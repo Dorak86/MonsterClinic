@@ -115,5 +115,42 @@
       "qualification": 3,
       "room": "room.waiting_room"
     }
+  ],
+  "decor": [
+    {
+      "object": "object.waiting_bench",
+      "x": 11,
+      "y": 5,
+      "length": 3,
+      "facing": "+y"
+    },
+    {
+      "object": "object.waiting_bench",
+      "x": 14,
+      "y": 5,
+      "length": 3,
+      "facing": "+y"
+    },
+    {
+      "object": "object.waiting_bench",
+      "x": 16,
+      "y": 6,
+      "length": 3,
+      "facing": "-x"
+    },
+    {
+      "object": "object.examination_couch",
+      "x": 5,
+      "y": 15,
+      "length": 2,
+      "facing": "+x"
+    },
+    {
+      "object": "object.examination_couch",
+      "x": 14,
+      "y": 16,
+      "length": 2,
+      "facing": "+y"
+    }
   ]
 }

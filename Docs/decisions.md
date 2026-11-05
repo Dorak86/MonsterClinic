@@ -19,6 +19,7 @@ Alle Entscheidungen des Auftraggebers und alle technischen Festlegungen mit Datu
 | A-11 | Krankheitsfrist ab Ankunft; waehrend der Behandlung halbe Geschwindigkeit; bei Ablauf Komplikation; Behandlung nach Dringlichkeit (Notfall vor kuerzester Restfrist vor Ankunft) |
 | A-12 | Goblins in Gruppen ab 3, ruetteln an Snackautomaten und pinkeln in Blumen; Vampire sind genervt; Automaten koennen kaputtgehen, Hausmeister repariert |
 | A-14 | Zuerst Meilenstein Spielkreislauf (K1–K5) mit 4 Krankheiten, dann Ausbau; pinker Goblin wird nach zweiter, kuerzerer Frist dauerhaft; neue Ereignisse aus A-13 nicht im MVP 1 |
+| A-15 | Waehrung heisst Infernalien (EN: Infernalia). Laufende Kosten je Tag: Gehaelter, Energie je Raum, Miete je Gebaeudekachel, Versicherung; Spiel soll knapp sein |
 | A-13 | Neue Ereignisse: Krankenkasse aendert Pauschale einer Behandlung; Geraet oder Objekt geht kaputt und muss ersetzt werden (Anzahl der MVP-Ereignisse offen) |
 
 ## Technische Festlegungen

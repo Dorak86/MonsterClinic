@@ -70,6 +70,12 @@ namespace MonsterClinic.Sim.Clinic
             TargetWaitMinutes = (int)r.GetInt("targetWaitMinutes");
             WaitPenaltyPerMinute = (int)r.GetInt("waitPenaltyPerMinute");
 
+            JsonValue f = j.Get("fixedCostsPerDay");
+            EnergyBase = (int)f.GetInt("energyBase");
+            EnergyPerRoom = IntMap(f.Get("energyPerRoom"));
+            RentPerIndoorTile = (int)f.GetInt("rentPerIndoorTile");
+            Insurance = (int)f.GetInt("insurance");
+
             PatientWalkSpeed = (int)j.Get("walkSpeed").GetInt("patient");
             StaffWalkSpeed = (int)j.Get("walkSpeed").GetInt("staff");
 
@@ -118,6 +124,10 @@ namespace MonsterClinic.Sim.Clinic
         public int ReputationKeepPercent { get; }
         public int TargetWaitMinutes { get; }
         public int WaitPenaltyPerMinute { get; }
+        public int EnergyBase { get; }
+        public IReadOnlyDictionary<string, int> EnergyPerRoom { get; }
+        public int RentPerIndoorTile { get; }
+        public int Insurance { get; }
         public int PatientWalkSpeed { get; }
         public int StaffWalkSpeed { get; }
 

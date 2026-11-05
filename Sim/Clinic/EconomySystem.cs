@@ -78,7 +78,7 @@ namespace MonsterClinic.Sim.Clinic
     }
 
     /// <summary>
-    /// Wirtschaft im Spielkreislauf (K3): Hauptbuch, Gehaelter, Kassentarife mit Privatzuschlag (A-09),
+    /// Wirtschaft im Spielkreislauf (K3), Waehrung Infernalien (A-15): Hauptbuch, Gehaelter, Energie, Miete, Versicherung, Kassentarife mit Privatzuschlag (A-09),
     /// Tagesabschluss mit Ruf aus Sauberkeit, Wartezeit, Diagnosequote und Erfolgsquote (A-09).
     /// ZWISCHENSTAND (Regel 6): Kredite, Vertraege, Finanzuebersicht und Folgen schlechter Wirtschaft folgen in Phase 5.
     /// </summary>
@@ -128,6 +128,12 @@ namespace MonsterClinic.Sim.Clinic
             }
 
             BuildingSystem building = sim.GetSystem<BuildingSystem>();
+            long energy = _b.EnergyBase + building.Rooms.Sum(r => _b.EnergyPerRoom.TryGetValue(r.TypeId, out int e) ? e : 0);
+            long indoorTiles = building.Footprints.Sum(f => (long)f.Width * f.Height);
+            Post(sim, -energy, "expense.energy", EntityId.None);
+            Post(sim, -indoorTiles * _b.RentPerIndoorTile, "expense.rent", EntityId.None);
+            Post(sim, -_b.Insurance, "expense.insurance", EntityId.None);
+
             int cleanliness = sim.GetSystem<HygieneSystem>().Cleanliness(building);
             DayStats d = Today;
 

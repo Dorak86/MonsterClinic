@@ -57,7 +57,11 @@ namespace MonsterClinic.SimCli
             Console.WriteLine($"Summe: {h.Sum(x => x.Arrivals)} Patienten, {h.Sum(x => x.Cured)} geheilt, {h.Sum(x => x.Abandoned)} abgebrochen, {h.Sum(x => x.Died)} gestorben, {h.Sum(x => x.PermanentlyUncured)} dauerhaft pink");
             int diag = h.Sum(x => x.Diagnoses);
             Console.WriteLine($"Diagnosen: {diag}, davon falsch: {h.Sum(x => x.WrongDiagnoses)} ({(diag == 0 ? 0 : 100 * h.Sum(x => x.WrongDiagnoses) / diag)} %), misslungene Behandlungen: {h.Sum(x => x.FailedTreatments)}");
-            Console.WriteLine($"Kontostand: {economy.Balance} (Start {new LoopBalancing(content.Balancing("clinic_loop")).StartMoney}), Ruf: {economy.Reputation / 10} von 100");
+            Console.WriteLine($"Kontostand: {economy.Balance} Infernalien (Start {new LoopBalancing(content.Balancing("clinic_loop")).StartMoney}), Ruf: {economy.Reputation / 10} von 100");
+            foreach (IGrouping<string, Transaction> g in economy.Ledger.GroupBy(t => t.Category).OrderBy(g => g.Key, StringComparer.Ordinal))
+            {
+                Console.WriteLine($"  {g.Key,-22} {g.Sum(t => t.Amount),10} Infernalien");
+            }
             Console.WriteLine($"Noch in der Klinik: {sim.GetSystem<PatientSystem>().Patients.Count()}");
             Console.WriteLine();
             Console.WriteLine("Je Krankheit (angekommen / geheilt / anders gegangen):");

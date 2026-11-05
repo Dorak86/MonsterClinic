@@ -11,3 +11,22 @@ Diese Schritte machst du einmal auf deinem Windows-PC.
 7. **Prüfen**: Unity öffnen. In der Konsole dürfen keine Fehler stehen. Den Testskript-Baustein für T0-06 liefere ich, sobald das Projekt existiert.
 
 Sag mir die Unity-Version und ob Schritt 7 ohne Fehler durchläuft. Ist dein PC mit dieser Sitzung verknüpft, kann ich die Schritte 4–7 auch prüfen.
+
+## Klinik in Unity ansehen (Meilenstein K4)
+
+1. `git pull` und danach `dotnet build MonsterClinic.sln -c Release` (kopiert den aktuellen Kern nach Unity).
+2. Unity öffnen, Szene `Assets/Scenes/SampleScene` öffnen, **Play** drücken. Die Testklinik startet von selbst; ein Objekt in der Szene ist nicht nötig.
+3. Grafiken werden direkt aus dem Ordner `Art` gelesen. Fehlt eine Datei, erscheint eine farbige Raute als Platzhalter und in der Konsole eine Warnung.
+
+| Taste | Wirkung |
+|---|---|
+| WASD, Pfeile, rechte oder mittlere Maustaste ziehen | Kamera verschieben |
+| Mausrad | Zoom (5 Stufen) |
+| Q / E | Ansicht um 90° drehen |
+| Leertaste | Pause |
+| 1 bis 4 | Tempo 1x, 2x, 4x, 8x |
+| Tab | Wände niedrig / hoch / aus |
+| Linksklick | Patient oder Mitarbeiter anzeigen |
+| F1 | wahre Krankheit im Patientenfenster (nur zum Testen) |
+
+Zwischenstand: Figuren sind farbige Platzhalter (Vampir rot, Geist hellblau, Zombie grün, Goblin orange; Ärzte weiß, Verwaltung blau, Reinigung gelb, Hausmeister braun). Die Einrichtung (Bänke, Liegen) ist reine Darstellung; die Simulation kennt sie erst mit dem Objektsystem in Phase 2.
