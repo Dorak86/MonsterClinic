@@ -15,4 +15,7 @@ Nutzungsbedingungen von Gemini zur kommerziellen Nutzung vor Release prüfen und
 | Art/Floors/floor_stone_A.png | 16 isometrische Bodenkacheln Stein | Tools/Art/normalize_joints.py + floor_to_iso.py | 05.11.2026 | ganze Textur, 4 x 4 Kacheln | Fugen auf gleiche Breite gebracht (Randfuge war dreifach breit) | zur Freigabe |
 | Art/Source/floor_marble_gemini_20261105.jpg | Bodentextur Marmor (Operationssaal), Quelle | Gemini (KI) | 05.11.2026 | Prompt „Seamless tileable floor texture … black and white marble checkerboard … sickly green sheen“ | keine | Quelle; Fehler: Reihen 3 und 4 gleich begonnen, eine Platte geteilt |
 | Art/Floors/floor_marble_A.png | 16 isometrische Bodenkacheln Marmor | Tools/Art/fix_checker_slabs.py + floor_to_iso.py | 05.11.2026 | Platten neu als korrektes Schachbrett gesetzt, geteilte Platte ersetzt durch gedrehte Kopie | Umrechnung | zur Freigabe |
+| Art/Source/floor_ground_gemini_20261105.jpg | Aussenboden (Grundstueck), Quelle | Gemini (KI) | 05.11.2026 | Prompt „Seamless tileable ground texture … cracked dry dark earth … cobblestones … ember orange cracks“ | keine | Quelle |
+| Art/Floors/floor_ground_A.png, floor_ground_B.png | 64 isometrische Kacheln je Satz (8 x 8) | floor_to_iso.py (--tiles 8) | 05.11.2026 | B = A um 180 Grad gedreht | Umrechnung | zur Freigabe |
+| Art/Floors/floor_toilet_A.png | 16 isometrische Kacheln Toilette | Tools/Art/recolor_toilet.py + floor_to_iso.py | 05.11.2026 | Fliesenblock A des Untersuchungszimmers | vergilbt, Gruen stumpfer | zur Freigabe |
 

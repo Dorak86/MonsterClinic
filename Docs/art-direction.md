@@ -41,4 +41,16 @@ pastel colors, modern sans-serif dashboard, any existing game's branding, photor
 Jeder Boden besteht aus Bloecken von 4 x 4 Spielkacheln. Kachel (x, y) nutzt Variante (x mod 4, y mod 4) aus einem Kachelsatz.
 Welcher Satz (A, B, ...) fuer einen Block gilt, bestimmt eine feste Formel aus der Blockposition:
 `((bx * 73856093) xor (by * 19349663)) mod Anzahl Saetze` mit bx = x div 4, by = y div 4.
+Der Aussenboden nutzt Bloecke von 8 x 8 Kacheln (laengere Wiederholung, kleinere Pflastersteine); die Formel gilt dann mit bx = x div 8, by = y div 8.
 Weitere Saetze entstehen durch Drehung um 180 Grad (Schachbrett bleibt erhalten; Spiegeln wuerde es verschieben) und zusaetzliche Flecken.
+
+## Boeden MVP (Stand 05.11.2026)
+
+| Boden | Raeume | Atlas |
+| --- | --- | --- |
+| Gruen-weisse Fliesen | Untersuchungszimmer | floor_examination_A/B |
+| Vergilbte Fliesen | Toilette | floor_toilet_A |
+| Holzdielen | Empfang, Wartezimmer | floor_wood_A |
+| Steinplatten | Flur | floor_stone_A |
+| Marmor | Operationssaal | floor_marble_A |
+| Hoellenboden | Grundstueck | floor_ground_A/B (8 x 8) |
