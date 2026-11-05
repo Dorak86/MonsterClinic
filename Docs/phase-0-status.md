@@ -1,6 +1,6 @@
 # Phase 0 – Zwischenstand 05.11.2026
 
-Kein Abnahmebericht. Phase 0 ist **nicht abgeschlossen**: T0-01, T0-06 und T0-07 brauchen GitHub, Unity und die Stilprobe.
+Kein Abnahmebericht. Phase 0 ist **nicht abgeschlossen**: T0-06 und T0-07 brauchen Unity und die Stilprobe.
 
 ## Umgesetzt
 
@@ -19,7 +19,7 @@ Kein Abnahmebericht. Phase 0 ist **nicht abgeschlossen**: T0-01, T0-06 und T0-07
 
 | ID | Ergebnis | Hinweis |
 | --- | --- | --- |
-| T0-01 | offen | CI-Datei vorhanden, wartet auf GitHub-Repository |
+| T0-01 | bestanden | GitHub Actions Lauf 42055602015 am 05.11.2026 gruen: Bauen, Inhaltspruefer, Phase-0-Pruefungen |
 | T0-02 | bestanden | |
 | T0-03 | bestanden | 4 Teilprüfungen: echte Inhalte fehlerfrei, falscher Verweis, unerlaubter Wert, doppelte ID |
 | T0-04 | bestanden | |
@@ -28,7 +28,7 @@ Kein Abnahmebericht. Phase 0 ist **nicht abgeschlossen**: T0-01, T0-06 und T0-07
 | T0-07 | offen | Stilprobe, Grafiken vom Auftraggeber per Gemini |
 | T0-08 | bestanden | |
 
-Ausgeführt am 05.11.2026 mit .NET 8.0.133 unter Linux. Unter Windows noch nicht ausgeführt.
+Ausgeführt am 05.11.2026 mit .NET 8.0.133 unter Linux und in GitHub Actions (ubuntu-latest). Unter Windows noch nicht ausgeführt.
 
 ## Bekannte Einschränkungen und technische Schulden
 
@@ -36,8 +36,10 @@ Ausgeführt am 05.11.2026 mit .NET 8.0.133 unter Linux. Unter Windows noch nicht
 2. Auslöser aller vier Komplikationen sind noch nicht festgelegt (Platzhalter).
 3. Für Goblins sind keine Bedürfnisse festgelegt; „Kreatur des Tages“ ist eine Annahme.
 4. Zahlenwerte (Aussagekraft der Untersuchungen) sind Platzhalter für das Balancing.
+5. GitHub meldet, dass die Actions-Versionen v4 auf Node.js 20 laufen, das abgekündigt ist. Umstellung auf neuere Versionen bei der nächsten CI-Änderung.
+6. Diese Claude-Sitzung darf nicht direkt auf `main` schreiben, nur auf Zweige `claude/...`. Änderungen kommen per Pull Request nach `main`.
 
 ## Nächste Schritte
 
-1. Auftraggeber: GitHub-Repository anlegen, Unity nach `Docs/unity-setup.md` einrichten, Stilprobe nach `Docs/stilprobe-briefing.md` erzeugen.
+1. Auftraggeber: Zweig `claude/phase-0-setup` auf GitHub in `main` umbenennen, Unity nach `Docs/unity-setup.md` einrichten, Stilprobe nach `Docs/stilprobe-briefing.md` erzeugen.
 2. Claude: Unity-Prüfskript für T0-06, Einbau der Stilprobe in Unity, danach Abnahmebericht Phase 0.
