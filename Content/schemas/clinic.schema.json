@@ -182,6 +182,45 @@
           "minimum": 0
         }
       }
+    },
+    "staff": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "profession",
+          "qualification",
+          "room"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "profession": {
+            "enum": [
+              "monster_doctor",
+              "administrator",
+              "janitor",
+              "cleaner"
+            ]
+          },
+          "specialization": {
+            "enum": [
+              "none",
+              "dermatologist",
+              "radiologist",
+              "surgeon"
+            ]
+          },
+          "qualification": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "room": {
+            "type": "string",
+            "x-ref": "room."
+          }
+        }
+      }
     }
   },
   "additionalProperties": false,

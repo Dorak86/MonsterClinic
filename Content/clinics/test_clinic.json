@@ -86,5 +86,34 @@
   "spawn": {
     "x": 1,
     "y": 10
-  }
+  },
+  "staff": [
+    {
+      "profession": "monster_doctor",
+      "specialization": "radiologist",
+      "qualification": 3,
+      "room": "room.examination_room"
+    },
+    {
+      "profession": "monster_doctor",
+      "specialization": "surgeon",
+      "qualification": 4,
+      "room": "room.operating_room"
+    },
+    {
+      "profession": "administrator",
+      "qualification": 3,
+      "room": "room.reception"
+    },
+    {
+      "profession": "cleaner",
+      "qualification": 3,
+      "room": "room.waiting_room"
+    },
+    {
+      "profession": "janitor",
+      "qualification": 3,
+      "room": "room.waiting_room"
+    }
+  ]
 }

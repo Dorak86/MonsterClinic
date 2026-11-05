@@ -34,4 +34,4 @@ Alle Entscheidungen des Auftraggebers und alle technischen Festlegungen mit Datu
 | 05.11.2026 | Übergangslösung: Phase-0-Prüfungen als Skript `Tests/phase0-checks.sh`, weil NUnit in der Entwicklungsumgebung von Claude nicht geladen werden kann (NuGet gesperrt). Umstellung auf NUnit, sobald NuGet erreichbar ist. |
 | 05.11.2026 | Kerntests mit eigenem kleinem Testlaeufer (`Tests/Sim.Tests`, NUnit-aehnliche Attribute) bis NuGet erreichbar ist |
 | 05.11.2026 | Eigener JSON-Baustein im Kern (`Sim/Data/Json.cs`), keine Fremdbibliothek; nur Ganzzahlen, kanonische Ausgabe fuer Pruefsummen. Aussagekraft von Untersuchungen daher in Prozent als Ganzzahl |
-| offen | Genaue Unity-Version (wird beim Anlegen des Projekts festgeschrieben) |
+| 05.11.2026 | Unity-Version 6000.6.8f1 („Supported“), festgeschrieben in Unity/ProjectSettings/ProjectVersion.txt. Vor Release pruefen, ob auf eine LTS-Version gewechselt wird |

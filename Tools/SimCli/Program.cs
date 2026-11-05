@@ -50,6 +50,9 @@ namespace MonsterClinic.SimCli
                     case "map":
                         return ClinicMap.Print(args);
 
+                    case "run":
+                        return ClinicRun.Run(args);
+
                     default:
                         Console.Error.WriteLine($"Unbekannter Befehl: {args[0]}");
                         return 2;

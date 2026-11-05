@@ -12,7 +12,7 @@ namespace MonsterClinic.Platform
     /// </summary>
     public static class ContentLoader
     {
-        private static readonly string[] Folders = { "rooms", "clinics" };
+        private static readonly string[] Folders = { "rooms", "clinics", "species", "diseases", "procedures", "treatments", "complications" };
 
         public static ContentDb Load(string contentRoot)
         {
@@ -31,6 +31,21 @@ namespace MonsterClinic.Platform
                     catch (JsonFormatException ex)
                     {
                         throw new JsonFormatException($"{folder}/{Path.GetFileName(file)}: {ex.Message}");
+                    }
+                }
+            }
+            string balancing = Path.Combine(contentRoot, "balancing");
+            if (Directory.Exists(balancing))
+            {
+                foreach (string file in Directory.GetFiles(balancing, "*.json").OrderBy(f => f, StringComparer.Ordinal))
+                {
+                    try
+                    {
+                        db.AddBalancing(Path.GetFileNameWithoutExtension(file), JsonValue.Parse(File.ReadAllText(file)));
+                    }
+                    catch (JsonFormatException ex)
+                    {
+                        throw new JsonFormatException($"balancing/{Path.GetFileName(file)}: {ex.Message}");
                     }
                 }
             }
