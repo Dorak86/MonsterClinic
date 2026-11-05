@@ -8,5 +8,7 @@
     <Company>LeviaStudios</Company>
     <Product>THE MONSTER CLINIC</Product>
     <Version>0.0.1</Version>
+    <!-- Werkzeuge (net8.0) laufen auch, wenn nur ein neueres .NET installiert ist, z. B. .NET 9 -->
+    <RollForward>Major</RollForward>
   </PropertyGroup>
 </Project>
