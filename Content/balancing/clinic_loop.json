@@ -1,0 +1,158 @@
+{
+  "_note": "Balancing fuer den Meilenstein Spielkreislauf (K3). Alle Werte sind erste Annahmen und werden im Spieltest eingestellt. Zeiten in Spielminuten, Geld in ganzen Talern, Anteile in Promille oder Prozent.",
+  "startMoney": 5000,
+  "arrival": {
+    "chancePermillePerMinute": {
+      "day": 7,
+      "night": 5
+    },
+    "speciesWeights": {
+      "day": {
+        "species.goblin": 20,
+        "species.vampire": 5,
+        "species.ghost": 35,
+        "species.zombie": 40
+      },
+      "night": {
+        "species.goblin": 5,
+        "species.vampire": 45,
+        "species.ghost": 25,
+        "species.zombie": 25
+      }
+    },
+    "groupExtraMax": 1,
+    "privatePatientPercent": 20
+  },
+  "patient": {
+    "patienceStart": 1000,
+    "patienceLossPerWaitingMinute": 3,
+    "satisfactionStart": 700,
+    "satisfactionLossPerWaitingMinuteAfter": 60,
+    "satisfactionCured": 200,
+    "satisfactionFailedTreatment": 150,
+    "satisfactionWrongDiagnosis": 100,
+    "healthBySeverity": {
+      "light": 800,
+      "medium": 650,
+      "severe": 500
+    },
+    "healthLossPerTenMinutesUntreated": 5
+  },
+  "durations": {
+    "registration": 5,
+    "procedures": {
+      "procedure.visual_exam": 10,
+      "procedure.temperature_blood_pressure": 15,
+      "procedure.body_scan": 25,
+      "procedure.xray": 20
+    },
+    "treatments": {
+      "treatment.talk_and_nose_punch": 30,
+      "treatment.blood_transfusion": 40,
+      "treatment.sew_on_head": 60,
+      "treatment.deflate": 20
+    }
+  },
+  "treatmentRooms": {
+    "treatment.talk_and_nose_punch": "room.examination_room",
+    "treatment.blood_transfusion": "room.examination_room",
+    "treatment.sew_on_head": "room.operating_room",
+    "treatment.deflate": "room.examination_room"
+  },
+  "qualification": {
+    "speedPercent": [
+      150,
+      125,
+      100,
+      85,
+      70
+    ],
+    "accuracyPercent": [
+      55,
+      68,
+      80,
+      90,
+      96
+    ],
+    "successBonusPercent": [
+      -15,
+      -5,
+      0,
+      5,
+      10
+    ]
+  },
+  "diagnosis": {
+    "confidenceThreshold": 55,
+    "maxExams": 3
+  },
+  "treatment": {
+    "baseSuccessPercent": 85,
+    "messDurationPercent": 150
+  },
+  "tariffs": {
+    "procedure.visual_exam": 20,
+    "procedure.temperature_blood_pressure": 30,
+    "procedure.body_scan": 80,
+    "procedure.xray": 70,
+    "treatment.talk_and_nose_punch": 60,
+    "treatment.blood_transfusion": 90,
+    "treatment.sew_on_head": 250,
+    "treatment.deflate": 120
+  },
+  "privateSurchargePercent": 20,
+  "materialCosts": {
+    "treatment.blood_transfusion": 30
+  },
+  "salariesPerDay": {
+    "monster_doctor": [
+      150,
+      180,
+      220,
+      300,
+      400
+    ],
+    "administrator": [
+      90,
+      100,
+      120,
+      140,
+      160
+    ],
+    "cleaner": [
+      80,
+      90,
+      100,
+      110,
+      120
+    ],
+    "janitor": [
+      85,
+      95,
+      110,
+      125,
+      140
+    ]
+  },
+  "cleanliness": {
+    "dirtPerVisit": 15,
+    "dirtMess": 200,
+    "cleanPerMinute": 40,
+    "cleanThreshold": 100
+  },
+  "complications": {
+    "emergencyHealthLoss": 300,
+    "messHealthLoss": 200
+  },
+  "reputation": {
+    "start": 500,
+    "keepPercentPerDay": 70,
+    "targetWaitMinutes": 30,
+    "waitPenaltyPerMinute": 10
+  },
+  "walkSpeed": {
+    "_note": "in 1/256 Kachel pro Tick; 100 = 25 Kacheln in etwa 13 Spielminuten",
+    "patient": 100,
+    "staff": 120
+  }
+}
