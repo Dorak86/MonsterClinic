@@ -9,6 +9,10 @@ using MonsterClinic.Sim.Diagnostics;
 using MonsterClinic.Sim.Kernel;
 using UnityEngine;
 using UnityEngine.InputSystem;
+// Unity 6.6 hat einen eigenen Typ UnityEngine.EntityId; gemeint ist immer der des Kerns.
+using EntityId = MonsterClinic.Sim.Kernel.EntityId;
+using LogEntry = MonsterClinic.Sim.Diagnostics.LogEntry;
+using LogLevel = MonsterClinic.Sim.Diagnostics.LogLevel;
 
 namespace MonsterClinic.App
 {
