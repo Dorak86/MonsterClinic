@@ -21,3 +21,4 @@ Unity/Assets/Plugins/MonsterClinic/*.pdb
 
 # Erzeugte Berichte
 placeholder-report.md
+__pycache__/
