@@ -1,5 +1,5 @@
 {
-  "_note": "Balancing fuer den Meilenstein Spielkreislauf (K3). Alle Werte sind erste Annahmen und werden im Spieltest eingestellt. Zeiten in Spielminuten, Geld in ganzen Talern, Anteile in Promille oder Prozent.",
+  "_note": "Balancing fuer den Meilenstein Spielkreislauf (K3). Alle Werte sind erste Annahmen und werden im Spieltest eingestellt. Zeiten in Spielminuten, Geld in ganzen Infernalien (Waehrung, A-15), Anteile in Promille oder Prozent.",
   "startMoney": 5000,
   "arrival": {
     "chancePermillePerMinute": {
@@ -91,14 +91,14 @@
     "messDurationPercent": 150
   },
   "tariffs": {
-    "procedure.visual_exam": 20,
-    "procedure.temperature_blood_pressure": 30,
-    "procedure.body_scan": 80,
-    "procedure.xray": 70,
-    "treatment.talk_and_nose_punch": 60,
-    "treatment.blood_transfusion": 90,
-    "treatment.sew_on_head": 250,
-    "treatment.deflate": 120
+    "procedure.visual_exam": 26,
+    "procedure.temperature_blood_pressure": 39,
+    "procedure.body_scan": 104,
+    "procedure.xray": 91,
+    "treatment.talk_and_nose_punch": 78,
+    "treatment.blood_transfusion": 117,
+    "treatment.sew_on_head": 325,
+    "treatment.deflate": 156
   },
   "privateSurchargePercent": 20,
   "materialCosts": {
@@ -106,32 +106,32 @@
   },
   "salariesPerDay": {
     "monster_doctor": [
-      150,
-      180,
       220,
-      300,
-      400
+      270,
+      330,
+      450,
+      600
     ],
     "administrator": [
-      90,
-      100,
-      120,
       140,
-      160
+      155,
+      180,
+      210,
+      240
     ],
     "cleaner": [
-      80,
-      90,
-      100,
-      110,
-      120
+      120,
+      135,
+      150,
+      165,
+      180
     ],
     "janitor": [
-      85,
-      95,
-      110,
-      125,
-      140
+      130,
+      145,
+      165,
+      185,
+      210
     ]
   },
   "cleanliness": {
@@ -154,5 +154,18 @@
     "_note": "in 1/256 Kachel pro Tick; 100 = 25 Kacheln in etwa 13 Spielminuten",
     "patient": 100,
     "staff": 120
+  },
+  "fixedCostsPerDay": {
+    "_note": "Laufende Kosten je Tagesabschluss (Lastenheft 10.2: Energie, Gebaeudekosten; dazu Versicherung)",
+    "energyBase": 80,
+    "energyPerRoom": {
+      "room.reception": 30,
+      "room.waiting_room": 40,
+      "room.toilet": 30,
+      "room.examination_room": 80,
+      "room.operating_room": 160
+    },
+    "rentPerIndoorTile": 1,
+    "insurance": 200
   }
 }

@@ -182,6 +182,8 @@ namespace MonsterClinic.Sim.Tests
             int staff = sim.GetSystem<StaffSystem>().Members.Count();
             Assert.Equal(3 * staff, eco.Ledger.Count(t => t.Category == "expense.salary"), "ein Gehalt je Mitarbeiter und Tag");
             Assert.Equal(3, eco.History.Count, "drei Tagesabschluesse");
+            foreach (string cat in new[] { "expense.energy", "expense.rent", "expense.insurance" })
+                Assert.Equal(3, eco.Ledger.Count(t => t.Category == cat), $"{cat} einmal je Tag");
             Assert.True(eco.History.All(d => d.Reputation >= 0 && d.Reputation <= 1000), "Ruf im Bereich 0 bis 1000");
             Assert.Equal(eco.History.Last().BalanceAtEnd, eco.Balance, "Kontostand am Tagesende");
         }
