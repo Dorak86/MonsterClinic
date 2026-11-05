@@ -13,3 +13,6 @@ Nutzungsbedingungen von Gemini zur kommerziellen Nutzung vor Release prüfen und
 | Art/Floors/floor_wood_A.png | 16 isometrische Bodenkacheln Holz | Tools/Art/floor_to_iso.py | 05.11.2026 | ganze Textur, 4 x 4 Kacheln | Umrechnung | zur Freigabe |
 | Art/Source/floor_stone_gemini_20261105.jpg | Bodentextur Steinplatten (Flur), Quelle | Gemini (KI) | 05.11.2026 | Prompt „Seamless tileable floor texture … large square grey flagstones … moss in the joints“ | keine | Quelle |
 | Art/Floors/floor_stone_A.png | 16 isometrische Bodenkacheln Stein | Tools/Art/normalize_joints.py + floor_to_iso.py | 05.11.2026 | ganze Textur, 4 x 4 Kacheln | Fugen auf gleiche Breite gebracht (Randfuge war dreifach breit) | zur Freigabe |
+| Art/Source/floor_marble_gemini_20261105.jpg | Bodentextur Marmor (Operationssaal), Quelle | Gemini (KI) | 05.11.2026 | Prompt „Seamless tileable floor texture … black and white marble checkerboard … sickly green sheen“ | keine | Quelle; Fehler: Reihen 3 und 4 gleich begonnen, eine Platte geteilt |
+| Art/Floors/floor_marble_A.png | 16 isometrische Bodenkacheln Marmor | Tools/Art/fix_checker_slabs.py + floor_to_iso.py | 05.11.2026 | Platten neu als korrektes Schachbrett gesetzt, geteilte Platte ersetzt durch gedrehte Kopie | Umrechnung | zur Freigabe |
+
