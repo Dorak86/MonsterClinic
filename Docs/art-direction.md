@@ -35,3 +35,10 @@ sickly green and blood red. Isometric 2:1, light from the top left, clear silhou
 AVOID: bright cheerful corporate hospital look, glossy 3D plastic, cartoon sitcom style, rounded bubbly UI,
 pastel colors, modern sans-serif dashboard, any existing game's branding, photorealism, gore.
 ```
+
+## Bodenkacheln: Regel fuer Abwechslung
+
+Jeder Boden besteht aus Bloecken von 4 x 4 Spielkacheln. Kachel (x, y) nutzt Variante (x mod 4, y mod 4) aus einem Kachelsatz.
+Welcher Satz (A, B, ...) fuer einen Block gilt, bestimmt eine feste Formel aus der Blockposition:
+`((bx * 73856093) xor (by * 19349663)) mod Anzahl Saetze` mit bx = x div 4, by = y div 4.
+Weitere Saetze entstehen durch Drehung um 180 Grad (Schachbrett bleibt erhalten; Spiegeln wuerde es verschieben) und zusaetzliche Flecken.

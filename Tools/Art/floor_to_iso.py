@@ -42,8 +42,10 @@ def main():
         yi = np.floor(py).astype(int)
         ax = (px - xi)[..., None]
         ay = (py - yi)[..., None]
-        top = im[yi, xi] * (1 - ax) + im[yi, xi + 1] * ax
-        bottom = im[yi + 1, xi] * (1 - ax) + im[yi + 1, xi + 1] * ax
+        xj = np.minimum(xi + 1, im.shape[1] - 1)
+        yj = np.minimum(yi + 1, im.shape[0] - 1)
+        top = im[yi, xi] * (1 - ax) + im[yi, xj] * ax
+        bottom = im[yj, xi] * (1 - ax) + im[yj, xj] * ax
         return top * (1 - ay) + bottom * ay
 
     sx, sy = np.meshgrid(np.arange(TILE_W) + 0.5, np.arange(TILE_H) + 0.5)
