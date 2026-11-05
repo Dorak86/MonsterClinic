@@ -26,6 +26,8 @@ namespace MonsterClinic.ContentCheck
             ["procedures"] = "procedure",
             ["treatments"] = "treatment",
             ["complications"] = "complication",
+            ["rooms"] = "room",
+            ["clinics"] = "clinic",
         };
 
         private static readonly string[] Languages = { "de", "en" };

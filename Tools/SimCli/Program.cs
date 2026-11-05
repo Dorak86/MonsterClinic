@@ -47,6 +47,9 @@ namespace MonsterClinic.SimCli
                         log.Info("SimCli", "Erzwinge Testabsturz");
                         throw new InvalidOperationException("Absichtlicher Testabsturz (T0-05)");
 
+                    case "map":
+                        return ClinicMap.Print(args);
+
                     default:
                         Console.Error.WriteLine($"Unbekannter Befehl: {args[0]}");
                         return 2;

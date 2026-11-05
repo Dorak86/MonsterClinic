@@ -1,0 +1,8 @@
+{
+  "id": "room.sample_lab",
+  "formatVersion": 1,
+  "category": "diagnostics",
+  "minWidth": 4,
+  "minHeight": 4,
+  "_note": "MVP-Raum (D-08). Mindestgroesse ist Balancing-Platzhalter"
+}

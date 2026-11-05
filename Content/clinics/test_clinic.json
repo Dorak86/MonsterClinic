@@ -1,0 +1,90 @@
+{
+  "id": "clinic.test_clinic",
+  "formatVersion": 1,
+  "_note": "Feste Testklinik fuer den Meilenstein Spielkreislauf (A-14, K2). ZWISCHENSTAND: ersetzt nicht das freie Bauen (Phase 2).",
+  "lot": {
+    "w": 32,
+    "h": 24
+  },
+  "footprints": [
+    {
+      "x": 4,
+      "y": 4,
+      "w": 24,
+      "h": 16
+    }
+  ],
+  "rooms": [
+    {
+      "type": "room.reception",
+      "x": 4,
+      "y": 4,
+      "w": 6,
+      "h": 6
+    },
+    {
+      "type": "room.waiting_room",
+      "x": 10,
+      "y": 4,
+      "w": 8,
+      "h": 6
+    },
+    {
+      "type": "room.toilet",
+      "x": 18,
+      "y": 4,
+      "w": 4,
+      "h": 6
+    },
+    {
+      "type": "room.examination_room",
+      "x": 4,
+      "y": 12,
+      "w": 7,
+      "h": 8
+    },
+    {
+      "type": "room.operating_room",
+      "x": 11,
+      "y": 12,
+      "w": 8,
+      "h": 8
+    }
+  ],
+  "doors": [
+    {
+      "x": 7,
+      "y": 10,
+      "side": "N"
+    },
+    {
+      "x": 13,
+      "y": 10,
+      "side": "N"
+    },
+    {
+      "x": 19,
+      "y": 10,
+      "side": "N"
+    },
+    {
+      "x": 7,
+      "y": 12,
+      "side": "N"
+    },
+    {
+      "x": 14,
+      "y": 12,
+      "side": "N"
+    }
+  ],
+  "entrance": {
+    "x": 4,
+    "y": 10,
+    "side": "W"
+  },
+  "spawn": {
+    "x": 1,
+    "y": 10
+  }
+}
