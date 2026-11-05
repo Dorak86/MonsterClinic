@@ -5,6 +5,10 @@ using MonsterClinic.Sim.Data;
 using MonsterClinic.Sim.Kernel;
 using MonsterClinic.Sim.World;
 using UnityEngine;
+using Edge = MonsterClinic.Sim.World.Edge;
+using EdgeSide = MonsterClinic.Sim.World.EdgeSide;
+using Room = MonsterClinic.Sim.World.Room;
+using Tile = MonsterClinic.Sim.World.Tile;
 
 namespace MonsterClinic.App
 {
