@@ -2,7 +2,7 @@
 
 Zweites Spiel von LeviaStudios im Levia-Universum. Hospital-Management-Simulation in Levia, der verrückten Hölle voller Monster.
 
-Verbindliche Grundlagen in `Docs/`: Lastenheft V1.0 (mit Abweichungen A-01 bis A-10), Technische Planung v1.0, Pflichtenheft Phase 0 und 1.
+Verbindliche Grundlagen: Lastenheft V1.0 in `Docs/` (Abweichungen A-01 bis A-10 in `Docs/decisions.md`), dazu die Dokumente „Technische Planung v1.0“ und „Pflichtenheft Phase 0 und 1“ in Claude.
 
 ## Aufbau
 
