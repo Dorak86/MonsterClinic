@@ -25,10 +25,9 @@
     },
     "trigger": {
       "enum": [
-        "waiting_or_failed_treatment",
-        "untreated_progression",
-        "failed_treatment"
-      ]
+        "deadline_expired"
+      ],
+      "description": "A-11: Komplikation tritt ein, wenn die Krankheitsfrist ablaeuft"
     },
     "effect": {
       "enum": [

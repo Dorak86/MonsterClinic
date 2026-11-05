@@ -26,5 +26,6 @@
   "complications": [
     "complication.faints"
   ],
-  "_note": "Vom Auftraggeber beschrieben. Dauer und Zahlenwerte folgen im Balancing."
+  "_note": "Vom Auftraggeber beschrieben. Frist und Zahlenwerte sind Platzhalter fuer das Balancing.",
+  "deadlineGameMinutes": 240
 }

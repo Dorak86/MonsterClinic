@@ -4,5 +4,10 @@
   "sizeClass": "1x1",
   "activity": "day",
   "needs": [],
-  "_note": "Beduerfnisse vom Auftraggeber noch nicht festgelegt; Kreatur des Tages als Annahme"
+  "_note": "A-12 entschieden. Kreatur des Tages ist noch eine Annahme",
+  "groupSizeMin": 3,
+  "behaviors": [
+    "shake_vending_machine",
+    "pee_on_plants"
+  ]
 }

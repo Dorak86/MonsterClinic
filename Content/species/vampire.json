@@ -6,5 +6,9 @@
   "needs": [
     "darkness",
     "blood_supply"
+  ],
+  "annoyedBy": [
+    "shake_vending_machine",
+    "pee_on_plants"
   ]
 }

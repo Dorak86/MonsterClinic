@@ -53,6 +53,31 @@
           "large_space"
         ]
       }
+    },
+    "groupSizeMin": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Kleinste Gruppengroesse bei Ankunft (A-12: Goblins ab 3)"
+    },
+    "behaviors": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "shake_vending_machine",
+          "pee_on_plants"
+        ]
+      },
+      "description": "Stoerverhalten in der Klinik (A-12)"
+    },
+    "annoyedBy": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "shake_vending_machine",
+          "pee_on_plants"
+        ]
+      },
+      "description": "Verhalten anderer, das diese Spezies nervt (A-12)"
     }
   },
   "additionalProperties": false,

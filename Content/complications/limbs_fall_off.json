@@ -1,7 +1,7 @@
 {
   "id": "complication.limbs_fall_off",
   "formatVersion": 1,
-  "placeholder": true,
   "effect": "extra_damage_and_mess",
-  "_note": "Hausmeister muss die Reste aufkehren. Ausloeser offen"
+  "_note": "Ausloeser: Fristablauf (A-11). Hausmeister muss die Reste aufkehren",
+  "trigger": "deadline_expired"
 }

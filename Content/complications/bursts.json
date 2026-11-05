@@ -1,7 +1,7 @@
 {
   "id": "complication.bursts",
   "formatVersion": 1,
-  "placeholder": true,
   "effect": "death",
-  "_note": "Tod des Geistes (entschieden). Ausloeser offen"
+  "_note": "Ausloeser: Fristablauf (A-11). Tod des Geistes",
+  "trigger": "deadline_expired"
 }

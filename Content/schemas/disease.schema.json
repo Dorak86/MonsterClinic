@@ -11,7 +11,8 @@
     "diagnosis",
     "treatment",
     "costClass",
-    "complications"
+    "complications",
+    "deadlineGameMinutes"
   ],
   "properties": {
     "id": {
@@ -105,6 +106,11 @@
         "type": "string",
         "x-ref": "complication."
       }
+    },
+    "deadlineGameMinutes": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "A-11: Frist ab Ankunft in Spielminuten; laeuft waehrend der Behandlung mit halber Geschwindigkeit. Balancing-Wert"
     }
   },
   "additionalProperties": false,

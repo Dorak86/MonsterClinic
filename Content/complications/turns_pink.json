@@ -3,5 +3,6 @@
   "formatVersion": 1,
   "placeholder": true,
   "effect": "permanent_uncured",
-  "_note": "Wird pink, kann dauerhaft werden, dann nicht geheilt. Ausloeser offen (Vorschlag: lange Wartezeit oder misslungene Behandlung)"
+  "_note": "Ausloeser entschieden (A-11). Offen: wann wird pink dauerhaft (Zufall oder zweite Frist)?",
+  "trigger": "deadline_expired"
 }
