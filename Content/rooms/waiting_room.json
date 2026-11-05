@@ -1,0 +1,8 @@
+{
+  "id": "room.waiting_room",
+  "formatVersion": 1,
+  "category": "care",
+  "minWidth": 5,
+  "minHeight": 4,
+  "_note": "MVP-Raum (D-08). Mindestgroesse ist Balancing-Platzhalter"
+}

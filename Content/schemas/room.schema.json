@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Raumtyp",
+  "type": "object",
+  "required": [
+    "id",
+    "formatVersion",
+    "category",
+    "minWidth",
+    "minHeight"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^room\\.[a-z0-9_]+$"
+    },
+    "formatVersion": {
+      "const": 1
+    },
+    "placeholder": {
+      "type": "boolean"
+    },
+    "_note": {
+      "type": "string"
+    },
+    "category": {
+      "enum": [
+        "administration",
+        "diagnostics",
+        "treatment",
+        "care",
+        "staff_research"
+      ]
+    },
+    "minWidth": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Mindestgroesse in Kacheln (BAU-06), Balancing-Wert"
+    },
+    "minHeight": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "additionalProperties": false,
+  "x-locKeys": [
+    "name"
+  ]
+}

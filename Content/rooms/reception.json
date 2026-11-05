@@ -1,0 +1,8 @@
+{
+  "id": "room.reception",
+  "formatVersion": 1,
+  "category": "administration",
+  "minWidth": 4,
+  "minHeight": 4,
+  "_note": "MVP-Raum (D-08). Mindestgroesse ist Balancing-Platzhalter"
+}

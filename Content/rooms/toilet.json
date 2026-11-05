@@ -1,0 +1,8 @@
+{
+  "id": "room.toilet",
+  "formatVersion": 1,
+  "category": "care",
+  "minWidth": 3,
+  "minHeight": 3,
+  "_note": "MVP-Raum (D-08). Mindestgroesse ist Balancing-Platzhalter"
+}

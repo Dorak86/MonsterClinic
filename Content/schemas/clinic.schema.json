@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Fester Klinikgrundriss",
+  "type": "object",
+  "required": [
+    "id",
+    "formatVersion",
+    "lot",
+    "footprints",
+    "rooms",
+    "doors",
+    "entrance",
+    "spawn"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^clinic\\.[a-z0-9_]+$"
+    },
+    "formatVersion": {
+      "const": 1
+    },
+    "placeholder": {
+      "type": "boolean"
+    },
+    "_note": {
+      "type": "string"
+    },
+    "lot": {
+      "type": "object",
+      "required": [
+        "w",
+        "h"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "w": {
+          "type": "integer",
+          "minimum": 8
+        },
+        "h": {
+          "type": "integer",
+          "minimum": 8
+        }
+      }
+    },
+    "footprints": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "x",
+          "y",
+          "w",
+          "h"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "x": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "y": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "w": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "h": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "rooms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "type",
+          "x",
+          "y",
+          "w",
+          "h"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "x": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "y": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "w": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "h": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "type": {
+            "type": "string",
+            "x-ref": "room."
+          }
+        }
+      }
+    },
+    "doors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "x",
+          "y",
+          "side"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "x": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "y": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "side": {
+            "enum": [
+              "N",
+              "W"
+            ]
+          }
+        }
+      }
+    },
+    "entrance": {
+      "type": "object",
+      "required": [
+        "x",
+        "y",
+        "side"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "y": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "side": {
+          "enum": [
+            "N",
+            "W"
+          ]
+        }
+      }
+    },
+    "spawn": {
+      "type": "object",
+      "required": [
+        "x",
+        "y"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "y": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "x-locKeys": [
+    "name"
+  ]
+}
