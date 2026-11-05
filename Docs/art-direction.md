@@ -42,6 +42,7 @@ Jeder Boden besteht aus Bloecken von 4 x 4 Spielkacheln. Kachel (x, y) nutzt Var
 Welcher Satz (A, B, ...) fuer einen Block gilt, bestimmt eine feste Formel aus der Blockposition:
 `((bx * 73856093) xor (by * 19349663)) mod Anzahl Saetze` mit bx = x div 4, by = y div 4.
 Der Aussenboden nutzt Bloecke von 8 x 8 Kacheln (laengere Wiederholung, kleinere Pflastersteine); die Formel gilt dann mit bx = x div 8, by = y div 8.
+Boeden ohne Fugen (Aussenboden) brauchen kantengleiche Saetze: `match_edges.py` blendet am Rand die Basis ein, sonst sieht man an jeder Blockgrenze eine Naht.
 Weitere Saetze entstehen durch Drehung um 180 Grad (Schachbrett bleibt erhalten; Spiegeln wuerde es verschieben) und zusaetzliche Flecken.
 
 ## Boeden MVP (Stand 05.11.2026)
@@ -53,4 +54,4 @@ Weitere Saetze entstehen durch Drehung um 180 Grad (Schachbrett bleibt erhalten;
 | Holzdielen | Empfang, Wartezimmer | floor_wood_A |
 | Steinplatten | Flur | floor_stone_A |
 | Marmor | Operationssaal | floor_marble_A |
-| Hoellenboden | Grundstueck | floor_ground_A/B (8 x 8) |
+| Hoellenboden | Grundstueck | floor_ground_A/B/C (8 x 8) |
