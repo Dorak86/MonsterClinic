@@ -221,6 +221,48 @@
           }
         }
       }
+    },
+    "decor": {
+      "description": "ZWISCHENSTAND (K4): Einrichtung nur zur Darstellung; die Simulation kennt sie noch nicht (Objektsystem Phase 2).",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "object",
+          "x",
+          "y",
+          "length",
+          "facing"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "object": {
+            "type": "string",
+            "pattern": "^object\\.[a-z0-9_]+$"
+          },
+          "x": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "y": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "length": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4
+          },
+          "facing": {
+            "enum": [
+              "+x",
+              "-x",
+              "+y",
+              "-y"
+            ]
+          }
+        }
+      }
     }
   },
   "additionalProperties": false,
