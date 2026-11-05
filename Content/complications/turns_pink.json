@@ -1,8 +1,8 @@
 {
   "id": "complication.turns_pink",
   "formatVersion": 1,
-  "placeholder": true,
   "effect": "permanent_uncured",
-  "_note": "Ausloeser entschieden (A-11). Offen: wann wird pink dauerhaft (Zufall oder zweite Frist)?",
-  "trigger": "deadline_expired"
+  "_note": "Ausloeser: Fristablauf (A-11). Nach einer zweiten, kuerzeren Frist dauerhaft pink, gilt dann als nicht geheilt (A-14). Fristlaenge ist Balancing-Platzhalter",
+  "trigger": "deadline_expired",
+  "permanentAfterGameMinutes": 60
 }

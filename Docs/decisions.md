@@ -18,6 +18,7 @@ Alle Entscheidungen des Auftraggebers und alle technischen Festlegungen mit Datu
 | A-10 | Steam Early Access zu Halloween 2027 mit MVP-Umfang |
 | A-11 | Krankheitsfrist ab Ankunft; waehrend der Behandlung halbe Geschwindigkeit; bei Ablauf Komplikation; Behandlung nach Dringlichkeit (Notfall vor kuerzester Restfrist vor Ankunft) |
 | A-12 | Goblins in Gruppen ab 3, ruetteln an Snackautomaten und pinkeln in Blumen; Vampire sind genervt; Automaten koennen kaputtgehen, Hausmeister repariert |
+| A-14 | Zuerst Meilenstein Spielkreislauf (K1–K5) mit 4 Krankheiten, dann Ausbau; pinker Goblin wird nach zweiter, kuerzerer Frist dauerhaft; neue Ereignisse aus A-13 nicht im MVP 1 |
 | A-13 | Neue Ereignisse: Krankenkasse aendert Pauschale einer Behandlung; Geraet oder Objekt geht kaputt und muss ersetzt werden (Anzahl der MVP-Ereignisse offen) |
 
 ## Technische Festlegungen
@@ -31,4 +32,6 @@ Alle Entscheidungen des Auftraggebers und alle technischen Festlegungen mit Datu
 | 05.11.2026 | Messungen auf dem Rechner des Auftraggebers (P-04); Intro aus dem ersten Spiel als MP4 (P-03) |
 | 05.11.2026 | Inhaltsprüfer nutzt System.Text.Json (.NET 8) und einen eigenen Prüfer für eine kleine Teilmenge von JSON Schema, statt einer Fremdbibliothek; das Spiel liest Inhalte in Phase 2 mit Newtonsoft.Json. Beide lesen Standard-JSON; der Inhaltsprüfer meldet nicht unterstützte Schema-Schlüsselwörter als Fehler. |
 | 05.11.2026 | Übergangslösung: Phase-0-Prüfungen als Skript `Tests/phase0-checks.sh`, weil NUnit in der Entwicklungsumgebung von Claude nicht geladen werden kann (NuGet gesperrt). Umstellung auf NUnit, sobald NuGet erreichbar ist. |
+| 05.11.2026 | Kerntests mit eigenem kleinem Testlaeufer (`Tests/Sim.Tests`, NUnit-aehnliche Attribute) bis NuGet erreichbar ist |
+| 05.11.2026 | Eigener JSON-Baustein im Kern (`Sim/Data/Json.cs`), keine Fremdbibliothek; nur Ganzzahlen, kanonische Ausgabe fuer Pruefsummen. Aussagekraft von Untersuchungen daher in Prozent als Ganzzahl |
 | offen | Genaue Unity-Version (wird beim Anlegen des Projekts festgeschrieben) |

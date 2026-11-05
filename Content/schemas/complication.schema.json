@@ -37,10 +37,10 @@
         "death"
       ]
     },
-    "permanentChance": {
-      "type": "number",
-      "minimum": 0,
-      "maximum": 1
+    "permanentAfterGameMinutes": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "A-14: zweite, kuerzere Frist, nach der die Komplikation dauerhaft wird (z. B. pinker Goblin). Balancing-Wert"
     }
   },
   "additionalProperties": false,

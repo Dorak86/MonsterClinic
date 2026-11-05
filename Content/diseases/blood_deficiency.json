@@ -18,7 +18,7 @@
   "diagnosis": [
     {
       "procedure": "procedure.temperature_blood_pressure",
-      "power": 0.7
+      "power": 70
     }
   ],
   "treatment": "treatment.blood_transfusion",

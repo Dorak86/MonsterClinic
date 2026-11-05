@@ -14,7 +14,7 @@
   "diagnosis": [
     {
       "procedure": "procedure.body_scan",
-      "power": 0.7
+      "power": 70
     }
   ],
   "treatment": "treatment.deflate",

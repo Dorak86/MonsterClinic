@@ -81,10 +81,10 @@
             "x-ref": "procedure."
           },
           "power": {
-            "type": "number",
+            "type": "integer",
             "minimum": 0,
-            "maximum": 1,
-            "description": "Aussagekraft des Verfahrens, Balancing-Wert"
+            "maximum": 100,
+            "description": "Aussagekraft des Verfahrens in Prozent, Balancing-Wert (Ganzzahl, Code-Regel 2)"
           }
         }
       }

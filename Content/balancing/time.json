@@ -1,0 +1,6 @@
+{
+  "_note": "Pflichtenheft 3. Minuten seit Mitternacht. Wird ab K2 vom Inhaltslader gelesen; bis dahin nutzt der Kern dieselben Werte als Standard.",
+  "startMinuteOfDay": 360,
+  "dayStartMinute": 360,
+  "nightStartMinute": 1200
+}

@@ -14,11 +14,11 @@
   "diagnosis": [
     {
       "procedure": "procedure.body_scan",
-      "power": 0.7
+      "power": 70
     },
     {
       "procedure": "procedure.xray",
-      "power": 0.7
+      "power": 70
     }
   ],
   "treatment": "treatment.sew_on_head",

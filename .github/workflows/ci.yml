@@ -20,6 +20,8 @@ jobs:
         run: dotnet build MonsterClinic.sln -c Release
       - name: Inhaltspruefer
         run: ./Tools/ContentCheck/bin/Release/net8.0/contentcheck --content Content --placeholder-report placeholder-report.md
+      - name: Kerntests
+        run: ./Tests/Sim.Tests/bin/Release/net8.0/simtests
       - name: Phase-0-Pruefungen
         run: ./Tests/phase0-checks.sh
       - name: Platzhalterbericht ablegen

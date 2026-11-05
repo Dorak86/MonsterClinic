@@ -18,7 +18,7 @@
   "diagnosis": [
     {
       "procedure": "procedure.visual_exam",
-      "power": 0.7
+      "power": 70
     }
   ],
   "treatment": "treatment.talk_and_nose_punch",

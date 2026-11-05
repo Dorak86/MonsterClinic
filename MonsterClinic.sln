@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonsterClinic.SimCli", "Too
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonsterClinic.ContentCheck", "Tools\ContentCheck\MonsterClinic.ContentCheck.csproj", "{E457DD56-4F8D-4F27-9870-FCF75546DDD7}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{37AAE64F-307B-4F62-B490-8AC693C366AD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonsterClinic.Sim.Tests", "Tests\Sim.Tests\MonsterClinic.Sim.Tests.csproj", "{A146A104-D952-42F6-95A4-A03629DB7784}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,9 +42,14 @@ Global
 		{E457DD56-4F8D-4F27-9870-FCF75546DDD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E457DD56-4F8D-4F27-9870-FCF75546DDD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E457DD56-4F8D-4F27-9870-FCF75546DDD7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A146A104-D952-42F6-95A4-A03629DB7784}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A146A104-D952-42F6-95A4-A03629DB7784}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A146A104-D952-42F6-95A4-A03629DB7784}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A146A104-D952-42F6-95A4-A03629DB7784}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1599A405-89B0-4DAE-BD07-B9045F505800} = {8F7DE8B2-15DD-4DE5-B8D7-5A7DBB79A916}
 		{E457DD56-4F8D-4F27-9870-FCF75546DDD7} = {8F7DE8B2-15DD-4DE5-B8D7-5A7DBB79A916}
+		{A146A104-D952-42F6-95A4-A03629DB7784} = {37AAE64F-307B-4F62-B490-8AC693C366AD}
 	EndGlobalSection
 EndGlobal

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Kerntests. Uebergangsloesung ohne NUnit (NuGet in der Entwicklungsumgebung gesperrt, siehe Docs/decisions.md):
+    eigener kleiner Testlaeufer mit NUnit-aehnlichen Attributen, damit die Umstellung spaeter nur die usings betrifft.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>MonsterClinic.Sim.Tests</RootNamespace>
+    <AssemblyName>simtests</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../Sim/MonsterClinic.Sim.csproj" />
+    <ProjectReference Include="../../Platform/MonsterClinic.Platform.csproj" />
+  </ItemGroup>
+</Project>
