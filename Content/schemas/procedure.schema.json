@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Untersuchungsverfahren",
+  "type": "object",
+  "required": [
+    "id",
+    "formatVersion",
+    "specialization"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^procedure\\.[a-z0-9_]+$"
+    },
+    "formatVersion": {
+      "const": 1
+    },
+    "placeholder": {
+      "type": "boolean"
+    },
+    "_note": {
+      "type": "string",
+      "description": "Freier Kommentar fuer Autoren, wird vom Spiel ignoriert"
+    },
+    "specialization": {
+      "type": "string",
+      "enum": [
+        "none",
+        "dermatologist",
+        "radiologist",
+        "surgeon"
+      ],
+      "description": "Benoetigte Spezialisierung des Monsterarztes (D-09)"
+    }
+  },
+  "additionalProperties": false,
+  "x-locKeys": [
+    "name"
+  ]
+}

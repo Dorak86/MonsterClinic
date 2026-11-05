@@ -1,0 +1,9 @@
+{
+  "id": "disease.material_instability",
+  "formatVersion": 1,
+  "placeholder": true,
+  "species": [
+    "species.ghost"
+  ],
+  "_note": "Platzhalter aus Lastenheft Kap. 7.1, Beschreibung folgt vom Auftraggeber"
+}

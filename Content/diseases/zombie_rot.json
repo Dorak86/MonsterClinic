@@ -1,0 +1,30 @@
+{
+  "id": "disease.zombie_rot",
+  "formatVersion": 1,
+  "species": [
+    "species.zombie"
+  ],
+  "severity": "severe",
+  "symptoms": [
+    {
+      "id": "symptom.head_under_arm",
+      "visibleOnArrival": true
+    }
+  ],
+  "diagnosis": [
+    {
+      "procedure": "procedure.body_scan",
+      "power": 0.7
+    },
+    {
+      "procedure": "procedure.xray",
+      "power": 0.7
+    }
+  ],
+  "treatment": "treatment.sew_on_head",
+  "costClass": "medium",
+  "complications": [
+    "complication.limbs_fall_off"
+  ],
+  "_note": "Vom Auftraggeber beschrieben. Dauer und Zahlenwerte folgen im Balancing."
+}

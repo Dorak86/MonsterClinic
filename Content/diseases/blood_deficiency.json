@@ -1,0 +1,30 @@
+{
+  "id": "disease.blood_deficiency",
+  "formatVersion": 1,
+  "species": [
+    "species.vampire"
+  ],
+  "severity": "light",
+  "symptoms": [
+    {
+      "id": "symptom.staggering",
+      "visibleOnArrival": true
+    },
+    {
+      "id": "symptom.turning_pale",
+      "visibleOnArrival": false
+    }
+  ],
+  "diagnosis": [
+    {
+      "procedure": "procedure.temperature_blood_pressure",
+      "power": 0.7
+    }
+  ],
+  "treatment": "treatment.blood_transfusion",
+  "costClass": "low",
+  "complications": [
+    "complication.faints"
+  ],
+  "_note": "Vom Auftraggeber beschrieben. Dauer und Zahlenwerte folgen im Balancing."
+}

@@ -1,0 +1,12 @@
+<Project>
+  <!-- Gemeinsame Build-Regeln (Pflichtenheft Abschnitt 1, Code-Regel 5) -->
+  <PropertyGroup>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Deterministic>true</Deterministic>
+    <Company>LeviaStudios</Company>
+    <Product>THE MONSTER CLINIC</Product>
+    <Version>0.0.1</Version>
+  </PropertyGroup>
+</Project>

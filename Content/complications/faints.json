@@ -1,0 +1,7 @@
+{
+  "id": "complication.faints",
+  "formatVersion": 1,
+  "placeholder": true,
+  "effect": "emergency",
+  "_note": "Ausloeser offen"
+}

@@ -1,0 +1,11 @@
+<Project>
+  <!--
+    Kopiert Kern und Plattform nach dem Bauen ins Unity-Projekt, sobald es existiert
+    (Unity/Assets). So nutzt Unity immer den gerade gebauten, getesteten Kern.
+  -->
+  <Target Name="CopyToUnity" AfterTargets="Build"
+          Condition="'$(TargetFramework)' == 'netstandard2.1' And Exists('$(MSBuildThisFileDirectory)Unity/Assets')">
+    <MakeDir Directories="$(MSBuildThisFileDirectory)Unity/Assets/Plugins/MonsterClinic" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(MSBuildThisFileDirectory)Unity/Assets/Plugins/MonsterClinic" SkipUnchangedFiles="true" />
+  </Target>
+</Project>

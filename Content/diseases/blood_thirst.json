@@ -1,0 +1,9 @@
+{
+  "id": "disease.blood_thirst",
+  "formatVersion": 1,
+  "placeholder": true,
+  "species": [
+    "species.vampire"
+  ],
+  "_note": "Platzhalter aus Lastenheft Kap. 7.1, Beschreibung folgt vom Auftraggeber"
+}

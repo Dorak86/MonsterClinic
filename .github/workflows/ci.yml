@@ -1,0 +1,29 @@
+# Automatische Pruefung bei jedem Push (Pflichtenheft 1, T0-01).
+# Braucht keine Unity-Lizenz: geprueft werden Kern, Werkzeuge und Inhalte.
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Bauen
+        run: dotnet build MonsterClinic.sln -c Release
+      - name: Inhaltspruefer
+        run: ./Tools/ContentCheck/bin/Release/net8.0/contentcheck --content Content --placeholder-report placeholder-report.md
+      - name: Phase-0-Pruefungen
+        run: ./Tests/phase0-checks.sh
+      - name: Platzhalterbericht ablegen
+        uses: actions/upload-artifact@v4
+        with:
+          name: placeholder-report
+          path: placeholder-report.md

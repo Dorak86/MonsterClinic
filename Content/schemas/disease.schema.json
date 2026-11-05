@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Krankheit",
+  "type": "object",
+  "required": [
+    "id",
+    "formatVersion",
+    "species",
+    "severity",
+    "symptoms",
+    "diagnosis",
+    "treatment",
+    "costClass",
+    "complications"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^disease\\.[a-z0-9_]+$"
+    },
+    "formatVersion": {
+      "const": 1
+    },
+    "placeholder": {
+      "type": "boolean"
+    },
+    "_note": {
+      "type": "string",
+      "description": "Freier Kommentar fuer Autoren, wird vom Spiel ignoriert"
+    },
+    "species": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "x-ref": "species."
+      }
+    },
+    "severity": {
+      "enum": [
+        "light",
+        "medium",
+        "severe"
+      ]
+    },
+    "symptoms": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "visibleOnArrival"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "x-ref": "symptom."
+          },
+          "visibleOnArrival": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "diagnosis": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "procedure",
+          "power"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "procedure": {
+            "type": "string",
+            "x-ref": "procedure."
+          },
+          "power": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Aussagekraft des Verfahrens, Balancing-Wert"
+          }
+        }
+      }
+    },
+    "treatment": {
+      "type": "string",
+      "x-ref": "treatment."
+    },
+    "costClass": {
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "complications": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "x-ref": "complication."
+      }
+    }
+  },
+  "additionalProperties": false,
+  "x-locKeys": [
+    "name",
+    "description"
+  ],
+  "x-placeholderRequired": [
+    "id",
+    "formatVersion",
+    "placeholder",
+    "species"
+  ]
+}

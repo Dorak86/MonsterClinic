@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Komplikation",
+  "type": "object",
+  "required": [
+    "id",
+    "formatVersion",
+    "trigger",
+    "effect"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^complication\\.[a-z0-9_]+$"
+    },
+    "formatVersion": {
+      "const": 1
+    },
+    "placeholder": {
+      "type": "boolean"
+    },
+    "_note": {
+      "type": "string",
+      "description": "Freier Kommentar fuer Autoren, wird vom Spiel ignoriert"
+    },
+    "trigger": {
+      "enum": [
+        "waiting_or_failed_treatment",
+        "untreated_progression",
+        "failed_treatment"
+      ]
+    },
+    "effect": {
+      "enum": [
+        "permanent_uncured",
+        "emergency",
+        "extra_damage_and_mess",
+        "death"
+      ]
+    },
+    "permanentChance": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    }
+  },
+  "additionalProperties": false,
+  "x-locKeys": [
+    "name"
+  ],
+  "x-placeholderRequired": [
+    "id",
+    "formatVersion",
+    "placeholder",
+    "effect"
+  ]
+}

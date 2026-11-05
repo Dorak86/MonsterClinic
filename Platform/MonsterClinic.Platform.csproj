@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Plattformdienste fuer Spiel und Werkzeuge: Dateilog, Absturzbericht, Speicherpfade -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <RootNamespace>MonsterClinic.Platform</RootNamespace>
+    <AssemblyName>MonsterClinic.Platform</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Sim/MonsterClinic.Sim.csproj" />
+  </ItemGroup>
+</Project>

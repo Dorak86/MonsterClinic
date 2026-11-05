@@ -1,0 +1,8 @@
+{
+  "id": "treatment.blood_transfusion",
+  "formatVersion": 1,
+  "specialization": "none",
+  "consumes": [
+    "item.blood_bag"
+  ]
+}

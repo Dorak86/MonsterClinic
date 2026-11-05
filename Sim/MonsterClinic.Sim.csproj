@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Simulationskern: keine Unity-Referenz, keine Fremdpakete (Pflichtenheft 1, Regel 1) -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <RootNamespace>MonsterClinic.Sim</RootNamespace>
+    <AssemblyName>MonsterClinic.Sim</AssemblyName>
+  </PropertyGroup>
+</Project>

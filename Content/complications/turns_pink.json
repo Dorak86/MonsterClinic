@@ -1,0 +1,7 @@
+{
+  "id": "complication.turns_pink",
+  "formatVersion": 1,
+  "placeholder": true,
+  "effect": "permanent_uncured",
+  "_note": "Wird pink, kann dauerhaft werden, dann nicht geheilt. Ausloeser offen (Vorschlag: lange Wartezeit oder misslungene Behandlung)"
+}

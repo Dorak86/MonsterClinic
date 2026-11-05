@@ -1,0 +1,10 @@
+{
+  "id": "species.ghost",
+  "formatVersion": 1,
+  "sizeClass": "1x1",
+  "activity": "night",
+  "needs": [
+    "magic_stability",
+    "material_anchoring"
+  ]
+}

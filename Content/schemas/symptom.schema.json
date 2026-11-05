@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Symptom",
+  "type": "object",
+  "required": [
+    "id",
+    "formatVersion"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^symptom\\.[a-z0-9_]+$"
+    },
+    "formatVersion": {
+      "const": 1
+    },
+    "placeholder": {
+      "type": "boolean"
+    },
+    "_note": {
+      "type": "string",
+      "description": "Freier Kommentar fuer Autoren, wird vom Spiel ignoriert"
+    }
+  },
+  "additionalProperties": false,
+  "x-locKeys": [
+    "name"
+  ]
+}

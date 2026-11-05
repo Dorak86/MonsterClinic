@@ -1,0 +1,26 @@
+{
+  "id": "disease.balloon_bloating",
+  "formatVersion": 1,
+  "species": [
+    "species.ghost"
+  ],
+  "severity": "medium",
+  "symptoms": [
+    {
+      "id": "symptom.balloon_shape",
+      "visibleOnArrival": true
+    }
+  ],
+  "diagnosis": [
+    {
+      "procedure": "procedure.body_scan",
+      "power": 0.7
+    }
+  ],
+  "treatment": "treatment.deflate",
+  "costClass": "medium",
+  "complications": [
+    "complication.bursts"
+  ],
+  "_note": "Vom Auftraggeber beschrieben. Dauer und Zahlenwerte folgen im Balancing."
+}

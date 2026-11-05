@@ -1,0 +1,30 @@
+{
+  "id": "disease.goblin_depression",
+  "formatVersion": 1,
+  "species": [
+    "species.goblin"
+  ],
+  "severity": "medium",
+  "symptoms": [
+    {
+      "id": "symptom.love_hearts",
+      "visibleOnArrival": true
+    },
+    {
+      "id": "symptom.missing_rage",
+      "visibleOnArrival": false
+    }
+  ],
+  "diagnosis": [
+    {
+      "procedure": "procedure.visual_exam",
+      "power": 0.7
+    }
+  ],
+  "treatment": "treatment.talk_and_nose_punch",
+  "costClass": "low",
+  "complications": [
+    "complication.turns_pink"
+  ],
+  "_note": "Vom Auftraggeber beschrieben. Dauer und Zahlenwerte folgen im Balancing."
+}

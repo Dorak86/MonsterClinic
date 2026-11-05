@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Inhaltspruefer (Pflichtenheft 4). Nutzt nur System.Text.Json aus .NET 8, keine Fremdpakete. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>MonsterClinic.ContentCheck</RootNamespace>
+    <AssemblyName>contentcheck</AssemblyName>
+  </PropertyGroup>
+</Project>

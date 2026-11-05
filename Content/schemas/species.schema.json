@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Spezies",
+  "type": "object",
+  "required": [
+    "id",
+    "formatVersion",
+    "sizeClass",
+    "activity",
+    "needs"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^species\\.[a-z0-9_]+$"
+    },
+    "formatVersion": {
+      "const": 1
+    },
+    "placeholder": {
+      "type": "boolean"
+    },
+    "_note": {
+      "type": "string",
+      "description": "Freier Kommentar fuer Autoren, wird vom Spiel ignoriert"
+    },
+    "sizeClass": {
+      "enum": [
+        "1x1",
+        "2x2"
+      ]
+    },
+    "activity": {
+      "enum": [
+        "night",
+        "day"
+      ],
+      "description": "Kreatur der Nacht oder des Tages (D-05)"
+    },
+    "needs": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "darkness",
+          "blood_supply",
+          "cooling",
+          "hygiene",
+          "spare_parts",
+          "magic_stability",
+          "material_anchoring",
+          "robust_equipment",
+          "heat_resistance",
+          "large_space"
+        ]
+      }
+    }
+  },
+  "additionalProperties": false,
+  "x-locKeys": [
+    "name"
+  ]
+}

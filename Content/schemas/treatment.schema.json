@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Behandlung",
+  "type": "object",
+  "required": [
+    "id",
+    "formatVersion",
+    "specialization"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^treatment\\.[a-z0-9_]+$"
+    },
+    "formatVersion": {
+      "const": 1
+    },
+    "placeholder": {
+      "type": "boolean"
+    },
+    "_note": {
+      "type": "string",
+      "description": "Freier Kommentar fuer Autoren, wird vom Spiel ignoriert"
+    },
+    "specialization": {
+      "type": "string",
+      "enum": [
+        "none",
+        "dermatologist",
+        "radiologist",
+        "surgeon"
+      ],
+      "description": "Benoetigte Spezialisierung des Monsterarztes (D-09)"
+    },
+    "consumes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^item\\.[a-z0-9_]+$"
+      },
+      "description": "Verbrauchsmaterial; Gegenstaende werden in Phase 5 als eigene Inhalte angelegt"
+    }
+  },
+  "additionalProperties": false,
+  "x-locKeys": [
+    "name"
+  ]
+}

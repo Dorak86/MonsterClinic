@@ -1,0 +1,23 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+.idea/
+
+# Unity
+Unity/[Ll]ibrary/
+Unity/[Tt]emp/
+Unity/[Oo]bj/
+Unity/[Bb]uild/
+Unity/[Bb]uilds/
+Unity/[Ll]ogs/
+Unity/[Uu]ser[Ss]ettings/
+Unity/*.csproj
+Unity/*.sln
+# Vom Build kopierte Kern-Bibliotheken werden nicht eingecheckt
+Unity/Assets/Plugins/MonsterClinic/*.dll
+Unity/Assets/Plugins/MonsterClinic/*.pdb
+
+# Erzeugte Berichte
+placeholder-report.md

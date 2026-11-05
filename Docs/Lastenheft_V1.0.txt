@@ -1,0 +1,859 @@
+THE MONSTER CLINIC LASTENHEFT – VERBINDLICHE PRODUKTGRUNDLAGE Version
+1.0
+
+Arbeitstitel: THE MONSTER CLINIC Untertitel: A Monster Hospital
+Management Simulator Leitmotiv: „Wir retten Leben. Meistens jedenfalls.“
+
+============================================================ 1. ZWECK
+UND GELTUNGSBEREICH
+============================================================
+
+Dieses Lastenheft definiert die verbindlichen Produktanforderungen an
+THE MONSTER CLINIC. Es ist die zentrale Grundlage für Konzeption,
+Programmierung, Gestaltung, Qualitätssicherung und spätere
+Erweiterungen.
+
+Das Dokument beschreibt, WAS das Spiel leisten und enthalten muss. Die
+technische Umsetzung (WIE) wird in einem nachgelagerten technischen
+Pflichtenheft festgelegt.
+
+VERBINDLICHE REGELN
+
+1.  Dieses Lastenheft ist die maßgebliche Produktgrundlage.
+2.  Keine Kernfunktion darf ohne ausdrückliche Freigabe des
+    Auftraggebers entfernt, verändert oder durch eine vereinfachte
+    Alternative ersetzt werden.
+3.  Neue Funktionen dürfen nur ergänzt werden, wenn sie mit dem
+    bestehenden Konzept vereinbar sind.
+4.  Bereits funktionierende Systeme dürfen bei Änderungen nicht
+    unbeabsichtigt beschädigt werden.
+5.  Vor größeren Änderungen sind Auswirkungen und Abhängigkeiten zu
+    prüfen.
+6.  Platzhalterfunktionen dürfen nicht als fertige Funktionen ausgegeben
+    werden.
+7.  Nicht implementierte Funktionen und bekannte Einschränkungen müssen
+    ausdrücklich gekennzeichnet werden.
+8.  Bei widersprüchlichen Anforderungen muss die KI nachfragen, statt
+    grundlegende Designentscheidungen selbstständig zu treffen.
+9.  Technische Entscheidungen dürfen die festgelegten Spielmechaniken
+    nicht eigenmächtig verändern.
+10. Stabilität und Spielbarkeit haben Vorrang vor zusätzlichen
+    Funktionen.
+
+Ziel ist ein vollständiges, stabiles, erweiterbares und perspektivisch
+kommerziell veröffentlichbares Computerspiel – nicht lediglich ein
+optisch überzeugender Prototyp.
+
+============================================================ 2.
+PRODUKTVISION UND SPIELIDEE
+============================================================
+
+2.1 Ausgangssituation
+
+Der Spieler übernimmt eine heruntergekommene Klinik in einer
+fantastischen Unterwelt. Die Einrichtung ist finanziell angeschlagen,
+das Personal überfordert, die medizinische Ausstattung veraltet und der
+Ruf der Klinik miserabel.
+
+Die Bevölkerung der Unterwelt besteht aus fantastischen Kreaturen wie
+Drachen, Vampiren, Zombies, Geistern, Trollen, Dämonen und weiteren
+Wesen. Diese Kreaturen benötigen medizinische Versorgung, besitzen
+jedoch unterschiedliche Körper, Bedürfnisse und Krankheiten.
+
+Beispiele: - Ein Drache leidet an einer entzündeten Feuerdrüse. - Ein
+Vampir hat eine chronische Blutunterversorgung. - Ein Geist verliert
+zunehmend seine materielle Existenz. - Ein Zombie leidet unter
+beschleunigter Verwesung.
+
+Der Spieler baut aus einer heruntergekommenen Einrichtung eine
+erfolgreiche medizinische Institution auf. Dafür müssen medizinische
+Qualität, Personalführung, Wirtschaftlichkeit, Forschung und
+Patientenversorgung miteinander verbunden werden.
+
+2.2 Zentrale Spielerfantasie
+
+Der Spieler soll: - eine eigene Klinik aufbauen und gestalten, - ein
+komplexes Unternehmen führen, - medizinische Probleme lösen, - Personal
+einstellen und weiterentwickeln, - Räume planen und Infrastruktur
+optimieren, - neue Behandlungsmethoden erforschen, - wirtschaftliche
+Krisen und unerwartete Ereignisse bewältigen, - eine eigene Klinikmarke
+aufbauen, - sich gegen konkurrierende Einrichtungen durchsetzen.
+
+Die Klinik muss jederzeit sichtbar und lebendig sein. Der Spieler
+verwaltet nicht nur Zahlen, sondern beobachtet eine dynamische
+Spielwelt.
+
+2.3 Genre und Abgrenzung
+
+Genre: Hospital Management / Tycoon / Simulation / Comedy.
+
+Das Spiel ist ausdrücklich: - kein reines Aufbauspiel ohne Management, -
+kein klassischer Dungeon Crawler, - kein Rollenspiel mit steuerbarem
+Hauptcharakter, - kein Tower Defense, - keine reine
+Wirtschaftssimulation ohne sichtbare Spielwelt, - kein gewöhnliches
+Krankenhausspiel mit lediglich ausgetauschten Patientenmodellen.
+
+Der Kern ist die Kombination aus Fantasy-Medizin, Krankenhausmanagement,
+Wirtschaftssimulation und schwarzem Humor.
+
+============================================================ 3.
+PRODUKTPARAMETER UND ZIELPLATTFORM
+============================================================
+
+-   Plattform: Windows-PC; weitere Plattformen später prüfbar.
+-   Vertrieb: Steam als primäre Plattform.
+-   Spielmodus: Einzelspieler.
+-   Perspektive: isometrisch.
+-   Darstellung: 2.5D mit handgemalter 2D-Optik.
+-   Steuerung: Maus und Tastatur.
+-   Auflösung: dynamisch skalierbare Benutzeroberfläche.
+-   Sprachen: Deutsch und Englisch.
+-   Spielstände: lokal.
+-   Offlinebetrieb: vollständig ohne Internetverbindung spielbar.
+-   Modding: nicht Bestandteil der ersten Veröffentlichung.
+
+Die Game Engine und Programmiersprache dürfen technisch begründet
+ausgewählt werden. Sie müssen Simulation, Darstellung, Erweiterbarkeit
+und Performance unterstützen. Die Engine darf nicht allein deshalb
+gewählt werden, weil sich damit schneller ein einfacher Prototyp
+erstellen lässt.
+
+============================================================ 4.
+KERN-GAMEPLAY UND SPIELSCHLEIFE
+============================================================
+
+4.1 Zentrale Spielschleife
+
+Die folgenden Prozesse müssen funktional miteinander verbunden sein:
+
+1.  Patienten kommen an.
+2.  Anmeldung und Aufnahme.
+3.  Untersuchung und Diagnose.
+4.  Behandlung.
+5.  Abrechnung und Bewertung.
+6.  Investition und Weiterentwicklung der Klinik.
+7.  Der Kreislauf beginnt erneut.
+
+Alle Schritte müssen tatsächlich simuliert werden. Ein Patient darf
+beispielsweise nicht automatisch geheilt werden, nur weil er einen
+Behandlungsraum betritt.
+
+Der Behandlungserfolg muss von Diagnose, Personalqualifikation,
+Ausstattung und Patientenstatus abhängen.
+
+4.2 Spielgeschwindigkeit
+
+Das Spiel benötigt: - Pause, - normale Geschwindigkeit, - erhöhte
+Geschwindigkeit, - eine innerhalb sinnvoller Grenzen einstellbare
+Simulationsgeschwindigkeit.
+
+Während der Pause müssen Bau-, Planungs- und Verwaltungsfunktionen
+weiterhin nutzbar sein.
+
+============================================================ 5.
+KLINIKMANAGEMENT UND BAUSYSTEM
+============================================================
+
+5.1 Gebäude und Grundstück
+
+Der Spieler verwaltet eine Klinik auf einem modular erweiterbaren
+Grundstück. Die Klinik besteht aus Räumen, Fluren, Einrichtungen und
+technischen Anlagen.
+
+Verbindliche Anforderungen: - isometrisches Konstruktionssystem, -
+rasterbasierte Raumplanung, - Räume frei platzierbar und veränderbar, -
+korrekte Darstellung von Wänden, Türen und Raumgrenzen, - Räume müssen
+miteinander verbunden sein, - Patienten und Mitarbeiter müssen Räume
+erreichen können, - Räume besitzen Mindestgrößen, - Räume müssen
+Ausstattungsvoraussetzungen erfüllen, - Gebäudeerweiterungen müssen
+möglich sein, - Umbau und Abriss müssen möglich sein, - Baukosten
+fließen in die Wirtschaftssimulation ein.
+
+Die Gebäudeplanung ist nicht nur dekorativ. Raumgrößen, Wege, Türen und
+Ausstattung müssen tatsächliche Auswirkungen auf den Klinikbetrieb
+haben.
+
+5.2 Raumtypen
+
+Verwaltung: - Empfang, - Anmeldung, - Kasse, - Personalbüro, -
+Geschäftsleitung, - Archiv.
+
+Diagnostik: - Untersuchungszimmer, - Röntgen, - Magielabor, -
+Seelenanalyse, - Probenlabor, - Quarantäne.
+
+Behandlung: - Operationssaal, - Verbrennungsstation, -
+Flügelrekonstruktion, - Fluchtheilung, - Wiederbelebung, -
+Seelenreparatur.
+
+Versorgung: - Wartezimmer, - Toiletten, - Kantine, - Ruheraum, -
+Patientenzimmer, - Klinikshop, - Snackautomaten.
+
+Personal und Forschung: - Personalraum, - Schulungsraum, -
+Forschungslabor, - Medikamentenherstellung, - Lager, - Technikraum.
+
+Weitere Räume können im Verlauf der Kampagne freigeschaltet werden.
+
+5.3 Raumqualität
+
+Jeder Raum besitzt mindestens folgende Eigenschaften: - Raumgröße, -
+Ausstattung, - Sauberkeit, - Komfort, - Funktionalität, - Kapazität, -
+Betriebskosten, - Erreichbarkeit.
+
+Die Raumqualität beeinflusst Arbeitsgeschwindigkeit,
+Patientenzufriedenheit und Behandlungseffizienz.
+
+============================================================ 6.
+PATIENTENSYSTEM
+============================================================
+
+6.1 Eigenständige Patienten
+
+Jeder Patient muss als eigenständige Spieleinheit simuliert werden und
+mindestens folgende Daten besitzen: - individuelle ID, - Spezies, -
+Name, - Alter, - Persönlichkeit, - Krankheitsbild, - Symptome, -
+Gesundheitszustand, - Schweregrad, - Geduld, - Zufriedenheit, -
+Zahlungsfähigkeit, - besondere Bedürfnisse, - aktueller
+Aufenthaltsort, - Behandlungsstatus.
+
+Patienten dürfen nicht nur zufällige Figuren sein, die eine feste
+Animation abspielen. Sie müssen auf die Spielwelt reagieren.
+
+6.2 Patientenverhalten
+
+Patienten müssen: - die Klinik betreten und verlassen können, - sich
+anmelden, - auf Untersuchungen warten, - Räume selbstständig
+aufsuchen, - mit anderen Patienten interagieren können, - auf lange
+Wartezeiten reagieren, - unzufrieden werden können, - Behandlungen
+ablehnen können, - bei kritischem Gesundheitszustand besondere Abläufe
+auslösen, - die Klinik nach erfolgreicher oder abgebrochener Behandlung
+verlassen.
+
+Ein Patient darf die Klinik verlassen, wenn seine Geduld erschöpft ist.
+Dies wirkt sich auf Reputation und Einnahmen aus.
+
+6.3 Speziesabhängige Bedürfnisse
+
+Beispiele: - Drache: hitzebeständige Räume und große Bewegungsflächen. -
+Vampir: Dunkelheit und Blutversorgung. - Zombie: Kühlung, Hygiene und
+Ersatzkörperteile. - Geist: magische Stabilisierung und materielle
+Verankerung. - Troll: robuste Ausstattung und spezielle
+Untersuchungsgeräte.
+
+Diese Bedürfnisse müssen Planung und Betrieb der Klinik beeinflussen.
+
+============================================================ 7. SPEZIES
+UND KRANKHEITEN
+============================================================
+
+7.1 Start-Spezies
+
+Die erste vollständige Spielversion muss mindestens fünf Spezies
+enthalten:
+
+Drachen: - Feuerdrüsenentzündung, - Schuppenfäule, - Flügelbruch.
+Besonderheiten: Hitzeentwicklung, Feuerstöße, hoher Platzbedarf.
+
+Vampire: - Blutarmut, - Sonnenlichtallergie, - Blutdurst.
+Besonderheiten: Blutversorgung, Lichtempfindlichkeit, Nachtaktivität.
+
+Zombies: - Verwesungsbeschleunigung, - Gliederverlust, -
+Gedächtnisverfall. Besonderheiten: Kühlung, Körperteile, Hygiene.
+
+Geister: - Identitätsverlust, - materielle Instabilität, -
+Seelenflimmern. Besonderheiten: magische Stabilisierung, eingeschränkte
+Interaktion mit Gegenständen.
+
+Trolle: - Steinwucherungen, - Knochenverhärtung, - Moosbefall.
+Besonderheiten: robuste Ausstattung, spezielle Untersuchungsmethoden.
+
+7.2 Krankheitsdatensätze
+
+Jede Krankheit benötigt: - Bezeichnung, - Beschreibung, - betroffene
+Spezies, - Symptome, - Schweregrad, - Diagnoseverfahren, -
+Behandlungsmethode, - Behandlungsdauer, - Behandlungskosten, -
+Erfolgsvoraussetzungen, - mögliche Komplikationen.
+
+Mindestens zehn unterschiedliche Krankheiten müssen in der ersten
+spielbaren Grundversion vorhanden sein.
+
+7.3 Diagnoseprozess
+
+Der Diagnoseprozess ist mehrstufig: 1. Patient wird aufgenommen. 2.
+Symptome werden sichtbar. 3. Erste Untersuchung findet statt. 4. Arzt
+ermittelt mögliche Diagnosen. 5. Zusätzliche Untersuchungen können
+erforderlich sein. 6. Diagnose wird gestellt. 7. Passende Behandlung
+wird eingeleitet.
+
+Falsche Diagnosen müssen Konsequenzen haben können. Die Diagnose darf
+nicht immer sofort eindeutig sein. Das Spiel ermöglicht einen
+spielerischen medizinischen Entscheidungsprozess; es soll keine komplexe
+reale medizinische Fachsimulation werden.
+
+============================================================ 8.
+MEDIZINISCHE BEHANDLUNG
+============================================================
+
+Behandlungen müssen an die jeweilige Krankheit gekoppelt sein.
+
+Beispiel: Ein Drache kommt mit Husten, Rauchentwicklung und Fieber in
+die Klinik. Mögliche Diagnosen sind Feuerdrüsenentzündung, magische
+Atemwegsinfektion oder Schuppenfäule mit Sekundärinfektion.
+
+Die richtige Behandlung hängt von der Diagnose ab.
+
+Ein falscher Behandlungsversuch kann: - Geld kosten, - den Zustand des
+Patienten verschlechtern, - zusätzliche Behandlungen erforderlich
+machen, - die Patientenzufriedenheit senken, - die Reputation
+beeinträchtigen.
+
+Der Behandlungserfolg wird beeinflusst durch: - Richtigkeit der
+Diagnose, - Qualifikation des Personals, - Qualität der Ausstattung, -
+Zustand des Patienten, - Verfügbarkeit von Medikamenten, - Raumqualität.
+
+============================================================ 9.
+PERSONALMANAGEMENT
+============================================================
+
+9.1 Berufsgruppen
+
+Mindestens folgende Berufsgruppen werden benötigt: - Ärzte, -
+Chirurgen, - Pflegepersonal, - Laborpersonal, - Reinigungskräfte, -
+Techniker, - Verwaltungspersonal, - Sicherheitspersonal.
+
+Nicht alle Berufsgruppen müssen von Beginn an verfügbar sein.
+
+9.2 Mitarbeiterattribute
+
+Jeder Mitarbeiter besitzt: - Name, - Spezies, - Beruf, -
+Qualifikation, - Erfahrung, - Arbeitstempo, - Belastbarkeit, -
+Motivation, - Gehaltsforderung, - Spezialisierungen, -
+Persönlichkeitsmerkmale.
+
+9.3 Persönlichkeitssystem
+
+Beispiele: - Vampirarzt: besonders leistungsfähig während der Nacht. -
+Zombiepfleger: langsam, aber äußerst belastbar. - Dämonenchirurgin:
+hervorragend qualifiziert, verursacht gelegentlich Sachschäden. -
+Trolltechniker: körperlich stark, aber wenig präzise.
+
+Persönlichkeiten müssen sich tatsächlich auf das Verhalten auswirken.
+
+9.4 Mitarbeiterentwicklung
+
+Erforderliche Funktionen: - Einstellung, - Entlassung, -
+Gehaltsverwaltung, - Weiterbildung, - Beförderung, - Spezialisierung, -
+Pausenmanagement, - Arbeitsbelastung, - Motivation, - Kündigungen, -
+Krankmeldungen.
+
+Eine automatische Aufgabenverteilung muss vorhanden sein. Der Spieler
+soll nicht jede Bewegung eines Mitarbeiters manuell steuern müssen.
+
+============================================================ 10.
+WIRTSCHAFTSSIMULATION
+============================================================
+
+Die Wirtschaftssimulation ist ein zentrales Spielelement. Sie muss eine
+nachvollziehbare und konsistente Buchhaltung besitzen.
+
+10.1 Einnahmen - Untersuchungen, - Behandlungen, - Operationen, -
+Medikamentenverkauf, - Privatpatienten, - Versicherungsverträge, -
+Forschungsaufträge, - Sponsoring.
+
+10.2 Ausgaben - Gehälter, - Medikamenteneinkauf, - Verbrauchsmaterial, -
+Energie, - Reparaturen, - Lebensmittel, - Forschung, - Baukosten, -
+Werbung, - Gebäudekosten.
+
+10.3 Zentrale Kennzahlen
+
+Der Spieler muss jederzeit erkennen können: - Kontostand, - Umsatz
+innerhalb eines Zeitraums, - laufende Betriebskosten, - Gewinn oder
+Verlust, - Reputation, - Patientenzufriedenheit, -
+Mitarbeiterzufriedenheit.
+
+Es muss eine nachvollziehbare Finanzübersicht geben. Der Spieler muss
+erkennen können, warum er Geld verdient oder verliert.
+
+10.4 Wirtschaftliche Konsequenzen
+
+Mögliche Folgen schlechter Wirtschaftlichkeit: - Zahlungsunfähigkeit, -
+Kreditaufnahme, - Investitionsstopp, - Gehaltsprobleme, -
+Mitarbeiterkündigungen, - Einschränkungen im Betrieb, - Schließung
+einzelner Abteilungen.
+
+Wirtschaftlicher Misserfolg darf nicht zufällig entstehen, sondern muss
+aus nachvollziehbaren Entscheidungen und Ereignissen resultieren.
+
+============================================================ 11.
+FORSCHUNG UND ENTWICKLUNG
+============================================================
+
+Die Forschung ist ein langfristiges Progressionssystem mit vier
+Bereichen:
+
+1.  Monsterbiologie: neue Spezies und Krankheitsbilder.
+2.  Medizinische Technik: neue Geräte und Behandlungsmethoden.
+3.  Magische Medizin: Fluchheilung und Seelenbehandlung.
+4.  Betriebsmanagement: Effizienz, Personal und Wirtschaft.
+
+Forschung kostet Ressourcen und benötigt Zeit. Forschungsergebnisse
+müssen neue Funktionen freischalten.
+
+Beispiel: Forschungslabor bauen -> Diagnoseverfahren erforschen ->
+Untersuchungsgerät freischalten -> neue Krankheiten diagnostizieren ->
+neue Behandlungen anbieten.
+
+Ein Forschungsbaum muss grafisch dargestellt werden.
+
+============================================================ 12.
+KONKURRENZSYSTEM
+============================================================
+
+Die Unterwelt besitzt weitere medizinische Einrichtungen, zum
+Beispiel: - königliches Drachenhospital, - Vampir-Privatklinik, -
+günstige Zombie-Gesundheitsstation, - geheimes Dämonenforschungslabor.
+
+Die Konkurrenz wird zunächst durch ein simuliertes Wirtschaftssystem
+abgebildet.
+
+Konkurrenten können: - Preise verändern, - Werbung betreiben, - Personal
+abwerben, - neue Behandlungsmethoden entwickeln, - Reputation gewinnen
+oder verlieren, - Marktanteile beeinflussen.
+
+Die Konkurrenz muss eine tatsächliche wirtschaftliche Bedeutung haben.
+Für die erste vollständige Veröffentlichung ist keine vollständig
+simulierte, begehbare Konkurrenzklinik erforderlich.
+
+============================================================ 13.
+EREIGNIS- UND ZUFALLSSYSTEM
+============================================================
+
+Das Spiel benötigt ein dynamisches Ereignissystem. Ereignisse dürfen
+nicht nur zufällig eingeblendete Textmeldungen sein, sondern müssen den
+Klinikbetrieb beeinflussen.
+
+Verbindliche Beispiele: - Drachenwoche: erhöhtes Patientenaufkommen. -
+Poltergeist-Ausbruch: Störungen und beschädigte Einrichtungen. -
+Zombie-Grippe: Quarantäne und Personalbelastung. - Besuch des
+Vampirfürsten: VIP-Patient und Medieninteresse. - Stromausfall:
+Geräteausfälle und Behandlungsausfälle. - Medikamentenknappheit:
+eingeschränkte Behandlungen. - Mitarbeiterstreik: Einschränkungen des
+Klinikbetriebs. - Patientenverwechslung: falsche Behandlung und
+Beschwerden. - Drache legt Ei im Wartezimmer: unvorhergesehene
+Situation. - Dämon verklagt die Klinik: finanzielle und reputative
+Konsequenzen.
+
+Ereignisse müssen von der Spielsituation abhängig sein können. Ein
+Stromausfall muss beispielsweise Auswirkungen auf Geräte haben, die
+Strom benötigen.
+
+============================================================ 14.
+KAMPAGNE UND SPIELWELT
+============================================================
+
+14.1 Zusammenhängende Unterwelt
+
+Das Spiel findet in einer zusammenhängenden fantastischen Unterwelt
+statt. Diese besteht aus mehreren Regionen und Klinikstandorten. Jeder
+Standort bietet neue wirtschaftliche, medizinische und infrastrukturelle
+Herausforderungen.
+
+Beispielregionen: - verfallene Vorstadtklinik, - Vulkanregion mit vielen
+Drachenpatienten, - dunkles Vampirviertel, - verlassene Nekropole, -
+magische Geisterstadt.
+
+Die Regionen werden im Verlauf der Kampagne freigeschaltet.
+
+14.2 Kampagnenstruktur
+
+Kapitel 1 – Die alte Klinik: - grundlegendes Bausystem, -
+Patientenaufnahme, - erste Krankheiten, - Personal einstellen, -
+Wirtschaft verstehen, - Klinik stabilisieren.
+
+Kapitel 2 – Die Spezialklinik: - neue Spezies, - komplexere Diagnosen, -
+Forschung, - Konkurrenz, - spezialisierte Räume, - neue wirtschaftliche
+Herausforderungen.
+
+Kapitel 3 – Das medizinische Imperium: - große Klinik, - mehrere
+Abteilungen, - anspruchsvolle Patienten, - fortgeschrittene Forschung, -
+mehrere Klinikstandorte, - wirtschaftliche und strategische
+Entscheidungen.
+
+14.3 Sandbox
+
+Der Sandbox-Modus muss bieten: - freies Bauen, - freie Standortwahl, -
+einstellbare Startbedingungen, - einstellbaren Schwierigkeitsgrad, -
+wahlweise deaktivierte wirtschaftliche Einschränkungen, - freie
+Gestaltung der Klinik.
+
+============================================================ 15.
+BENUTZEROBERFLÄCHE UND BEDIENBARKEIT
+============================================================
+
+Die isometrische Klinik bleibt der zentrale Bildschirmbereich.
+
+Erforderliche Menüs: 1. Hauptmenü. 2. Klinikübersicht. 3. Baumenü. 4.
+Raumverwaltung. 5. Personalverwaltung. 6. Patientenverwaltung. 7.
+Medizinische Übersicht. 8. Forschungsmenü. 9. Wirtschaftsübersicht. 10.
+Ereignisübersicht. 11. Kampagnenübersicht. 12. Einstellungen.
+
+15.1 Informationsdarstellung
+
+Der Spieler muss wichtige Informationen direkt erkennen können: -
+Patienten mit kritischem Zustand, - Räume mit fehlender Ausstattung, -
+überlastete Mitarbeiter, - lange Warteschlangen, - fehlende
+Medikamente, - finanzielle Probleme, - nicht funktionierende Geräte.
+
+Die Benutzeroberfläche muss kontextabhängig sein. Bei Auswahl eines
+Raums erscheinen dessen relevante Informationen. Bei Auswahl eines
+Mitarbeiters erscheinen dessen persönliche Daten und Arbeitsstatus.
+
+15.2 Bedienbarkeit
+
+Verbindlich: - intuitive Maussteuerung, - Kontextmenüs, - Tooltips, -
+klare Symbole, - verständliche Fehlermeldungen, - übersichtliche
+Statistiken, - einstellbare Kameraposition, - Zoomfunktion, -
+Kameraverschiebung, - Schnellzugriffe für häufige Aktionen.
+
+============================================================ 16. GRAFIK,
+ANIMATION UND AUDIO
+============================================================
+
+16.1 Art Direction
+
+Die grafische Gestaltung orientiert sich an: - Gothic Whimsy, - Dark
+Storybook, - viktorianischer Architektur, - grotesker Fantasy, -
+handgemalter Spielgrafik.
+
+Die Spielwelt soll düster, aber nicht depressiv wirken. Sie benötigt
+eine klare visuelle Identität.
+
+16.2 Verbindliche grafische Regeln
+
+-   Keine beliebige Mischung unterschiedlicher Grafikstile.
+-   Keine zufällig zusammengewürfelten Raumobjekte.
+-   Einheitliche Perspektive.
+-   Einheitliche Licht- und Schattenlogik.
+-   Wiedererkennbare Farbpalette.
+-   Klare Silhouetten.
+-   Gute Lesbarkeit bei herausgezoomter Kamera.
+-   Visuelle Unterscheidbarkeit der Spezies.
+-   Wiedererkennbare Raumtypen.
+
+Die Klinik muss auch in der Gesamtansicht sofort als solche erkennbar
+sein.
+
+16.3 Animationen
+
+Erforderliche Animationen: - Gehen, - Warten, - Sitzen, - Arbeiten, -
+Untersuchen, - Behandeln, - Operieren, - Essen, - Schlafen, -
+Reagieren, - Verletzungen und Krankheitssymptome, - spezies-spezifische
+Bewegungen.
+
+Die Animationen müssen zur handgemalten 2.5D-Optik passen.
+
+16.4 Audio
+
+Das Spiel benötigt: - atmosphärische Hintergrundmusik, -
+Klinikgeräusche, - Maschinen- und Geräteklänge, - Patientenreaktionen, -
+Personalgeräusche, - Ereignis-Sounds, - Menü- und Interaktionssounds.
+
+============================================================ 17.
+TECHNISCHE QUALITÄTSANFORDERUNGEN
+============================================================
+
+17.1 Softwarequalität
+
+Die Software muss: - modular aufgebaut sein, - erweiterbar sein, -
+wartbaren Code besitzen, - klare Zuständigkeiten zwischen Systemen
+aufweisen, - Fehler nachvollziehbar protokollieren, - Daten und
+Spiellogik möglichst getrennt halten, - unnötige Abhängigkeiten
+vermeiden, - wiederverwendbare Komponenten enthalten.
+
+17.2 Performance
+
+Zielwerte auf einer vorher definierten Referenzhardware: - Zielbildrate:
+60 FPS bei typischer Spielsituation. - Untergrenze: 30 FPS bei hoher
+Auslastung. - Spielstand laden: möglichst unter 10 Sekunden. -
+Spielstand speichern: ohne spürbare Unterbrechung. - Keine
+reproduzierbaren Abstürze im freigegebenen Build.
+
+Die Werte sind Entwicklungsziele und müssen anhand einer festgelegten
+Referenzhardware überprüft werden.
+
+17.3 Speichersystem
+
+Das Spiel benötigt ein zuverlässiges Speichersystem. Gespeichert werden
+müssen: - Gebäude, - Räume, - Einrichtungen, - Personal, - Patienten, -
+Krankheiten, - Forschung, - Finanzen, - Kampagnenfortschritt, -
+Ereignisstatus, - Spieleinstellungen.
+
+Mehrere Speicherstände müssen möglich sein. Automatisches und manuelles
+Speichern sind verpflichtend. Beschädigte Spielstände dürfen nicht
+unbemerkt als erfolgreich geladen behandelt werden.
+
+============================================================ 18. MVP –
+ERSTE VOLLSTÄNDIG SPIELBARE VERSION
+============================================================
+
+Das MVP ist kein abgespecktes Endprodukt, sondern ein funktionierender
+Kern des späteren Spiels.
+
+Verbindlicher MVP-Umfang:
+
+-   1 Klinikgebäude.
+-   3 Spezies.
+-   10 Krankheiten.
+-   8 Räume.
+-   4 Berufsgruppen.
+-   10 Behandlungsgeräte.
+-   einfacher Forschungsbaum.
+-   vollständiger Patientenaufnahme- und Behandlungsprozess.
+-   Wirtschaft mit Einnahmen und Ausgaben.
+-   Personal mit Einstellung und Aufgabenverteilung.
+-   5 Ereignisse.
+-   Speichern und Laden.
+-   keine Konkurrenz.
+-   keine Kampagne.
+
+18.1 Verbindliche MVP-Funktionen
+
+Der MVP ist erst fertig, wenn: - der Spieler eine Klinik bauen kann, -
+Räume erstellt werden können, - Räume eingerichtet werden können, -
+Patienten eigenständig erscheinen, - Patienten sich anmelden, -
+Patienten untersucht werden, - Krankheiten diagnostiziert werden
+können, - Behandlungen durchgeführt werden, - Mitarbeiter ihre Aufgaben
+erledigen, - Patienten für Behandlungen bezahlen, - Einnahmen und
+Ausgaben berechnet werden, - Patienten zufrieden oder unzufrieden sein
+können, - Speichern und Laden funktionieren.
+
+Ein MVP, bei dem Patienten nur durch die Klinik laufen und Zahlen
+angezeigt werden, erfüllt die Anforderungen nicht.
+
+============================================================ 19.
+ENTWICKLUNGSPHASEN UND MEILENSTEINE
+============================================================
+
+Die Entwicklung erfolgt in klar getrennten Phasen.
+
+Phase 1 – Technische Grundlage: Projektstruktur, Engine, Kamera,
+isometrisches Raster, grundlegende Darstellung, Eingabe und
+Spielschleife. Abnahme: stabile, begehbare und bearbeitbare Testkarte.
+
+Phase 2 – Bausystem: Gebäude, Räume, Wände, Türen, Ausstattung und
+Raumvalidierung. Abnahme: Eine Klinik kann vollständig aufgebaut und
+verändert werden.
+
+Phase 3 – Figuren und Navigation: Patienten, Mitarbeiter,
+Bewegungslogik, Wegfindung und Warteschlangen. Abnahme: Alle Figuren
+erreichen vorgesehene Ziele zuverlässig.
+
+Phase 4 – Medizinische Simulation: Krankheiten, Symptome, Diagnosen,
+Untersuchungen und Behandlungen. Abnahme: Ein Patient kann vollständig
+und nachvollziehbar behandelt werden.
+
+Phase 5 – Wirtschaft und Personal: Einnahmen, Ausgaben,
+Mitarbeiterattribute, Personalverwaltung und Zufriedenheit. Abnahme: Die
+Klinik funktioniert als echte Wirtschaftssimulation.
+
+Phase 6 – Inhalte und Progression: Weitere Spezies, Krankheiten, Räume,
+Forschung und Ereignisse. Abnahme: Der MVP-Umfang ist vollständig
+vorhanden.
+
+Phase 7 – Kampagne und Konkurrenz: Standorte, Missionen,
+Wirtschaftskonkurrenz und langfristige Progression. Abnahme: Die
+Kampagne ist von Anfang bis Ende spielbar.
+
+Phase 8 – Qualitätssicherung und Veröffentlichung: Performance,
+Fehlerbehebung, Balancing, Audio, Grafik, Lokalisierung und
+Release-Vorbereitung. Abnahme: stabiler, vollständiger und
+veröffentlichungsfähiger Build.
+
+============================================================ 20.
+ABNAHMEKRITERIEN UND QUALITÄTSKONTROLLE
+============================================================
+
+Eine Phase darf nicht allein deshalb als abgeschlossen markiert werden,
+weil Code geschrieben wurde. Jede Phase benötigt überprüfbare
+Funktionstests.
+
+Beispiel Patientensystem: - Patient erscheint: Patient wird korrekt
+erzeugt. - Patient betritt Klinik: Navigation funktioniert. - Patient
+meldet sich an: Anmeldung wird registriert. - Patient wartet:
+Warteschlange funktioniert. - Patient wird aufgerufen: Zielraum wird
+angesteuert. - Patient wird untersucht: Untersuchung wird
+durchgeführt. - Patient erhält Diagnose: Diagnose wird gespeichert. -
+Patient wird behandelt: Behandlung verändert Gesundheitszustand. -
+Patient bezahlt: Finanzen werden aktualisiert. - Patient verlässt
+Klinik: Patient wird korrekt aus der Simulation entfernt.
+
+Jedes System muss einzeln und im Zusammenspiel getestet werden.
+
+20.1 Regressionstests
+
+Bei jeder Änderung muss geprüft werden, ob bereits funktionierende
+Systeme weiterhin funktionieren.
+
+Beispiel: Bei einer Änderung des Wegfindungssystems müssen mindestens
+Patientenbewegung, Mitarbeiterbewegung, Warteschlangen, Raumzugänge und
+Notfallabläufe erneut getestet werden.
+
+20.2 Fehlerklassifizierung
+
+Kritisch: Spielabsturz, Spielstandverlust oder zentrale Spielfunktion
+defekt.
+
+Hoch: Zentrale Spielmechanik funktioniert nicht korrekt.
+
+Mittel: Einzelne Funktionen sind fehlerhaft.
+
+Niedrig: Optische Fehler oder kleinere Bedienprobleme.
+
+Kritische und hohe Fehler müssen vor Freigabe einer Entwicklungsphase
+behoben werden.
+
+============================================================ 21.
+AUSDRÜCKLICH AUSGESCHLOSSENE FUNKTIONEN
+============================================================
+
+Folgende Funktionen sind zunächst nicht Bestandteil des Produkts: -
+Multiplayer, - Koop-Modus, - Online-Wirtschaftssystem, - PvP, -
+vollständig frei begehbare 3D-Welt, - steuerbarer Hauptcharakter, -
+komplexe Echtzeitkämpfe, - umfangreiches Modding-System, -
+Mobile-Version, - Konsolenversion.
+
+Diese Funktionen dürfen nicht eigenmächtig in die Entwicklung
+aufgenommen werden. Eine spätere Erweiterung ist nur nach ausdrücklicher
+Freigabe zulässig.
+
+============================================================ 22.
+VERBINDLICHE ARBEITSANWEISUNG FÜR DIE CODING-KI
+============================================================
+
+Du bist der leitende Softwarearchitekt, Senior Game Developer, Gameplay
+Programmer, Technical Designer und QA-Verantwortliche für THE MONSTER
+CLINIC.
+
+Das vorliegende Lastenheft ist deine verbindliche Produktgrundlage.
+
+Deine oberste Aufgabe ist die vollständige und stabile Umsetzung des
+definierten Spiels.
+
+Du darfst das Produktkonzept nicht eigenmächtig verändern. Du darfst
+keine Anforderungen stillschweigend entfernen oder vereinfachen. Du
+darfst keine Funktionen als fertig deklarieren, die lediglich simuliert,
+vorgetäuscht oder durch Platzhalter ersetzt wurden.
+
+ARBEITSREGELN
+
+1.  Analysiere zunächst das gesamte Lastenheft.
+2.  Erstelle daraus eine vollständige technische Entwicklungsplanung.
+3.  Identifiziere Abhängigkeiten zwischen allen Spielsystemen.
+4.  Lege eine modulare Softwarearchitektur fest.
+5.  Definiere Datenmodelle und Schnittstellen.
+6.  Entwickle ausschließlich in klar abgegrenzten Entwicklungsphasen.
+7.  Implementiere und teste jedes System vor der Integration weiterer
+    Systeme.
+8.  Führe bei jeder Änderung Regressionstests durch.
+9.  Dokumentiere alle abgeschlossenen Funktionen.
+10. Kennzeichne offene Punkte, technische Schulden und bekannte Fehler.
+11. Sichere funktionierende Zwischenstände.
+12. Vermeide unnötige Neuentwicklungen bereits funktionierender
+    Komponenten.
+
+UMGANG MIT PROBLEMEN
+
+Wenn eine Anforderung technisch nicht umsetzbar ist: - Benenne das
+konkrete Problem. - Identifiziere die betroffenen Anforderungen. -
+Schlage mindestens eine technisch geeignete Lösung vor. - Erläutere
+Auswirkungen auf andere Systeme. - Hole vor einer konzeptionellen
+Änderung die Freigabe des Auftraggebers ein.
+
+UMGANG MIT CODEÄNDERUNGEN
+
+Ändere nicht unnötig funktionierenden Code. Prüfe vor jeder Änderung,
+welche anderen Systeme betroffen sein könnten. Verwende keine
+willkürlichen Platzhalter, wenn eine echte Implementierung gefordert
+ist. Achte auf nachvollziehbare Fehlerbehandlung, konsistente
+Datenhaltung und stabile Schnittstellen.
+
+ENTWICKLUNGSDISZIPLIN
+
+Arbeite nicht an allen Funktionen gleichzeitig. Entwickle nach dem
+festgelegten Phasenplan. Jede Phase muss einen funktionierenden,
+testbaren Zwischenstand liefern.
+
+Erstelle nach jeder Phase einen Bericht mit: - implementierten
+Funktionen, - erfolgreichen Tests, - fehlgeschlagenen Tests, - bekannten
+Fehlern, - noch offenen Anforderungen, - betroffenen Modulen, - nächsten
+Entwicklungsschritten.
+
+Geschwindigkeit ist kein Ersatz für Qualität. Ein stabiler,
+funktionierender und erweiterbarer Entwicklungsstand ist wichtiger als
+eine große Menge ungetesteten Codes.
+
+Du bist nicht dafür verantwortlich, ein anderes Spiel zu erfinden. Du
+bist dafür verantwortlich, THE MONSTER CLINIC gemäß diesem Lastenheft
+umzusetzen.
+
+============================================================ 23.
+VERBINDLICHER PLANUNGSDURCHLAUF VOR PROGRAMMIERBEGINN
+============================================================
+
+Die Coding-KI darf nicht unmittelbar nach Erhalt des Lastenhefts mit der
+Implementierung beginnen.
+
+Zunächst muss sie ausschließlich die technische Planung erstellen und
+zur Freigabe vorlegen.
+
+Die Planung muss enthalten: 1. vollständige Anforderungsmatrix mit
+eindeutigen IDs, 2. technische Architektur, 3. Modulübersicht, 4.
+Datenmodelle für Patienten, Mitarbeiter, Krankheiten, Räume und
+Wirtschaft, 5. Abhängigkeitsdiagramm aller Systeme, 6.
+Entwicklungsreihenfolge, 7. Testkonzept, 8. Risikoanalyse, 9. technische
+Entscheidung für Engine und Programmiersprache, 10. Liste aller noch
+offenen Designentscheidungen.
+
+Erst nach ausdrücklicher Freigabe des Auftraggebers beginnt die
+eigentliche Implementierung.
+
+============================================================ 24. OFFENE
+DETAILPLANUNG
+============================================================
+
+Das Lastenheft definiert die Produktidee und die wesentlichen
+Funktionen. Vor der vollständigen Implementierung müssen insbesondere
+folgende Bereiche in einer technischen Spezifikation konkretisiert
+werden:
+
+1.  Bewegungssystem: Wie bewegen sich Patienten und Mitarbeiter? Wie
+    werden Kreuzungen, Türen, Warteschlangen und überfüllte Flure
+    behandelt?
+
+2.  Raum- und Bausystem: Wie funktionieren Raster, Wände, Türen,
+    Raumgrenzen und die isometrische Darstellung?
+
+3.  Simulationslogik: Wie oft werden Patienten, Mitarbeiter,
+    Krankheiten, Finanzen und Ereignisse aktualisiert? Welche
+    Berechnungen laufen kontinuierlich, welche in festen
+    Simulationsschritten?
+
+4.  Spielbalance: Welche Kosten, Einnahmen, Wartezeiten,
+    Behandlungsdauern und Schwellenwerte gelten? Diese Werte müssen
+    zentral konfigurierbar sein und dürfen nicht an zahlreichen Stellen
+    fest im Code verankert werden.
+
+Diese Detailentscheidungen werden in einem nachgelagerten technischen
+Pflichtenheft festgelegt. Sie dürfen das Produktkonzept nicht
+stillschweigend verändern.
+
+============================================================ 25.
+DOKUMENTENSTATUS
+============================================================
+
+Dokument: THE MONSTER CLINIC – Lastenheft Version: 1.0 Status:
+Verbindliche Produktgrundlage Geltungsbereich: Gesamtes Spielprojekt
+
+Änderungen an diesem Lastenheft bedürfen der ausdrücklichen Freigabe des
+Auftraggebers.
+
+ENDE DES LASTENHEFTS

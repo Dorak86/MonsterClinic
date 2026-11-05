@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Kommandozeilen-Simulator (Planung Abschnitt 3). Phase 0: Diagnosebefehle; ab Phase 1 Simulationslaeufe. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>MonsterClinic.SimCli</RootNamespace>
+    <AssemblyName>simcli</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../Sim/MonsterClinic.Sim.csproj" />
+    <ProjectReference Include="../../Platform/MonsterClinic.Platform.csproj" />
+  </ItemGroup>
+</Project>

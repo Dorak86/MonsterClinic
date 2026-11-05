@@ -1,0 +1,9 @@
+{
+  "id": "disease.memory_decay",
+  "formatVersion": 1,
+  "placeholder": true,
+  "species": [
+    "species.zombie"
+  ],
+  "_note": "Platzhalter aus Lastenheft Kap. 7.1, Beschreibung folgt vom Auftraggeber"
+}
