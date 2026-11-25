@@ -66,6 +66,7 @@ class Game {
     };
     window.addEventListener('resize', () => { this.renderer.resize(); this.hud.resize(); });
     this.bindMenus();
+    try { if (matchMedia('(pointer: coarse)').matches) $('touchnote').hidden = false; } catch (e) { /* egal */ }
     this.showScreen('menu');
     this.menuScene();
     this.last = performance.now();

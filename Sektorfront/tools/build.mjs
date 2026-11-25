@@ -24,3 +24,15 @@ mkdirSync(join(root, 'dist'), { recursive: true });
 const out = join(root, 'dist/sektorfront.html');
 writeFileSync(out, html);
 console.log(`${out}  ${(html.length / 1024).toFixed(0)} KB`);
+// Variante ohne Dokumentgerüst (für Plattformen, die es selbst ergänzen)
+const artIdx = process.argv.indexOf('--artifact');
+if (artIdx > 0) {
+  const frag = html
+    .replace(/<!doctype html>\s*/i, '')
+    .replace(/<html[^>]*>\s*/i, '').replace(/<\/html>\s*$/i, '')
+    .replace(/<head>\s*/i, '').replace(/<\/head>\s*/i, '')
+    .replace(/<meta charset="utf-8">\s*/i, '').replace(/<meta name="viewport"[^>]*>\s*/i, '')
+    .replace(/<body>\s*/i, '').replace(/<\/body>\s*/i, '');
+  writeFileSync(process.argv[artIdx + 1], frag);
+  console.log('Fragment:', process.argv[artIdx + 1]);
+}

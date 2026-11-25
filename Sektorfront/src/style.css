@@ -11,6 +11,7 @@
   --ok: #66ffa0;
   --warn: #ffb347;
   --font: "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
+  color-scheme: dark;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; user-select: none; -webkit-user-select: none; }
