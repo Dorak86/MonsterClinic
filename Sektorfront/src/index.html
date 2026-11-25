@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sektorfront</title>
+<style>/*__CSS__*/</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<canvas id="overlay"></canvas>
+
+<div id="hud" hidden>
+  <div id="topbar">
+    <div class="terr">
+      <span class="lbl">Gebiet</span>
+      <div class="tbar"><div id="terr-p"></div><div id="terr-e"></div></div>
+      <span id="terr-txt" class="num">0 : 0</span>
+    </div>
+    <div class="stat"><span class="lbl">Einheiten</span><b id="st-units" class="num">0/60</b></div>
+    <div class="stat"><span class="lbl">Bautempo</span><b id="st-prod" class="num">100 %</b></div>
+    <div class="stat"><span class="lbl">Zeit</span><b id="st-clock" class="num">00:00</b></div>
+    <div class="grow"></div>
+    <button id="btn-speed" class="ibtn" title="Spieltempo (+/−)">1×</button>
+    <button id="btn-pause" class="ibtn" title="Pause (P / Esc)">❚❚</button>
+  </div>
+  <div id="msgs"></div>
+  <div id="tipbox" hidden><div id="tiptext"></div><button id="tipclose" class="ibtn small" title="Hinweis schließen">✕</button></div>
+  <div id="bottom">
+    <div id="minimap-wrap"><canvas id="minimap"></canvas></div>
+    <div id="panel"></div>
+  </div>
+</div>
+
+<div id="screens">
+  <section id="scr-menu" class="screen">
+    <div class="title-wrap">
+      <h1 class="logo">SEKTOR<span>FRONT</span></h1>
+      <p class="sub">Echtzeit-Strategie um Flaggen, Fabriken und jeden Meter Boden</p>
+    </div>
+    <nav class="menu">
+      <button data-go="campaign" class="big">Kampagne</button>
+      <button data-go="skirmish" class="big">Gefecht</button>
+      <button data-go="help">Steuerung</button>
+      <button data-go="options">Optionen</button>
+    </nav>
+    <p class="foot">Eigenständiges Spiel im Stil klassischer Territorial-RTS · v1.0</p>
+  </section>
+
+  <section id="scr-campaign" class="screen" hidden>
+    <h2>Kampagne</h2>
+    <div id="camp-list" class="cards"></div>
+    <div class="row"><button data-go="menu">Zurück</button></div>
+  </section>
+
+  <section id="scr-skirmish" class="screen" hidden>
+    <h2>Gefecht</h2>
+    <div id="sk-list" class="cards"></div>
+    <div class="row">
+      <label>Gegner
+        <select id="sk-diff"><option value="0">Leicht</option><option value="1" selected>Normal</option><option value="2">Schwer</option></select>
+      </label>
+      <button data-go="menu">Zurück</button>
+    </div>
+  </section>
+
+  <section id="scr-briefing" class="screen" hidden>
+    <div class="brief">
+      <canvas id="portrait" width="220" height="260"></canvas>
+      <div>
+        <h2 id="br-title"></h2>
+        <p id="br-meta" class="muted"></p>
+        <p id="br-text"></p>
+        <div class="row">
+          <label>Gegner
+            <select id="br-diff"><option value="0">Leicht</option><option value="1" selected>Normal</option><option value="2">Schwer</option></select>
+          </label>
+          <button id="br-start" class="primary">Einsatz beginnen</button>
+          <button data-go="campaign">Zurück</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="scr-help" class="screen" hidden>
+    <h2>Steuerung</h2>
+    <table class="keys">
+      <tr><td>Linksklick / Ziehen</td><td>Einheiten oder Gebäude auswählen, Rahmenauswahl</td></tr>
+      <tr><td>Doppelklick</td><td>Alle sichtbaren Einheiten dieses Typs</td></tr>
+      <tr><td>Umschalt + Klick</td><td>Zur Auswahl hinzufügen</td></tr>
+      <tr><td>Rechtsklick</td><td>Bewegen · Angreifen · Fahrzeug besteigen · Sammelpunkt setzen</td></tr>
+      <tr><td>F + Rechtsklick</td><td>Angriffsmarsch (unterwegs kämpfen)</td></tr>
+      <tr><td>WASD / Pfeiltasten / Bildrand</td><td>Kamera verschieben</td></tr>
+      <tr><td>Mausrad · Q / E</td><td>Zoomen · Kamera drehen</td></tr>
+      <tr><td>Strg + 1–9 · 1–9</td><td>Gruppe speichern · Gruppe wählen (zweimal: hinspringen)</td></tr>
+      <tr><td>X</td><td>Halt</td></tr>
+      <tr><td>H · Leertaste</td><td>Zum Fort · zum letzten Ereignis</td></tr>
+      <tr><td>P / Esc · + / −</td><td>Pause · Spieltempo</td></tr>
+    </table>
+    <h3>Regeln</h3>
+    <ul class="rules">
+      <li>Nur <b>Roboter</b> erobern Flaggen. Normale Flaggen fallen nach 1 s, Werksektoren nach 2,5 s, die Fortflagge nach 12 s ununterbrochener Anwesenheit.</li>
+      <li>Alle Gebäude eines Sektors gehören dem Besitzer der Flagge.</li>
+      <li>Je mehr Gebiet Sie halten, desto schneller bauen Ihre Werke.</li>
+      <li>Graue Fahrzeuge sind herrenlos: Ein Roboter steigt per Rechtsklick ein.</li>
+      <li>Stehende Einheiten in der Nähe eines passenden eigenen Werks werden repariert.</li>
+      <li>Sieg: feindliches Fort zerstören oder dessen Flagge erobern.</li>
+    </ul>
+    <div class="row"><button data-back>Zurück</button></div>
+  </section>
+
+  <section id="scr-options" class="screen" hidden>
+    <h2>Optionen</h2>
+    <div class="form">
+      <label>Grafikqualität
+        <select id="op-quality"><option value="1">Hoch</option><option value="0">Niedrig</option></select>
+      </label>
+      <label>Effekte <input id="op-sfx" type="range" min="0" max="1" step="0.05"></label>
+      <label>Musik <input id="op-music" type="range" min="0" max="1" step="0.05"></label>
+      <label class="check"><input id="op-edge" type="checkbox"> Kamera am Bildschirmrand verschieben</label>
+      <p class="muted">Die Grafikqualität wird beim nächsten Levelstart wirksam.</p>
+    </div>
+    <div class="row"><button data-back>Zurück</button></div>
+  </section>
+
+  <section id="scr-pause" class="screen dim" hidden>
+    <h2>Pause</h2>
+    <nav class="menu">
+      <button id="pa-resume" class="big">Weiter</button>
+      <button data-go="help">Steuerung</button>
+      <button data-go="options">Optionen</button>
+      <button id="pa-restart">Neu starten</button>
+      <button id="pa-quit">Aufgeben und zum Menü</button>
+    </nav>
+  </section>
+
+  <section id="scr-end" class="screen dim" hidden>
+    <h2 id="end-title"></h2>
+    <p id="end-reason" class="muted"></p>
+    <table id="end-stats" class="stats"></table>
+    <div class="row">
+      <button id="end-next" class="primary">Nächster Einsatz</button>
+      <button id="end-retry">Nochmal</button>
+      <button id="end-menu">Hauptmenü</button>
+    </div>
+  </section>
+
+  <section id="scr-loading" class="screen" hidden>
+    <h2>Lade Einsatzgebiet …</h2>
+  </section>
+
+  <section id="scr-error" class="screen" hidden>
+    <h2>Das Spiel konnte nicht gestartet werden</h2>
+    <p id="err-text" class="muted"></p>
+    <p>Bitte einen aktuellen Browser mit WebGL2 verwenden (Chrome, Edge oder Firefox).</p>
+  </section>
+</div>
+<script>/*__JS__*/</script>
+</body>
+</html>

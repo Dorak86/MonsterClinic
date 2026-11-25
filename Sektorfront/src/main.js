@@ -1,0 +1,412 @@
+// Einstieg: Menüs, Spielschleife, Speicherstand, Tutorial
+
+import { World } from './sim/world.js';
+import { AI } from './sim/ai.js';
+import { LEVELS, BIOMES } from './sim/levels.js';
+import { generateMap } from './sim/mapgen.js';
+import { SIM_DT, T, UNITS, BUILDINGS } from './sim/defs.js';
+import { Renderer } from './render/renderer.js';
+import { TILE } from './render/materials.js';
+import { Hud } from './ui/hud.js';
+import { Input } from './ui/input.js';
+import { renderIcons, drawPortrait } from './ui/icons.js';
+import { Audio } from './audio.js';
+
+const $ = (id) => document.getElementById(id);
+const SAVE_KEY = 'sektorfront.v1';
+
+function loadSave() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
+    return { unlocked: s.unlocked || 1, best: s.best || {}, options: { quality: 1, sfx: 0.7, music: 0.35, edge: true, ...(s.options || {}) } };
+  } catch (e) {
+    return { unlocked: 1, best: {}, options: { quality: 1, sfx: 0.7, music: 0.35, edge: true } };
+  }
+}
+function storeSave(s) {
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(s)); } catch (e) { /* privat */ }
+}
+
+const TIPS = [
+  { text: 'Linksklick wählt eine Einheit, Ziehen mit gedrückter Maustaste wählt mehrere. Mit WASD, Mausrad und Q/E steuern Sie die Kamera.', done: (g) => g.selection.size > 0 },
+  { text: 'Rechtsklick auf eine Flagge schickt Ihre Roboter dorthin. Ein Roboter auf der Flagge erobert den Sektor samt Gebäuden.', done: (g) => g.world.sectors.filter((s) => s.owner === 1).length >= 2 },
+  { text: 'Sichern Sie das Roboterwerk im Norden. Klicken Sie es danach an und wählen Sie, was gebaut wird.', done: (g) => g.world.buildings.some((b) => b.type === 'robot' && b.team === 1) },
+  { text: 'Mehr Gebiet bedeutet schnellere Produktion (Anzeige „Bautempo“ oben). Das Fahrzeugwerk in der Mitte liefert Panzer.', done: (g) => g.world.buildings.some((b) => b.type === 'vehicle' && b.team === 1) },
+  { text: 'Ziel: das rote Fort zerstören oder dessen Flagge 12 Sekunden lang halten. Panzerjäger und Panzer sind gegen Gebäude am stärksten.', done: () => false },
+];
+
+class Game {
+  constructor() {
+    this.save = loadSave();
+    this.options = this.save.options;
+    this.audio = new Audio();
+    this.audio.setVolumes(this.options.sfx, this.options.music);
+    this.state = 'menu';
+    this.selection = new Set();
+    this.speed = 1;
+    this.levelIndex = 0;
+    this.difficulty = 1;
+    this.prevScreen = 'menu';
+    this.renderer = new Renderer($('gl'), this.options.quality);
+    this.icons = renderIcons();
+    this.hud = new Hud(this.icons);
+    this.input = new Input(this);
+    this.hud.onMinimap = (kind, x, y) => {
+      if (kind === 'look') this.renderer.lookAt(x, y);
+      else if (kind === 'order') {
+        const ids = [...this.selection].filter((id) => { const o = this.world.byId.get(id); return o && o.kind === 'unit' && o.team === 1; });
+        if (ids.length) { this.world.commandMove(ids, x, y, 1, this.input.keys.has('KeyF')); this.audio.play('order'); }
+      }
+    };
+    this.hud.onPanel = (kind, a, b) => {
+      if (kind === 'produce') { this.world.setProduction(a, b, 1); this.audio.play('click'); }
+      else if (kind === 'subselect') {
+        for (const id of [...this.selection]) { const o = this.world.byId.get(id); if (!o || o.type !== a) this.selection.delete(id); }
+      }
+    };
+    window.addEventListener('resize', () => { this.renderer.resize(); this.hud.resize(); });
+    this.bindMenus();
+    this.showScreen('menu');
+    this.menuScene();
+    this.last = performance.now();
+    this.acc = 0;
+    this.time = 0;
+    requestAnimationFrame((t) => this.loop(t));
+  }
+
+  // ---------- Menüs ----------
+  bindMenus() {
+    document.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => {
+      this.audio.init();
+      this.audio.play('click');
+      const to = b.dataset.go;
+      if (to === 'help' || to === 'options') this.prevScreen = this.state === 'pause' ? 'pause' : 'menu';
+      this.showScreen(to);
+    }));
+    document.querySelectorAll('[data-back]').forEach((b) => b.addEventListener('click', () => {
+      this.audio.play('click');
+      this.showScreen(this.prevScreen);
+    }));
+    $('br-start').addEventListener('click', () => { this.audio.init(); this.difficulty = +$('br-diff').value; this.start(this.levelIndex, this.difficulty, true); });
+    $('pa-resume').addEventListener('click', () => this.togglePause());
+    $('pa-restart').addEventListener('click', () => this.start(this.levelIndex, this.difficulty, this.campaign));
+    $('pa-quit').addEventListener('click', () => this.toMenu());
+    $('btn-pause').addEventListener('click', () => this.togglePause());
+    $('btn-speed').addEventListener('click', () => this.setSpeed(this.speed === 1 ? 2 : 1));
+    $('end-retry').addEventListener('click', () => this.start(this.levelIndex, this.difficulty, this.campaign));
+    $('end-menu').addEventListener('click', () => this.toMenu());
+    $('end-next').addEventListener('click', () => {
+      if (this.levelIndex + 1 < LEVELS.length) this.briefing(this.levelIndex + 1);
+      else this.toMenu();
+    });
+    $('tipclose').addEventListener('click', () => { this.tipsOff = true; $('tipbox').hidden = true; });
+    // Optionen
+    $('op-quality').value = String(this.options.quality);
+    $('op-sfx').value = this.options.sfx;
+    $('op-music').value = this.options.music;
+    $('op-edge').checked = this.options.edge;
+    const saveOpts = () => {
+      this.options.quality = +$('op-quality').value;
+      this.options.sfx = +$('op-sfx').value;
+      this.options.music = +$('op-music').value;
+      this.options.edge = $('op-edge').checked;
+      this.audio.setVolumes(this.options.sfx, this.options.music);
+      storeSave(this.save);
+    };
+    for (const id of ['op-quality', 'op-sfx', 'op-music', 'op-edge']) $(id).addEventListener('input', saveOpts);
+  }
+
+  showScreen(name) {
+    document.querySelectorAll('.screen').forEach((s) => { s.hidden = s.id !== 'scr-' + name; });
+    if (name === 'campaign') this.buildCampaign();
+    if (name === 'skirmish') this.buildSkirmish();
+  }
+
+  thumb(level) {
+    const c = document.createElement('canvas');
+    const map = generateMap(level);
+    const s = 4;
+    c.width = map.w * s; c.height = map.h * s;
+    const g = c.getContext('2d');
+    const b = map.biome;
+    const col = { [T.GROUND]: b.ground[0], [T.ROAD]: b.road, [T.ROCK]: b.rock, [T.WATER]: b.lava ? 0xd24a10 : b.water, [T.FOREST]: b.forest, [T.BRIDGE]: 0x8a6a50 };
+    for (let y = 0; y < map.h; y++) for (let x = 0; x < map.w; x++) {
+      g.fillStyle = '#' + col[map.tiles[y * map.w + x]].toString(16).padStart(6, '0');
+      g.fillRect(x * s, y * s, s, s);
+    }
+    for (const sp of map.buildingSpots) {
+      const o = map.sectors[sp.sector].owner;
+      g.fillStyle = o === 1 ? '#2f9dff' : o === 2 ? '#ff4532' : '#bfc6cc';
+      g.fillRect(sp.x * s, sp.y * s, sp.w * s, sp.h * s);
+    }
+    for (const sec of map.sectors) {
+      g.fillStyle = '#fff';
+      g.beginPath(); g.arc(sec.x * s, sec.y * s, 4, 0, 7); g.fill();
+      g.fillStyle = sec.owner === 1 ? '#2f9dff' : sec.owner === 2 ? '#ff4532' : '#888';
+      g.beginPath(); g.arc(sec.x * s, sec.y * s, 2.6, 0, 7); g.fill();
+    }
+    return c;
+  }
+
+  levelCard(level, i, onPick, locked) {
+    const b = document.createElement('button');
+    b.className = 'card' + (locked ? ' locked' : '');
+    b.disabled = locked;
+    const best = this.save.best[level.id];
+    b.appendChild(this.thumbCache?.[i] || (this.thumbCache = this.thumbCache || {}, this.thumbCache[i] = this.thumb(level)));
+    const info = document.createElement('div');
+    info.className = 'ci';
+    info.innerHTML = `<div class="cn">${level.id}. ${level.name}</div><div class="cm">${BIOMES[level.biome].name} · ${level.sectors.length} Sektoren${best ? ' · Bestzeit ' + fmt(best) : ''}${locked ? ' · gesperrt' : ''}</div>`;
+    b.appendChild(info);
+    if (!locked) b.addEventListener('click', () => { this.audio.init(); this.audio.play('click'); onPick(i); });
+    return b;
+  }
+
+  buildCampaign() {
+    const list = $('camp-list');
+    list.innerHTML = '';
+    LEVELS.forEach((l, i) => list.appendChild(this.levelCard(l, i, (k) => this.briefing(k), i + 1 > this.save.unlocked)));
+  }
+
+  buildSkirmish() {
+    const list = $('sk-list');
+    list.innerHTML = '';
+    LEVELS.forEach((l, i) => list.appendChild(this.levelCard(l, i, (k) => this.start(k, +$('sk-diff').value, false), i + 1 > this.save.unlocked)));
+  }
+
+  briefing(i) {
+    this.levelIndex = i;
+    const l = LEVELS[i];
+    $('br-title').textContent = `Einsatz ${l.id}: ${l.name}`;
+    $('br-meta').textContent = `${BIOMES[l.biome].name} · ${l.w}×${l.h} Felder · ${l.sectors.length} Sektoren`;
+    $('br-text').textContent = l.briefing;
+    $('br-diff').value = String(this.difficulty);
+    drawPortrait($('portrait'), i);
+    this.showScreen('briefing');
+  }
+
+  // Hintergrund im Menü: langsam kreisende Kamera über Level 1 mit KI gegen KI
+  menuScene() {
+    this.world = new World(LEVELS[1], { difficulty: 1 });
+    this.ais = [new AI(this.world, 1, 1), new AI(this.world, 2, 1)];
+    this.renderer.load(this.world);
+    this.world.vis[1].fill(1);
+    this.world.explored[1].fill(1);
+    this.demo = true;
+    this.renderer.cam.tdist = 60;
+    this.renderer.lookAt(this.world.map.w / 2, this.world.map.h / 2, true);
+  }
+
+  // ---------- Spiel ----------
+  start(i, difficulty, campaign) {
+    this.showScreen('loading');
+    setTimeout(() => {
+      try {
+        this.levelIndex = i;
+        this.difficulty = difficulty;
+        this.campaign = campaign;
+        const level = LEVELS[i];
+        this.renderer.quality = this.options.quality;
+        this.world = new World(level, { difficulty });
+        this.ais = [new AI(this.world, 2, difficulty)];
+        this.renderer.load(this.world);
+        this.hud.setWorld(this.world, this.renderer);
+        this.selection.clear();
+        this.input.groups = {};
+        this.speed = 1;
+        $('btn-speed').textContent = '1×';
+        this.demo = false;
+        this.acc = 0;
+        this.ended = false;
+        this.tipIdx = level.tips ? 0 : -1;
+        this.tipsOff = false;
+        $('tipbox').hidden = true;
+        $('hud').hidden = false;
+        this.showScreen('none');
+        this.state = 'play';
+        this.audio.init();
+        this.audio.startMusic(i);
+        this.hud.message(`Einsatz ${level.id}: ${level.name}`, 'info');
+      } catch (e) {
+        console.error(e);
+        $('err-text').textContent = String(e && e.message || e);
+        this.showScreen('error');
+      }
+    }, 30);
+  }
+
+  toMenu() {
+    this.state = 'menu';
+    $('hud').hidden = true;
+    this.audio.stopMusic();
+    this.selection.clear();
+    this.hud.og.clearRect(0, 0, innerWidth, innerHeight);
+    this.menuScene();
+    this.showScreen('menu');
+  }
+
+  togglePause() {
+    if (this.state === 'play') { this.state = 'pause'; this.showScreen('pause'); }
+    else if (this.state === 'pause') { this.state = 'play'; this.showScreen('none'); }
+  }
+
+  setSpeed(s) {
+    this.speed = s;
+    $('btn-speed').textContent = s + '×';
+  }
+
+  handleEvents() {
+    const w = this.world;
+    for (const ev of w.drainEvents()) {
+      this.renderer.handleEvent(ev);
+      if (this.demo) continue;
+      const vis = (x, y) => w.isVisible(1, x, y);
+      switch (ev.t) {
+        case 'shot': if (vis(ev.x, ev.y)) this.audio.play(ev.proj.wpn.sound, ev.x, ev.y, 0.8); break;
+        case 'impact': if (vis(ev.x, ev.y) && ev.splash > 0.5) this.audio.play('explode', ev.x, ev.y, 0.5); break;
+        case 'death':
+          if (vis(ev.x, ev.y)) this.audio.play(ev.cls === 'vehicle' ? 'explode' : 'thump', ev.x, ev.y, ev.cls === 'vehicle' ? 1 : 0.5);
+          this.selection.delete(ev.id);
+          break;
+        case 'bdestroy':
+          this.audio.play('bigexplode', ev.x, ev.y, 1.2);
+          this.hud.message(`${BUILDINGS[ev.type].name} ${ev.team === 1 ? 'verloren' : 'zerstört'}`, ev.team === 1 ? 'bad' : 'good', ev.x, ev.y);
+          break;
+        case 'capture': {
+          const s = w.sectors[ev.sector];
+          const names = s.buildings.map((id) => w.byId.get(id)).filter((b) => b && !b.destroyed).map((b) => b.def.name);
+          const what = names.length ? ` (${names.join(', ')})` : '';
+          if (ev.team === 1) { this.audio.play('capture'); this.hud.message(`Sektor erobert${what}`, 'good', ev.x, ev.y); }
+          else if (ev.prev === 1) { this.audio.play('lost'); this.hud.message(`Sektor verloren${what}!`, 'bad', ev.x, ev.y); }
+          else if (names.length) this.hud.message(`Gegner übernimmt ${names.join(', ')}`, 'bad', ev.x, ev.y);
+          break;
+        }
+        case 'underattack':
+          if (ev.team === 1) { this.audio.play('alarm'); this.hud.message(`${ev.what} unter Beschuss`, 'bad', ev.x, ev.y); }
+          break;
+        case 'spawn':
+          if (ev.team === 1) { this.audio.play('spawn', ev.x, ev.y, 0.6); }
+          break;
+        case 'board':
+          if (ev.team === 1) { this.audio.play('board'); this.hud.message('Fahrzeug übernommen', 'good', ev.x, ev.y); }
+          else this.hud.message('Gegner übernimmt ein herrenloses Fahrzeug', 'bad', ev.x, ev.y);
+          break;
+        case 'eject':
+          break;
+        case 'gameover':
+          this.endGame(ev);
+          break;
+      }
+    }
+  }
+
+  endGame(ev) {
+    if (this.ended) return;
+    this.ended = true;
+    const win = ev.winner === 1;
+    const w = this.world;
+    const level = LEVELS[this.levelIndex];
+    if (win) {
+      if (this.campaign || true) this.save.unlocked = Math.max(this.save.unlocked, Math.min(LEVELS.length, level.id + 1));
+      const prev = this.save.best[level.id];
+      if (!prev || w.time < prev) this.save.best[level.id] = Math.floor(w.time);
+      storeSave(this.save);
+    }
+    setTimeout(() => {
+      this.state = 'end';
+      this.audio.stopMusic();
+      this.audio.play(win ? 'capture' : 'lost');
+      $('end-title').textContent = win ? 'Sieg' : 'Niederlage';
+      $('end-title').className = win ? 'win' : 'lose';
+      const reasons = {
+        fort: win ? 'Das feindliche Fort wurde zerstört.' : 'Ihr Fort wurde zerstört.',
+        flag: win ? 'Die Flagge des feindlichen Forts ist in Ihrer Hand.' : 'Der Feind hat die Flagge Ihres Forts erobert.',
+      };
+      $('end-reason').textContent = reasons[ev.reason] + ' Spielzeit ' + fmt(w.time) + '.';
+      const s1 = w.stats[1], s2 = w.stats[2];
+      $('end-stats').innerHTML = `<tr><th></th><th class="p">Sie</th><th class="e">Gegner</th></tr>
+        <tr><td>Einheiten gebaut</td><td>${s1.built}</td><td>${s2.built}</td></tr>
+        <tr><td>Einheiten verloren</td><td>${s1.lost}</td><td>${s2.lost}</td></tr>
+        <tr><td>Abschüsse</td><td>${s1.kills}</td><td>${s2.kills}</td></tr>
+        <tr><td>Sektoren erobert</td><td>${s1.captures}</td><td>${s2.captures}</td></tr>
+        <tr><td>Gebiet am Ende</td><td>${Math.round(w.territory(1) * 100)} %</td><td>${Math.round(w.territory(2) * 100)} %</td></tr>`;
+      $('end-next').hidden = !win || this.levelIndex + 1 >= LEVELS.length;
+      if (win && this.levelIndex + 1 >= LEVELS.length) $('end-reason').textContent += ' Die Kampagne ist abgeschlossen – das Glutkern-Hauptquartier ist gefallen.';
+      this.showScreen('end');
+    }, 2500);
+  }
+
+  updateTips() {
+    if (this.tipIdx < 0 || this.tipsOff) return;
+    const tip = TIPS[this.tipIdx];
+    if (!tip) { $('tipbox').hidden = true; return; }
+    if (tip.done(this)) { this.tipIdx++; return; }
+    $('tipbox').hidden = false;
+    $('tiptext').textContent = tip.text;
+  }
+
+  loop(t) {
+    requestAnimationFrame((tt) => this.loop(tt));
+    const dt = Math.min(0.1, (t - this.last) / 1000);
+    this.last = t;
+    this.time += dt;
+    if (!this.world) return;
+    const running = this.state === 'play' || (this.state === 'menu' && this.demo) || (this.state === 'end');
+    if (running) {
+      this.acc += dt * (this.demo ? 1 : this.speed);
+      let steps = 0;
+      while (this.acc >= SIM_DT && steps < 8) {
+        for (const ai of this.ais) ai.update(SIM_DT);
+        this.world.step();
+        this.acc -= SIM_DT;
+        steps++;
+        if (this.demo && this.world.over) { this.menuScene(); break; }
+      }
+      if (steps >= 8) this.acc = 0;
+      this.handleEvents();
+    }
+    if (this.demo) {
+      this.renderer.cam.yaw += dt * 0.04;
+      this.world.vis[1].fill(1);
+    }
+    this.input.update(dt);
+    // Hörerposition
+    this.audio.listener.x = this.renderer.cam.x / TILE;
+    this.audio.listener.y = this.renderer.cam.z / TILE;
+    this.audio.listener.zoom = this.renderer.cam.dist / 42;
+    const alpha = Math.min(1, this.acc / SIM_DT);
+    for (const id of [...this.selection]) { const o = this.world.byId.get(id); if (!o || o.dead) this.selection.delete(id); }
+    this.renderer.frame(dt, running ? alpha : 1, this.demo ? new Set() : this.selection, this.time);
+    if (!this.demo && (this.state === 'play' || this.state === 'pause')) {
+      this.hudT = (this.hudT || 0) - dt;
+      if (this.hudT <= 0) {
+        this.hudT = 0.2;
+        this.hud.updateTop();
+        this.hud.drawMinimap();
+        this.updateTips();
+      }
+      this.hud.updatePanel(this.selection);
+      this.hud.drawOverlay(this.selection, this.input.box, this.input.hoverId, alpha);
+    }
+  }
+}
+
+function fmt(s) {
+  s = Math.floor(s);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+
+function boot() {
+  try {
+    const test = document.createElement('canvas').getContext('webgl2');
+    if (!test) throw new Error('WebGL2 wird von diesem Browser nicht unterstützt.');
+    window.game = new Game();
+  } catch (e) {
+    console.error(e);
+    document.querySelectorAll('.screen').forEach((s) => { s.hidden = s.id !== 'scr-error'; });
+    $('err-text').textContent = String(e && e.message || e);
+  }
+}
+boot();
+
+export { UNITS };

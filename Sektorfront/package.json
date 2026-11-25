@@ -1,0 +1,16 @@
+{
+  "name": "sektorfront",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Echtzeit-Strategiespiel um Sektoren und Flaggen",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "test": "node tools/smoketest.mjs",
+    "test:browser": "LEVELS=1,2,3,4,5,6,7,8 FAST=1200 node tools/browsertest.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0",
+    "three": "^0.170.0"
+  }
+}
