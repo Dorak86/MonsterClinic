@@ -240,14 +240,19 @@ def build(kind):
             P(b, 'cyl', (0.025, 0.025, 0.4), (0, cab[1] - 0.4, 1.61), (math.pi / 2, 0, 0), mat=dark, verts=10, sub=0)
             empty('Muzzle0', (0, cab[1] - 0.62, 1.61), b)
         elif kind == 'fueltruck':
-            P(hull, 'cyl', (0.58, 0.58, 1.6), (0, bed_y + 0.05, 1.32), (math.pi / 2, 0, 0), mat=paint, verts=32, bevel=0.06, sub=1)
-            for y in (bed_y - 0.55, bed_y + 0.05, bed_y + 0.65):
-                P(hull, 'cyl', (0.6, 0.6, 0.06), (0, y, 1.32), (math.pi / 2, 0, 0), mat=dark, verts=32, sub=0)
-            P(hull, 'cyl', (0.14, 0.14, 0.08), (0, bed_y, 1.92), mat=M['metal'], verts=16, sub=0)
-            P(hull, 'box', (0.06, 1.4, 0.05), (0.42, bed_y + 0.05, 1.82), mat=M['metal'], bevel=0.01, sub=0)
-            P(hull, 'box', (0.9, 0.03, 0.22), (0, bed_y + 0.86, 1.3), mat=M['glow'], bevel=0.01, sub=0)  # Warnstreifen hinten
-            for s in (1, -1):
-                P(hull, 'cyl', (0.12, 0.12, 0.7), (0.62 * s, bed_y + 0.2, 0.75), (math.pi / 2, 0, 0), mat=M['metal'], verts=14, sub=0)
+            # Batterie-Lkw: Gestell mit großen Akkuzellen, Ladeanzeigen und Kabelpeitsche
+            charge = material('Charge', (0.02, 0.08, 0.04), 0.0, 0.3, (0.35, 1.0, 0.5), 4.0)
+            plate(hull, (1.25, 1.65, 0.1), (0, bed_y, 0.82), (0, 0, 0), dark)
+            for x in (-0.3, 0.3):
+                for y in (bed_y - 0.5, bed_y + 0.05, bed_y + 0.6):
+                    P(hull, 'box', (0.5, 0.48, 0.62), (x, y, 1.2), mat=paint, bevel=0.05, sub=0)
+                    P(hull, 'box', (0.04, 0.3, 0.42), (x + (0.26 if x > 0 else -0.26), y, 1.2), mat=charge, bevel=0.01, sub=0)
+                    for t in (-0.1, 0.1):
+                        P(hull, 'cyl', (0.04, 0.04, 0.08), (x + t, y, 1.55), mat=M['metal'], verts=8, sub=0)
+            for x in (-0.62, 0.62):
+                P(hull, 'box', (0.05, 1.7, 0.05), (x, bed_y, 1.55), mat=M['metal'], bevel=0.01, sub=0)
+            P(hull, 'box', (0.9, 0.03, 0.22), (0, bed_y + 0.86, 1.1), mat=charge, bevel=0.01, sub=0)
+            P(hull, 'cyl', (0.025, 0.025, 1.3), (0.5, bed_y + 0.9, 1.0), (0.4, 0, 0), mat=dark, verts=8, sub=0)
             empty('Turret', (0, bed_y, 1.3), hull)
         else:  # Raketenwerfer auf Lkw-Fahrgestell
             plate(hull, (1.25, 1.65, 0.1), (0, bed_y, 0.82), (0, 0, 0), dark)

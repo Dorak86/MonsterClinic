@@ -21,7 +21,19 @@ def extra():
         'hazard': material('Hazard', (0.75, 0.55, 0.08), 0.2, 0.6),
         'concrete': material('Concrete', (0.36, 0.35, 0.33), 0.0, 0.9),
         'tread': material('Tread', (0.06, 0.055, 0.05), 0.5, 0.8),
+        'energy': material('Energy', (0.02, 0.08, 0.1), 0.0, 0.3, (0.3, 0.9, 1.0), 5.0),
+        'char': material('Char', (0.05, 0.045, 0.04), 0.0, 0.95),
+        'rubble': material('Rubble', (0.28, 0.26, 0.24), 0.0, 0.95),
     }
+
+
+def coil(root, M, X, x, y, z, h=1.4, r=0.32):
+    # Generatorspule: Sockel, gewickelte Leuchtringe, Kugelkopf
+    P(root, 'cyl', (r * 1.3, r * 1.4, 0.3), (x, y, z + 0.15), mat=M['dark'], verts=16, sub=0)
+    P(root, 'cyl', (r * 0.6, r * 0.6, h), (x, y, z + 0.3 + h / 2), mat=M['metal'], verts=16, sub=0)
+    for k in range(5):
+        P(root, 'torus', (r, 0.05), (x, y, z + 0.45 + k * h / 5.5), mat=X['energy'])
+    P(root, 'sph', (r * 0.75, r * 0.75, r * 0.75), (x, y, z + 0.45 + h), mat=X['energy'], verts=20)
 
 
 def hangar(root, M, X, W, D, H):
@@ -144,6 +156,8 @@ def build(kind):
         P(root, 'cyl', (0.03, 0.05, 2.4), (-2.1, 2.1, 4.1), mat=M['metal'], verts=8, sub=0)
         P(root, 'sph', (0.1, 0.1, 0.1), (-2.1, 2.1, 5.3), mat=M['glow'], verts=12)
         empty('Chimney0', (2.0, 2.0, 3.2), root)
+        for s in (1, -1):
+            coil(root, M, X, s * 2.1, 2.05, 2.6, 1.1, 0.28)
     elif kind == 'turret':
         P(root, 'cyl', (0.95, 1.05, 0.55), (0, 0, 0.3), mat=team, verts=8, bevel=0.05, sub=0)
         P(root, 'cyl', (0.8, 0.85, 0.25), (0, 0, 0.7), mat=dark, verts=8, sub=0)
@@ -185,11 +199,67 @@ def build(kind):
         P(root, 'cyl', (0.25, 0.25, 0.08), (-1.7, 1.7, 3.15), mat=X['amber'], verts=16, sub=0)
         plate(root, (0.8, 0.5, 1.2), (1.5, 1.5, 0.85), (0, 0, 0), team, 0.08)  # Werkzeugschrank
         plate(root, (0.6, 0.05, 0.8), (1.5, 1.24, 0.9), (0, 0, 0), dark, 0.02)
+    elif kind == 'power':
+        # Stromwerk 4x4 m: Generatorhalle, zwei Spulen, Kabeltrasse, Ladeplatz vorn
+        plate(root, (4.1, 4.1, 0.25), (0, 0, 0.12), (0, 0, 0), X['concrete'], 0.05)
+        plate(root, (2.6, 2.0, 1.6), (0, 0.7, 1.05), (0, 0, 0), team, 0.22)
+        plate(root, (2.2, 1.6, 0.4), (0, 0.75, 2.05), (0, 0, 0), dark, 0.08)
+        for k in range(4):
+            plate(root, (0.08, 1.4, 0.3), (-0.75 + k * 0.5, 0.75, 2.3), (0, 0, 0), M['metal'], 0.01)
+        plate(root, (1.2, 0.08, 0.8), (0, -0.32, 0.95), (0, 0, 0), dark, 0.03)
+        P(root, 'box', (0.9, 0.05, 0.12), (0, -0.37, 1.2), mat=X['energy'], bevel=0.01, sub=0)
+        rivets(root, M, (-1.25, -0.32, 1.7), (1.25, -0.32, 1.7), 9)
+        for s in (1, -1):
+            coil(root, M, X, s * 1.55, 0.9, 0.25, 1.6, 0.34)
+            P(root, 'cyl', (0.05, 0.05, 1.0), (s * 1.05, 0.9, 1.6), (0, math.pi / 2, 0), mat=M['dark'], verts=8, sub=0)
+        # Ladeplatz mit Leuchtring
+        P(root, 'cyl', (1.0, 1.0, 0.08), (0, -1.3, 0.28), mat=M['metal'], verts=32, sub=0)
+        P(root, 'torus', (0.95, 0.05), (0, -1.3, 0.34), mat=X['energy'])
+        for k in range(6):  # Warnstreifen
+            plate(root, (0.3, 0.05, 0.05), (-1.6 + k * 0.64, -2.0, 0.27), (0, 0, 0.7), X['hazard'], 0.005)
+    elif kind.startswith('ruin'):
+        # Ruinen: rissige Bodenplatte, gezackte Mauerreste, verbogene Träger, Schutthaufen
+        import random
+        rnd = random.Random(hash(kind) & 0xffff)
+        W, D = {'ruin6x6': (6, 6), 'ruin6x4': (6, 4), 'ruin4x4': (4, 4), 'ruin2x2': (2, 2)}[kind]
+        for i in range(4):
+            sx, sy = (i % 2 - 0.5) * W / 2, (i // 2 - 0.5) * D / 2
+            plate(root, (W / 2 * 0.97, D / 2 * 0.97, 0.25), (sx, sy, 0.1 + rnd.random() * 0.06), (rnd.uniform(-0.05, 0.05), rnd.uniform(-0.05, 0.05), 0), X['concrete'], 0.04)
+        nwall = max(3, int((W + D) * 0.9))
+        for i in range(nwall):
+            edge = rnd.randint(0, 3)
+            t = rnd.uniform(-0.45, 0.45)
+            x = t * W if edge < 2 else (W / 2 - 0.3) * (1 if edge == 2 else -1)
+            y = t * D if edge >= 2 else (D / 2 - 0.3) * (1 if edge == 0 else -1)
+            h = rnd.uniform(0.4, 1.8) * min(1.5, W / 3)
+            ln = rnd.uniform(0.5, 1.4)
+            m = team if rnd.random() < 0.45 else X['char']
+            plate(root, (ln if edge < 2 else 0.35, 0.35 if edge < 2 else ln, h), (x, y, h / 2 + 0.2), (rnd.uniform(-0.15, 0.15), rnd.uniform(-0.15, 0.15), rnd.uniform(-0.2, 0.2)), m, 0.03)
+        for i in range(max(2, W // 2)):
+            P(root, 'box', (0.12, 0.12, rnd.uniform(1.0, 2.2)), (rnd.uniform(-W / 3, W / 3), rnd.uniform(-D / 3, D / 3), 0.8), (rnd.uniform(-0.9, 0.9), rnd.uniform(-0.9, 0.9), 0), mat=M['metal'], bevel=0.01, sub=0)
+        for i in range(int(W * D * 0.8) + 4):
+            r = rnd.uniform(0.12, 0.45) * (W / 4 + 0.6)
+            P(root, 'sph', (r, r * rnd.uniform(0.6, 1.1), r * 0.55), (rnd.uniform(-W / 2.4, W / 2.4), rnd.uniform(-D / 2.4, D / 2.4), 0.25), (rnd.random(), rnd.random(), rnd.random()), mat=X['rubble'] if rnd.random() < 0.6 else X['char'], verts=7)
+        empty('Fire0', (0, 0, 0.6), root)
+    elif kind == 'flag':
+        # Flaggensockel: sechseckige Plinthe, Leuchtrille, Mast mit Querträger
+        P(root, 'cyl', (1.15, 1.25, 0.22), (0, 0, 0.11), mat=X['concrete'], verts=6, bevel=0.04, sub=0)
+        P(root, 'cyl', (0.9, 0.95, 0.12), (0, 0, 0.28), mat=M['dark'], verts=6, sub=0)
+        for k in range(6):
+            a = k / 6 * math.pi * 2
+            P(root, 'box', (0.25, 0.06, 0.06), (math.cos(a) * 1.05, math.sin(a) * 1.05, 0.25), (0, 0, a + math.pi / 2), mat=X['hazard'], bevel=0.01, sub=0)
+            P(root, 'sph', (0.04, 0.04, 0.03), (math.cos(a + 0.5) * 1.12, math.sin(a + 0.5) * 1.12, 0.23), mat=M['metal'], verts=8, sub=0)
+        P(root, 'cyl', (0.16, 0.2, 0.35), (0, 0, 0.5), mat=M['metal'], verts=12, sub=0)
+        P(root, 'cyl', (0.045, 0.055, 3.4), (0, 0, 2.3), mat=M['metal'], verts=12, sub=0)
+        P(root, 'box', (0.05, 0.05, 0.06), (0, 0, 3.98), mat=M['metal'], bevel=0.01, sub=0)
+        P(root, 'sph', (0.09, 0.09, 0.09), (0, 0, 4.05), mat=M['chrome'], verts=12)
+        for s in (1, -1):  # Bodenstrahler
+            P(root, 'box', (0.16, 0.12, 0.1), (s * 0.55, -0.55, 0.42), (0.6, 0, 0), mat=M['dark'], bevel=0.02, sub=0)
     path = f'{OUT}/building_{kind}.glb'
     export(path)
     return path
 
 
 if __name__ == '__main__':
-    for k in ('vehicle', 'robot', 'radar', 'fort', 'turret', 'mgturret', 'repair'):
+    for k in ('vehicle', 'robot', 'radar', 'fort', 'turret', 'mgturret', 'repair', 'power', 'ruin6x6', 'ruin6x4', 'ruin4x4', 'ruin2x2', 'flag'):
         print('exported', build(k))

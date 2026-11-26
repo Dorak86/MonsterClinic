@@ -9,7 +9,7 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { TILE, shared, TEAM_COLORS } from './materials.js';
 import { Terrain } from './terrain.js';
 import { Effects } from './effects.js';
-import { makeRobot, makeVehicle, makeBuilding, makeRuin, makeFlag, wreckify, makeBarrel } from './models.js';
+import { makeRobot, makeVehicle, makeBuilding, makeRuin, makeFlag, wreckify, makeBarrel, energyMaterials } from './models.js';
 import { T } from '../sim/defs.js';
 
 function angLerp(a, b, t) {
@@ -555,6 +555,16 @@ export class Renderer {
       } else e.obj.scale.setScalar(ud.scale || 1);
       if (!visible) continue;
       if (ud.kind === 'prop') continue;
+      // Laden: Stromblitze von Generator oder Batterie-Lkw
+      if (time - 0 >= 0 && w.time - u.chargeT < 0.3 && Math.random() < dt * (u.cls === 'robot' ? 3 : 1.5)) {
+        const src = w.byId.get(u.chargeFrom);
+        if (src) {
+          const sx = src.kind === 'building' ? src.cx : src.x, sy = src.kind === 'building' ? src.cy : src.y;
+          const from = new THREE.Vector3(sx * TILE, this.terrain.unitHeight(sx, sy) + (src.kind === 'building' ? 3 : 1.6), sy * TILE);
+          this.effects.zap(from, new THREE.Vector3(e.obj.position.x, gy + 1.3, e.obj.position.z));
+        }
+      }
+      if (ud.chargeMat) ud.chargeMat.emissiveIntensity = 0.2 + 4 * (u.stock / (u.def.stock || 1));
       if (ud.kind === 'robot') {
         const moving = Math.hypot(u.x - u.px, u.y - u.py) > 0.001;
         // Leerlauf: gelegentlich umschauen, strecken, Steine treten
@@ -627,6 +637,7 @@ export class Renderer {
         if (em.kind === 'chimney') em.rate = b.produce && b.team ? 4 : 0.5;
       }
     }
+    for (const m of energyMaterials()) m.emissiveIntensity = 3.5 + Math.sin(time * 3) * 1.5;
     // Flaggen
     for (const f of this.flags) {
       const ud = f.obj.userData;

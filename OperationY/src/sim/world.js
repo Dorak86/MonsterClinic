@@ -1,6 +1,6 @@
 // Spielsimulation: Einheiten, Gebäude, Geschosse, Sektoren, Produktion, Sicht
 
-import { T, TEAM, UNITS, BUILDINGS, WEAPONS, DAMAGE, UNIT_CAP, SIM_DT, productionFactor, BARREL } from './defs.js';
+import { T, TEAM, UNITS, BUILDINGS, WEAPONS, DAMAGE, UNIT_CAP, SIM_DT, productionFactor, BARREL, BAT } from './defs.js';
 import { generateMap } from './mapgen.js';
 import { findPath, nearestPassable, passable } from './path.js';
 
@@ -120,6 +120,7 @@ export class World {
       gx: x, gy: y, stuckT: 0, sx: x, sy: y, repaths: 0, moving: false, scanT: Math.random() * 0.3,
       walk: 0, recoil: 0, driver: def.cls === 'vehicle' ? 'runner' : null, born: this.time, passengers: def.carry ? [] : null,
       needPath: false, dest: null, hitT: -9, idleT: 0, killT: -9,
+      bat: def.cls === 'robot' ? BAT.max : null, stock: def.stock || 0, chargeT: -9, chargeFrom: null,
     };
     this.units.push(u);
     this.byId.set(u.id, u);
@@ -223,6 +224,7 @@ export class World {
       if (!q) return;
       const r = this.addUnit(p.type, q[0] + 0.5, q[1] + 0.5, v.team);
       r.hp = Math.max(1, p.hp * hpMul);
+      if (p.bat != null) r.bat = p.bat;
       out.push(r.id);
     });
     v.passengers = [];
@@ -355,8 +357,10 @@ export class World {
     this.updateFires(dt);
     this.updateSectors();
     if (this.tick % 40 === 0) this.checkAnnihilation();
+    if (this.tick % 20 === 0 && this.level.goal?.hold) this.checkGoal();
     if (this.tick % 5 === 0) this.updateVisibility();
     if (this.tick % 10 === 0) this.repair(dt * 10);
+    if (this.tick % 5 === 0) this.updatePower(dt * 5);
     // Tote entfernen
     if (this.tick % 20 === 0) {
       this.units = this.units.filter((u) => {
@@ -370,6 +374,36 @@ export class World {
     let c = 0;
     for (const u of this.units) if (!u.dead && u.team === team && u.cls !== 'prop') c += 1 + (u.passengers ? u.passengers.length : 0);
     return c;
+  }
+
+  // Strom: Laden an Generatoren, Batterie-Lkw tanken und verteilen
+  updatePower(dt) {
+    const chargers = this.buildings.filter((b) => b.def.charges && !b.destroyed && b.team);
+    for (const u of this.units) {
+      if (u.dead || !u.team) continue;
+      if (u.cls === 'robot') {
+        u.bat = Math.max(0, u.bat - BAT.idle * dt);
+        if (u.bat < BAT.max) {
+          const c = chargers.find((b) => b.team === u.team && this.distToBuilding(u.x, u.y, b) < BAT.range);
+          if (c) { u.bat = Math.min(BAT.max, u.bat + BAT.charge * dt); u.chargeT = this.time; u.chargeFrom = c.id; }
+        }
+        if (u.bat <= 0 && !u.batWarn) { u.batWarn = true; this.emit({ t: 'batteryEmpty', id: u.id, team: u.team, x: u.x, y: u.y }); }
+        if (u.bat > 20) u.batWarn = false;
+      } else if (u.def.support) {
+        const c = chargers.find((b) => b.team === u.team && this.distToBuilding(u.x, u.y, b) < BAT.range + 0.5);
+        if (c && u.stock < u.def.stock) { u.stock = Math.min(u.def.stock, u.stock + BAT.truckRefill * dt); u.chargeT = this.time; u.chargeFrom = c.id; }
+        if (u.stock > 0) {
+          for (const r of this.units) {
+            if (r.dead || r.team !== u.team || r.cls !== 'robot' || r.bat >= 90) continue;
+            if (Math.hypot(r.x - u.x, r.y - u.y) > BAT.truckRange) continue;
+            const give = Math.min(BAT.truckGive * dt, BAT.max - r.bat, u.stock);
+            r.bat += give; u.stock -= give;
+            r.chargeT = this.time; r.chargeFrom = u.id;
+            if (u.stock <= 0) break;
+          }
+        }
+      }
+    }
   }
 
   updateFires(dt) {
@@ -514,7 +548,7 @@ export class World {
       if (!this.canBoard(v, u.team)) { u.order = { kind: 'idle' }; u.gx = u.x; u.gy = u.y; u.path = null; }
       else if (v.def?.carry && v.team === u.team) {
         if (Math.hypot(v.x - u.x, v.y - u.y) < v.radius + 0.8) {
-          v.passengers.push({ type: u.type, hp: u.hp });
+          v.passengers.push({ type: u.type, hp: u.hp, bat: u.bat });
           u.dead = true;
           this.emit({ t: 'embark', id: u.id, vid: v.id, team: u.team, x: v.x, y: v.y, n: v.passengers.length });
           return;
@@ -587,7 +621,8 @@ export class World {
         u.turret = aim;
       }
       const aligned = Math.abs(angDiff(u.turret, aim)) < 0.25;
-      if (d <= wpn.range && (!wpn.minRange || d >= wpn.minRange) && aligned) {
+      const powered = u.cls !== 'robot' || u.bat > 0;
+      if (powered && d <= wpn.range && (!wpn.minRange || d >= wpn.minRange) && aligned) {
         if (u.cd <= 0) {
           u.cd = wpn.cd * (0.9 + Math.random() * 0.2);
           if (wpn.salvo) { u.salvo = wpn.salvo; u.salvoT = 0; }
@@ -629,6 +664,10 @@ export class World {
     }
     const tile = this.map.tiles[Math.floor(u.y) * this.map.w + Math.floor(u.x)];
     let sp = u.def.speed;
+    if (u.cls === 'robot') {
+      u.bat = Math.max(0, u.bat - BAT.move * dt);
+      if (u.bat <= 0) sp *= BAT.empty;
+    }
     if (tile === T.FOREST) sp *= 0.6;
     if ((tile === T.ROAD || tile === T.BRIDGE) && u.cls === 'vehicle') sp *= 1.15;
     const want = Math.atan2(dy, dx);
@@ -766,6 +805,7 @@ export class World {
     };
     this.projectiles.push(p);
     if (src.kind === 'unit') src.recoil = 1;
+    if (src.cls === 'robot') src.bat = Math.max(0, src.bat - BAT.fire * wpn.cd);
     else src.recoil = 1;
     this.emit({ t: 'shot', x: sx, y: sy, tx, ty, angle: Math.atan2(ty - sy, tx - sx), w: wname, team: src.team, src: src.id, proj: p });
   }
@@ -1013,7 +1053,7 @@ export class World {
     }
     this.emit({ t: 'capture', sector: s.id, team, prev, x: s.x, y: s.y });
     if (hasFort) this.gameOver(team, 'flag');
-    this.checkGoal();
+    if (!this.level.goal?.hold) this.checkGoal();
   }
 
   repair(dt) {
@@ -1073,7 +1113,13 @@ export class World {
     const g = this.level.goal;
     if (!g || g.type !== 'own' || this.over) return;
     const need = this.buildings.filter((b) => g.types.includes(b.type) && !b.destroyed);
-    if (need.length && need.every((b) => b.team === TEAM.PLAYER)) this.gameOver(TEAM.PLAYER, 'goal');
+    const owned = need.length && need.every((b) => b.team === TEAM.PLAYER);
+    if (!g.hold) { if (owned) this.gameOver(TEAM.PLAYER, 'goal'); return; }
+    if (owned) {
+      if (!this.goalHoldT) this.emit({ t: 'goalHold', secs: g.hold });
+      this.goalHoldT = (this.goalHoldT || 0) + SIM_DT * 20;
+      if (this.goalHoldT >= g.hold) this.gameOver(TEAM.PLAYER, 'goal');
+    } else if (this.goalHoldT) { this.goalHoldT = 0; this.emit({ t: 'goalLost' }); }
   }
 
   gameOver(winner, reason) {

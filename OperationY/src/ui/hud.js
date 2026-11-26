@@ -264,6 +264,22 @@ export class Hud {
       el.firstChild.style.width = f * 100 + '%';
       el.firstChild.style.background = f > 0.6 ? 'var(--ok)' : f > 0.3 ? 'var(--warn)' : 'var(--enemy)';
     }
+    for (const el of this.panel.querySelectorAll('[data-bat]')) {
+      const o = w.byId.get(+el.dataset.bat);
+      if (o) { el.firstChild.style.width = o.bat + '%'; el.firstChild.style.background = o.bat < 20 ? '#ff9a30' : '#5ae0ff'; }
+    }
+    for (const el of this.panel.querySelectorAll('[data-stock]')) {
+      const o = w.byId.get(+el.dataset.stock);
+      if (o) { el.firstChild.style.width = (o.stock / o.def.stock * 100) + '%'; el.firstChild.style.background = '#7dff9a'; }
+    }
+    for (const el of this.panel.querySelectorAll('[data-battext]')) {
+      const o = w.byId.get(+el.dataset.battext);
+      if (o) el.textContent = o.bat <= 0 ? 'leer – zum Hauptquartier, Stromwerk oder Versorger!' : `${Math.round(o.bat)} %`;
+    }
+    for (const el of this.panel.querySelectorAll('[data-stocktext]')) {
+      const o = w.byId.get(+el.dataset.stocktext);
+      if (o) el.textContent = `${Math.round(o.stock)} / ${o.def.stock}`;
+    }
     for (const el of this.panel.querySelectorAll('[data-hptext]')) {
       const o = w.byId.get(+el.dataset.hptext);
       if (o) el.textContent = `${Math.ceil(o.hp)} / ${o.maxHp}`;
@@ -286,7 +302,7 @@ export class Hud {
         this.facecam.render(Math.min(0.1, (now - (this.fcLast || now)) / 1000), u.cls === 'vehicle' && !u.team ? 'bored' : moodOf(u, w.time));
         this.fcLast = now;
         const m = this.panel.querySelector('.mood');
-        if (m) m.textContent = { panic: 'Unter Beschuss!', grin: 'Treffer!', angry: 'Im Gefecht', bored: 'Langweilt sich', neutral: 'Bereit' }[moodOf(u, w.time)];
+        if (m) m.textContent = { panic: 'Unter Beschuss!', grin: 'Treffer!', angry: 'Im Gefecht', bored: u.bat != null && u.bat < 20 ? 'Akku fast leer' : 'Langweilt sich', empty: 'Akku leer – schläft fast ein', neutral: 'Bereit' }[moodOf(u, w.time)];
       }
     }
     const pass = this.panel.querySelector('[data-pass]');
@@ -319,7 +335,10 @@ export class Hud {
           <div><h3>${d.name} <span class="muted" style="font-size:12px;font-weight:400">· ${teamName}</span></h3>
           <p class="desc">${d.desc}</p>${extra}${d.carry && o.team === 1 ? `<div class="row left" style="margin:2px 0 6px"><span class="desc" data-pass="${o.id}" style="margin:0"></span><button class="ibtn wide" data-unload="${o.id}" title="Aussteigen (U)">Aussteigen</button></div>` : ''}${o.team === 1 ? '<p class="desc mood" style="color:var(--player);margin:0 0 4px"></p>' : ''}
           <div class="hpbar" data-hp="${o.id}"><div></div></div>
+          ${o.bat != null ? `<div class="hpbar bat" data-bat="${o.id}" title="Akku"><div></div></div>` : ''}
+          ${o.def.support ? `<div class="hpbar bat" data-stock="${o.id}" title="Batterievorrat"><div></div></div>` : ''}
           <div class="kv" style="margin-top:6px"><span>Struktur</span><span data-hptext="${o.id}"></span>
+          ${o.bat != null ? `<span>Akku</span><span data-battext="${o.id}"></span>` : ''}${o.def.support ? `<span>Batterien</span><span data-stocktext="${o.id}"></span>` : ''}
           <span>Reichweite</span><span>${weaponRange(d)}</span><span>Panzerung</span><span>${armorName(d.armor)}</span></div></div>`;
         p.querySelector('[data-unload]')?.addEventListener('click', () => this.onPanel?.('unload', o.id));
         if (o.cls !== 'prop') {
@@ -384,13 +403,16 @@ export class Hud {
     const zoom = 42 / this.r.cam.dist;
     for (const u of w.units) {
       if (u.dead || !u.team) continue;
-      const show = selection.has(u.id) || u.hp < u.maxHp || hoverId === u.id;
+      const show = selection.has(u.id) || u.hp < u.maxHp || hoverId === u.id || (u.team === 1 && u.bat != null && u.bat < 40);
       if (!show) continue;
       if (u.team !== 1 && !w.isVisible(1, u.x, u.y)) continue;
       const x = u.px + (u.x - u.px) * alpha, y = u.py + (u.y - u.py) * alpha;
       const [sx, sy, sz] = this.r.tileToScreen(x, y, u.cls === 'robot' ? 2.4 : 2.2);
       if (sz > 1) continue;
-      bar(sx, sy, (u.cls === 'robot' ? 22 : 34) * Math.min(1.4, zoom), u.hp / u.maxHp, u.team === 2 && !selection.has(u.id) ? '#7cb8ff' : null);
+      const bw = (u.cls === 'robot' ? 22 : 34) * Math.min(1.4, zoom);
+      bar(sx, sy, bw, u.hp / u.maxHp, u.team === 2 && !selection.has(u.id) ? '#7cb8ff' : null);
+      if (u.team === 1 && u.bat != null) bar(sx, sy + 5, bw, u.bat / 100, u.bat < 20 ? '#ff9a30' : '#5ae0ff');
+      if (u.team === 1 && u.def.support) bar(sx, sy + 5, bw, u.stock / u.def.stock, '#7dff9a');
     }
     for (const b of w.buildings) {
       if (b.destroyed) continue;

@@ -107,9 +107,9 @@ export const UNITS = {
     desc: 'Bringt bis zu vier Roboter schnell an die Front. Roboter steigen per Rechtsklick ein, Taste U lässt sie aussteigen.',
   },
   fueltruck: {
-    name: 'Versorger', cls: 'vehicle', armor: 'medium', hp: 240, speed: 2.7, sight: 7,
-    weapon: null, build: 28, radius: 0.85, turnRate: 2.8, support: true,
-    desc: 'Tanklaster: repariert eigene Fahrzeuge in der Nähe. Explodiert gewaltig, wenn er getroffen wird.',
+    name: 'Versorger', cls: 'vehicle', armor: 'medium', hp: 240, speed: 2.9, sight: 7,
+    weapon: null, build: 22, radius: 0.85, turnRate: 2.8, support: true, stock: 400,
+    desc: 'Batterie-Lkw: tankt an Hauptquartier und Stromwerken Strom und lädt Roboter in seiner Nähe auf. Explodiert, wenn er zerstört wird.',
   },
   launcher: {
     name: 'Raketenwerfer', cls: 'vehicle', armor: 'medium', hp: 220, speed: 2.3, sight: 8,
@@ -120,9 +120,9 @@ export const UNITS = {
 
 export const BUILDINGS = {
   fort: {
-    name: 'Fort', w: 3, h: 3, hp: 3200, weapon: 'fortgun', sight: 9,
+    name: 'Fort', w: 3, h: 3, hp: 3200, weapon: 'fortgun', sight: 9, charges: true,
     produces: ['runner', 'assault', 'grenadier', 'rocketeer'],
-    desc: 'Hauptquartier. Fällt es, ist die Schlacht verloren.',
+    desc: 'Hauptquartier und Generator: lädt Roboter und Versorger in der Nähe auf. Fällt es, ist die Schlacht verloren.',
   },
   robot: {
     name: 'Roboterwerk', w: 3, h: 2, hp: 1300, sight: 6,
@@ -137,6 +137,10 @@ export const BUILDINGS = {
   radar: {
     name: 'Radarmast', w: 1, h: 1, hp: 500, sight: 16,
     desc: 'Deckt ein großes Gebiet auf, schaltet die Minikarte mit Feindbewegungen frei und zeigt gegnerische Produktion.',
+  },
+  power: {
+    name: 'Stromwerk', w: 2, h: 2, hp: 1100, sight: 6, charges: true,
+    desc: 'Lädt eigene Roboter und Versorger in der Nähe auf. Gehört dem Besitzer des Sektors.',
   },
   repair: {
     name: 'Reparaturstation', w: 2, h: 2, hp: 900, sight: 5,
@@ -153,6 +157,12 @@ export const BUILDINGS = {
 };
 
 export const UNIT_CAP = 60;
+
+// Akkus der Roboter
+export const BAT = {
+  max: 100, move: 0.3, idle: 0.04, fire: 0.22, empty: 0.4,
+  charge: 10, range: 4, truckRange: 3, truckGive: 12, truckRefill: 45, low: 25,
+};
 
 // Explosives Fass (Kartenobjekt)
 export const BARREL = { name: 'Explosives Fass', cls: 'prop', armor: 'light', hp: 25, speed: 0, sight: 0, radius: 0.3, desc: 'Explodiert bei Beschuss. Mit Vorsicht genießen.' };

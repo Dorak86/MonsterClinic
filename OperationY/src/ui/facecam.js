@@ -73,7 +73,7 @@ export class FaceCam {
     g.clearRect(0, 0, W, H);
     g.fillStyle = 'rgba(10,6,4,0.85)';
     g.fillRect(0, 0, W, H);
-    const col = mood === 'panic' ? '#ff6050' : mood === 'grin' ? '#80ff90' : '#ffc070';
+    const col = mood === 'panic' ? '#ff6050' : mood === 'grin' ? '#80ff90' : mood === 'empty' ? '#6a5a40' : '#ffc070';
     g.fillStyle = col; g.strokeStyle = col; g.lineWidth = 5; g.lineCap = 'round';
     const blink = Math.sin(t * 1.7) > 0.97;
     const eye = (x) => {
@@ -81,6 +81,7 @@ export class FaceCam {
       if (mood === 'panic') { g.beginPath(); g.arc(x + Math.sin(t * 30) * 2, 24, 10, 0, 7); g.stroke(); g.beginPath(); g.arc(x, 24, 3, 0, 7); g.fill(); }
       else if (mood === 'grin') { g.beginPath(); g.arc(x, 28, 9, Math.PI * 1.1, Math.PI * 1.9); g.stroke(); }
       else if (mood === 'bored') { g.fillRect(x - 10, 24, 20, 5); }
+      else if (mood === 'empty') { g.fillRect(x - 9, 30, 18, 3); }
       else if (mood === 'angry') { g.beginPath(); g.moveTo(x - 10, 18 + (x < 64 ? 0 : 6)); g.lineTo(x + 10, 18 + (x < 64 ? 6 : 0)); g.stroke(); g.fillRect(x - 6, 26, 12, 6); }
       else { g.fillRect(x - 8, 18, 16, 12); }
     };
@@ -89,9 +90,11 @@ export class FaceCam {
     if (mood === 'panic') g.ellipse(64, 50, 8, 6 + Math.abs(Math.sin(t * 12)) * 3, 0, 0, 7);
     else if (mood === 'grin') g.arc(64, 38, 16, 0.2, Math.PI - 0.2);
     else if (mood === 'bored') { g.moveTo(52, 52); g.lineTo(76, 50); }
+    else if (mood === 'empty') { g.moveTo(54, 52); g.quadraticCurveTo(64, 46, 74, 52); }
     else if (mood === 'angry') { g.moveTo(50, 54); g.lineTo(78, 54); }
     else { g.moveTo(54, 50); g.lineTo(74, 50); }
-    mood === 'panic' ? g.stroke() : g.stroke();
+    g.stroke();
+    if (mood === 'empty') { g.font = 'bold 16px monospace'; g.fillText('z', 100 + Math.sin(t * 2) * 3, 18); g.font = 'bold 11px monospace'; g.fillText('z', 112, 8); }
     g.fillStyle = 'rgba(0,0,0,0.3)';
     for (let y = 0; y < H; y += 3) g.fillRect(0, y, W, 1);
     this.ledTex.needsUpdate = true;
@@ -118,9 +121,10 @@ export class FaceCam {
 // Stimmung einer Einheit aus dem Spielzustand
 export function moodOf(u, time) {
   if (!u) return 'neutral';
+  if (u.bat != null && u.bat <= 0) return 'empty';
   if (time - u.hitT < 1.6) return 'panic';
   if (time - (u.killT ?? -9) < 3) return 'grin';
   if (u.target) return 'angry';
-  if (u.order.kind === 'idle' && (u.idleT > 12 || (u.still || 0) > 12)) return 'bored';
+  if ((u.bat != null && u.bat < 20) || (u.order.kind === 'idle' && (u.idleT > 12 || (u.still || 0) > 12))) return 'bored';
   return 'neutral';
 }

@@ -26,6 +26,12 @@ import bRadar from '../models/building_radar.glb';
 import bTurret from '../models/building_turret.glb';
 import bMg from '../models/building_mgturret.glb';
 import bRepair from '../models/building_repair.glb';
+import bPower from '../models/building_power.glb';
+import bR66 from '../models/building_ruin6x6.glb';
+import bR64 from '../models/building_ruin6x4.glb';
+import bR44 from '../models/building_ruin4x4.glb';
+import bR22 from '../models/building_ruin2x2.glb';
+import bFlag from '../models/building_flag.glb';
 import { mat, TEAM_COLORS, panelTex, treadTex, patchFow } from './materials.js';
 
 let PANEL = null, TREAD = null;
@@ -522,7 +528,7 @@ function instance(key, build) {
 // ---------- Roboter aus Blender (GLB mit Skelett und Animationen) ----------
 const ROBOT_GLB = { runner: glbRunner, grenadier: glbGrenadier, rocketeer: glbRocketeer, sniper: glbSniper, assault: glbAssault, flamer: glbFlamer, laser: glbLaser };
 const VEHICLE_GLB = { buggy: glbBuggy, lighttank: glbLight, mediumtank: glbMedium, heavytank: glbHeavy, launcher: glbLauncher, transporter: glbTransporter, fueltruck: glbFuel };
-const BUILDING_GLB = { fort: bFort, robot: bRobot, vehicle: bVehicle, radar: bRadar, turret: bTurret, mgturret: bMg, repair: bRepair };
+const BUILDING_GLB = { fort: bFort, robot: bRobot, vehicle: bVehicle, radar: bRadar, turret: bTurret, mgturret: bMg, repair: bRepair, power: bPower, ruin6x6: bR66, ruin6x4: bR64, ruin4x4: bR44, ruin2x2: bR22, flag: bFlag };
 const robotSrc = {};
 const vehicleSrc = {};
 const buildingSrc = {};
@@ -581,6 +587,9 @@ function weatherTex() {
 }
 
 const vehMatCache = new Map();
+export function energyMaterials() {
+  return ['Energy', 'Charge'].map((k) => vehMatCache.get(k)).filter(Boolean);
+}
 function vehicleMaterial(m, team) {
   const key = m.name + (m.name === 'Team' || m.name === 'TeamGlow' ? team : '');
   if (vehMatCache.has(key)) return vehMatCache.get(key);
@@ -682,6 +691,13 @@ export function makeVehicle(type, team) {
     ud.muzzles.push(m || b);
   }
   for (let i = 0; i < 8; i++) { const w = model.getObjectByName('Wheel' + i); if (w) ud.wheels.push(w); }
+  // Ladeanzeige des Batterie-Lkw je Fahrzeug
+  model.traverse((c) => {
+    if (c.isMesh && c.material.name === 'Charge') {
+      if (!ud.chargeMat) ud.chargeMat = patchFow(c.material.clone());
+      c.material = ud.chargeMat;
+    }
+  });
   // eigene Kettentextur je Fahrzeug, damit sie nur beim Fahren läuft
   ud.trackMat = null;
   model.traverse((c) => {
@@ -761,6 +777,19 @@ export function makeBuilding(type, team) {
 }
 
 export function makeRuin(type, w, h) {
+  const key = w >= 3 && h >= 3 ? 'ruin6x6' : w >= 3 ? 'ruin6x4' : w >= 2 ? 'ruin4x4' : 'ruin2x2';
+  if (buildingSrc[key]) {
+    const tk = 'gr' + key;
+    if (!templates.has(tk)) {
+      const src = buildingSrc[key].scene.clone();
+      src.traverse((c) => { if (c.isMesh) { c.material = vehicleMaterial(c.material, 0); c.castShadow = true; c.receiveShadow = true; } });
+      templates.set(tk, src);
+    }
+    const o = templates.get(tk).clone();
+    o.rotation.y = (Math.floor(Math.random() * 2)) * Math.PI;
+    o.userData = { kind: 'ruin' };
+    return o;
+  }
   const root = new THREE.Group();
   const c = mat(0x3a3836, { r: 1 });
   const c2 = mat(0x24221f, { r: 1 });
@@ -783,30 +812,71 @@ export function makeRuin(type, w, h) {
 }
 
 // ---------------- Flagge ----------------
+let FLAGTEX = null;
+function flagTex() {
+  // Stoff mit eigenem Wappen: Zahnrad mit Y, ausgefranster Rand, Schmutz
+  if (FLAGTEX) return FLAGTEX;
+  const W = 256, H = 160;
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  g.fillStyle = '#e8e4dc'; g.fillRect(0, 0, W, H);
+  for (let y = 0; y < H; y += 3) { g.fillStyle = `rgba(0,0,0,${0.03 + Math.random() * 0.04})`; g.fillRect(0, y, W, 1); }
+  g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(0, 0, 14, H);
+  const cx = 140, cy = 80, r = 46;
+  g.fillStyle = 'rgba(20,16,14,0.55)';
+  g.beginPath();
+  for (let i = 0; i < 24; i++) {
+    const a = (i / 24) * Math.PI * 2, rr = i % 2 ? r : r + 9;
+    g.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr);
+  }
+  g.closePath(); g.fill();
+  g.fillStyle = '#ece8e0';
+  g.beginPath(); g.arc(cx, cy, r - 10, 0, Math.PI * 2); g.fill();
+  g.strokeStyle = 'rgba(20,16,14,0.7)'; g.lineWidth = 11; g.lineCap = 'round';
+  g.beginPath(); g.moveTo(cx - 18, cy - 20); g.lineTo(cx, cy); g.lineTo(cx + 18, cy - 20); g.moveTo(cx, cy); g.lineTo(cx, cy + 24); g.stroke();
+  for (let i = 0; i < 40; i++) { g.fillStyle = `rgba(80,60,40,${Math.random() * 0.15})`; g.beginPath(); g.arc(Math.random() * W, Math.random() * H, 4 + Math.random() * 14, 0, 7); g.fill(); }
+  g.clearRect(W - 6, 0, 6, H);
+  for (let y = 0; y < H; y += 10) g.clearRect(W - 14 + Math.random() * 6, y, 14, 5);
+  FLAGTEX = new THREE.CanvasTexture(c);
+  FLAGTEX.colorSpace = THREE.SRGBColorSpace;
+  return FLAGTEX;
+}
 export function makeFlag() {
   const root = new THREE.Group();
-  const pad = mesh(cyl(1.0, 1.15, 0.16, 24), mat(0x55585c, { r: 0.6, m: 0.5 }), 0, 0.08, 0, root);
-  pad.castShadow = false;
-  mesh(cyl(0.05, 0.06, 3.2, 16), metal(0xb8bcc2), 0, 1.6, 0, root);
-  mesh(sph(0.09), metal(0xd0d4d8), 0, 3.25, 0, root);
+  let poleTop = 3.25, ringY = 0.18;
+  if (buildingSrc.flag) {
+    if (!templates.has('gflag')) {
+      const src = buildingSrc.flag.scene.clone();
+      src.traverse((c) => { if (c.isMesh) { c.material = vehicleMaterial(c.material, 0); c.castShadow = true; c.receiveShadow = true; } });
+      templates.set('gflag', src);
+    }
+    root.add(templates.get('gflag').clone());
+    poleTop = 4.0; ringY = 0.37;
+  } else {
+    const pad = mesh(cyl(1.0, 1.15, 0.16, 24), mat(0x55585c, { r: 0.6, m: 0.5 }), 0, 0.08, 0, root);
+    pad.castShadow = false;
+    mesh(cyl(0.05, 0.06, 3.2, 16), metal(0xb8bcc2), 0, 1.6, 0, root);
+    mesh(sph(0.09), metal(0xd0d4d8), 0, 3.25, 0, root);
+  }
   const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9, side: THREE.DoubleSide });
   const ring = new THREE.Mesh(new THREE.RingGeometry(0.85, 1.0, 40), ringMat);
   ring.rotation.x = -Math.PI / 2;
-  ring.position.y = 0.18;
+  ring.position.y = ringY;
   root.add(ring);
   const capMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.95, side: THREE.DoubleSide });
   const cap = new THREE.Mesh(new THREE.RingGeometry(1.15, 1.4, 48, 1, 0, 0.01), capMat);
   cap.rotation.x = -Math.PI / 2;
-  cap.position.y = 0.2;
+  cap.position.y = ringY + 0.02;
   cap.visible = false;
   root.add(cap);
   // Tuch
   const clothGeo = new THREE.PlaneGeometry(1.3, 0.8, 10, 4);
   clothGeo.translate(0.65, 0, 0);
-  const clothMat = new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide, roughness: 0.8, emissive: 0x000000, emissiveIntensity: 0.6 });
+  const clothMat = new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide, roughness: 0.85, emissive: 0x000000, emissiveIntensity: 0.6, map: flagTex(), alphaTest: 0.5 });
   patchFow(clothMat);
   const cloth = new THREE.Mesh(clothGeo, clothMat);
-  cloth.position.set(0.04, 2.8, 0);
+  cloth.position.set(0.06, poleTop - 0.5, 0);
   cloth.castShadow = true;
   root.add(cloth);
   root.userData = { cloth, ring, cap, base: clothGeo.attributes.position.array.slice() };

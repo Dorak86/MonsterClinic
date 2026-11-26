@@ -224,6 +224,23 @@ export class Effects {
     this.projs.add({ p, from: from.clone(), t: 0, trail: 0 });
   }
 
+  // Stromblitz: zackige Linie zwischen zwei Punkten
+  zap(a, b, color = 0x6ae8ff) {
+    const pts = [];
+    const n = 7;
+    for (let i = 0; i <= n; i++) {
+      const t = i / n;
+      const p = a.clone().lerp(b, t);
+      if (i > 0 && i < n) p.add(new THREE.Vector3((Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.5 + Math.sin(t * Math.PI) * 0.6, (Math.random() - 0.5) * 0.5));
+      pts.push(p);
+    }
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
+      new THREE.LineBasicMaterial({ color: new THREE.Color(color).multiplyScalar(3), transparent: true, opacity: 1, toneMapped: false, blending: THREE.AdditiveBlending }));
+    this.scene.add(line);
+    this.beams.push({ line, life: 0, max: 0.14 });
+    this.glow.spawn({ x: b.x, y: b.y, z: b.z, life: 0.2, s0: 0.8, s1: 0.1, c0: [0.5, 0.95, 1], a0: 1, a1: 0 });
+  }
+
   impact(e) {
     const wx = e.x * TILE, wz = e.y * TILE;
     const wy = e.water ? -0.4 : this.terrain.unitHeight(e.x, e.y) + 0.1;

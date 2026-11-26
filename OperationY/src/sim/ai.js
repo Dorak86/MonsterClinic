@@ -57,7 +57,7 @@ export class AI {
           heavytank: 1 + foeVeh * 0.4 + (this.diff === 2 ? 1 : 0),
           launcher: 1 + (foeRob > 8 ? 1 : 0),
           transporter: 0.4,
-          fueltruck: 0.35,
+          fueltruck: mine.filter((u) => u.def.support).length < 2 ? 1.6 : 0.2,
         });
       } else {
         const opts = b.def.produces;
@@ -82,6 +82,42 @@ export class AI {
     }
 
     const idle = mine.filter((u) => !this.tasks.has(u.id) && u.order.kind === 'idle' && !u.chase && u.cls !== 'prop');
+
+    // Strom: leere Roboter zum Laden, Versorger zwischen Generator und Truppe pendeln
+    const chargers = w.buildings.filter((b) => b.def.charges && !b.destroyed && b.team === this.team);
+    const trucks = mine.filter((u) => u.def.support);
+    const nearest = (list, x, y, f = (o) => [o.cx ?? o.x, o.cy ?? o.y]) => {
+      let best = null, bd = 1e9;
+      for (const o of list) { const [ox, oy] = f(o); const d = Math.hypot(ox - x, oy - y); if (d < bd) { bd = d; best = o; } }
+      return best;
+    };
+    for (const u of mine) {
+      if (u.cls !== 'robot' || u.bat > 22 || this.tasks.get(u.id)?.kind === 'charge') continue;
+      const src = nearest(chargers.concat(trucks.filter((t) => t.stock > 60)), u.x, u.y);
+      if (!src) continue;
+      const [sx, sy] = src.kind === 'building' ? [src.cx, src.y + src.h + 1] : [src.x, src.y];
+      w.commandMove([u.id], sx, sy, this.team, false);
+      this.tasks.set(u.id, { kind: 'charge', until: w.time + 45 });
+    }
+    for (const [id, t] of this.tasks) {
+      const u = w.byId.get(id);
+      if (t.kind === 'charge' && u && u.bat > 85) this.tasks.delete(id);
+    }
+    for (const t of trucks) {
+      const task = this.tasks.get(t.id);
+      if (task && task.kind === 'truck' && t.order.kind !== 'idle') continue;
+      if (t.stock < 120) {
+        const c = nearest(chargers, t.x, t.y);
+        if (c) w.commandMove([t.id], c.cx, c.y + c.h + 1.5, this.team, false);
+      } else {
+        const low = mine.filter((u) => u.cls === 'robot' && u.bat < 60).sort((a, b) => a.bat - b.bat).slice(0, 6);
+        if (low.length) {
+          const cx = low.reduce((s, u) => s + u.x, 0) / low.length, cy = low.reduce((s, u) => s + u.y, 0) / low.length;
+          w.commandMove([t.id], cx, cy, this.team, false);
+        }
+      }
+      this.tasks.set(t.id, { kind: 'truck', until: w.time + 12 });
+    }
 
     // Herrenlose Fahrzeuge und unbemannte Geschütze kapern
     const boardables = w.units.filter((v) => !v.dead && v.cls === 'vehicle' && v.team === 0)
@@ -152,7 +188,7 @@ export class AI {
       let value = 0;
       for (const id of s.buildings) {
         const b = w.byId.get(id);
-        if (b && !b.destroyed) value += b.def.produces ? 14 : 6;
+        if (b && !b.destroyed) value += b.def.produces ? 14 : b.def.charges ? 11 : 6;
       }
       if (s.owner === this.enemy) value += 4;
       const score = value - dmin * 0.95 - defense * 3;

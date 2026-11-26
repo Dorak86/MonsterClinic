@@ -446,7 +446,8 @@ class Game {
           const names = s.buildings.map((id) => w.byId.get(id)).filter((b) => b && !b.destroyed).map((b) => b.def.name);
           const what = names.length ? ` (${names.join(', ')})` : '';
           const factory = s.buildings.some((id) => { const b = w.byId.get(id); return b && !b.destroyed && b.def.produces && b.type !== 'fort'; });
-          if (ev.team === 1) { this.audio.play('capture'); this.hud.message(`Sektor erobert${what}`, 'good', ev.x, ev.y); this.radio(factory ? RADIO.factory : RADIO.capture, factory ? 1 : 0.4); }
+          const power = s.buildings.some((id) => w.byId.get(id)?.type === 'power');
+          if (ev.team === 1) { this.audio.play('capture'); this.hud.message(`Sektor erobert${what}`, 'good', ev.x, ev.y); this.radio(power ? RADIO.power : factory ? RADIO.factory : RADIO.capture, factory || power ? 1 : 0.4); }
           else if (ev.prev === 1) { this.audio.play('lost'); this.hud.message(`Sektor verloren${what}!`, 'bad', ev.x, ev.y); this.radio(RADIO.lost, 0.8); }
           else { if (names.length) this.hud.message(`Gegner übernimmt ${names.join(', ')}`, 'bad', ev.x, ev.y); this.radio(RADIO.enemyCapture, 0.25); }
           break;
@@ -479,6 +480,15 @@ class Game {
           break;
         case 'disembark':
           if (ev.team === 1) { this.audio.play('order'); if (ev.ids[0]) this.hud.bubble(ev.ids[0], pick(QUIPS.disembark)); }
+          break;
+        case 'batteryEmpty':
+          if (ev.team === 1) { this.hud.bubble(ev.id, pick(QUIPS.empty)); this.radio(RADIO.battery, 0.35); }
+          break;
+        case 'goalHold':
+          this.hud.message(`Ziel eingenommen – ${ev.secs} Sekunden halten!`, 'good'); this.radio(RADIO.goalHold);
+          break;
+        case 'goalLost':
+          this.hud.message('Ziel verloren – Countdown zurückgesetzt!', 'bad');
           break;
         case 'impatient':
           if (ev.team === 1) { this.hud.bubble(ev.id, pick(QUIPS.impatient)); }

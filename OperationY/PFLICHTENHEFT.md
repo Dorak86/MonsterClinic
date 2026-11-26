@@ -97,6 +97,16 @@ Werke mit Tunneltor und laufendem Förderband, Radarstation mit Gittermast und d
 Kanonenturm und neue MG-Stellung (Dreibein); Roboter mit lackierter, abgenutzter Rüstung,
 wuchtiger Panzerjäger mit Raketenkasten, schlanker Scharfschütze. Eigene Entwürfe und Namen.
 
+Strom-Mechanik (v1.7): Jeder Roboter hat einen Akku (Verbrauch beim Laufen 0,3/s, beim Schießen
+0,22/s, im Stand 0,04/s). Leer: 40 % Tempo, kein Feuer, Flaggen bleiben eroberbar. Laden mit
+10/s im Umkreis von 4 Feldern um das Hauptquartier (Generator) und eroberbare Stromwerke (auf
+jeder Karte 1–2). Der Versorger ist ein Batterie-Lkw (Vorrat 400): füllt sich an Generatoren
+nach (45/s) und lädt Roboter im Umkreis von 3 Feldern (12/s je Roboter). Die KI schickt leere
+Roboter zum Laden und lässt Versorger zwischen Generator und Truppe pendeln. Akkuleiste unter
+der Lebensleiste, Akku und Vorrat im Panel, Ladeblitze, LED-Mimik „Akku leer“.
+Zerstörte Gebäude als Blender-Ruinen in vier Größen, neue Flaggen mit Sockel und Wappen.
+Level 6: Archivturm muss 60 Sekunden gehalten werden.
+
 Nicht umgesetzt: 3D-NavMesh (Wegfindung bleibt rasterbasiert, Brücken verändern das Raster),
 überrollbare Bäume, Karten-/Rauch-Idle mit Requisiten.
 
