@@ -1,6 +1,6 @@
 // HUD: Statusleiste, Minikarte, Auswahl-/Produktionspanel, Meldungen, Overlay
 
-import { UNITS, BUILDINGS, T, productionFactor, UNIT_CAP } from '../sim/defs.js';
+import { UNITS, BUILDINGS, WEAPONS, T, productionFactor, UNIT_CAP } from '../sim/defs.js';
 import { TEAM_CSS } from '../render/materials.js';
 import { FaceCam, moodOf } from './facecam.js';
 
@@ -289,6 +289,8 @@ export class Hud {
         if (m) m.textContent = { panic: 'Unter Beschuss!', grin: 'Treffer!', angry: 'Im Gefecht', bored: 'Langweilt sich', neutral: 'Bereit' }[moodOf(u, w.time)];
       }
     }
+    const pass = this.panel.querySelector('[data-pass]');
+    if (pass) { const v = w.byId.get(+pass.dataset.pass); if (v?.passengers) pass.textContent = `Passagiere: ${v.passengers.length}/${v.def.carry}`; }
     const eprod = this.panel.querySelector('[data-eprod]');
     if (eprod) {
       const b = w.byId.get(+eprod.dataset.eprod);
@@ -315,10 +317,11 @@ export class Hud {
         const extra = o.team === 0 ? '<p class="desc" style="color:var(--warn)">Herrenlos – einen Roboter auswählen und per Rechtsklick einsteigen lassen.</p>' : '';
         p.innerHTML = `<div class="icon fc"></div>
           <div><h3>${d.name} <span class="muted" style="font-size:12px;font-weight:400">· ${teamName}</span></h3>
-          <p class="desc">${d.desc}</p>${extra}${o.team === 1 ? '<p class="desc mood" style="color:var(--player);margin:0 0 4px"></p>' : ''}
+          <p class="desc">${d.desc}</p>${extra}${d.carry && o.team === 1 ? `<div class="row left" style="margin:2px 0 6px"><span class="desc" data-pass="${o.id}" style="margin:0"></span><button class="ibtn wide" data-unload="${o.id}" title="Aussteigen (U)">Aussteigen</button></div>` : ''}${o.team === 1 ? '<p class="desc mood" style="color:var(--player);margin:0 0 4px"></p>' : ''}
           <div class="hpbar" data-hp="${o.id}"><div></div></div>
           <div class="kv" style="margin-top:6px"><span>Struktur</span><span data-hptext="${o.id}"></span>
           <span>Reichweite</span><span>${weaponRange(d)}</span><span>Panzerung</span><span>${armorName(d.armor)}</span></div></div>`;
+        p.querySelector('[data-unload]')?.addEventListener('click', () => this.onPanel?.('unload', o.id));
         if (o.cls !== 'prop') {
           try {
             this.facecam.set(o.cls === 'robot' ? o.type : (o.driver || 'runner'), o.team);
@@ -436,8 +439,8 @@ export class Hud {
 }
 
 function weaponRange(d) {
-  const wpn = { rifle: 5, grenade: 5.5, bazooka: 6, longrifle: 9, mg: 5.5, cannon: 6.5, twincannon: 7, salvo: 11 }[d.weapon];
-  return wpn ? `${wpn} Felder` : '–';
+  const w = d.weapon && WEAPONS[d.weapon];
+  return w ? `${w.range} Felder` : 'keine Waffe';
 }
 
 function armorName(a) {

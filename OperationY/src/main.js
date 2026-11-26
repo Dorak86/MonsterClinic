@@ -78,6 +78,8 @@ class Game {
       else if (kind === 'selectBuilding') {
         const b = this.world.byId.get(a);
         if (b) { this.selection.clear(); this.selection.add(a); this.renderer.lookAt(b.cx, b.cy + 2); this.audio.play('click'); }
+      } else if (kind === 'unload') {
+        this.world.commandUnload([a], 1); this.audio.play('order');
       } else if (kind === 'subselect') {
         for (const id of [...this.selection]) { const o = this.world.byId.get(id); if (!o || o.type !== a) this.selection.delete(id); }
       }
@@ -471,6 +473,12 @@ class Game {
         case 'bridge':
           if (ev.destroyed) { this.audio.play('bigexplode', ev.x, ev.y, 1.2); this.hud.message('Brücke gesprengt', 'bad', ev.x, ev.y); this.radio(RADIO.bridgeDown, 0.8); }
           else { this.audio.play('capture'); this.hud.message('Brücke repariert', 'good', ev.x, ev.y); if (ev.team === 1) this.radio(RADIO.bridgeUp, 0.8); }
+          break;
+        case 'embark':
+          if (ev.team === 1) this.audio.play('board', ev.x, ev.y, 0.7);
+          break;
+        case 'disembark':
+          if (ev.team === 1) { this.audio.play('order'); if (ev.ids[0]) this.hud.bubble(ev.ids[0], pick(QUIPS.disembark)); }
           break;
         case 'impatient':
           if (ev.team === 1) { this.hud.bubble(ev.id, pick(QUIPS.impatient)); }

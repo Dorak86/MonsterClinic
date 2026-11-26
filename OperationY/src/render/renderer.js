@@ -472,11 +472,11 @@ export class Renderer {
         break;
       }
       case 'barrel': {
-        const e = this.entities.get(ev.id);
+        const e = ev.id > 0 ? this.entities.get(ev.id) : null;
         if (e) { this.scene.remove(e.obj); this.entities.delete(ev.id); }
         if (!vis(ev.x, ev.y)) break;
         const wx = ev.x * TILE, wz = ev.y * TILE, wy = this.terrain.unitHeight(ev.x, ev.y);
-        this.effects.bigExplosion(wx, wy + 0.5, wz, 1.4);
+        this.effects.bigExplosion(wx, wy + 0.5, wz, ev.big ? 2.6 : 1.4);
         this.effects.addEmitter({ kind: 'fire', x: wx, y: wy + 0.2, z: wz, r: 1.6, rate: 14, life: 6 });
         break;
       }
@@ -501,7 +501,8 @@ export class Renderer {
     let bar = null;
     if (ud.kind === 'vehicle' && ud.muzzles?.length) {
       ud.barrelIdx = ((ud.barrelIdx || 0) + 1) % ud.muzzles.length;
-      ud.barrels[ud.barrelIdx].userData.kick = 1;
+      ud.barrels[ud.barrelIdx].userData.kick = e.u?.type === 'heavytank' ? 0.15 : 1;
+      if (e.u?.type === 'heavytank') ud.spin = 1;
       return ud.muzzles[ud.barrelIdx].getWorldPosition(new THREE.Vector3());
     }
     if (ud.kind === 'vehicle' || ud.kind === 'building') {
@@ -575,6 +576,11 @@ export class Renderer {
         for (const b of ud.barrels) {
           b.userData.kick = Math.max(0, (b.userData.kick || 0) - dt * 4);
           if (b.userData.base) b.position.copy(b.userData.base).addScaledVector(b.userData.dir, -b.userData.kick * 0.22);
+        }
+        // Gatling dreht sich beim Feuern und läuft langsam aus
+        if (ud.spin > 0 && ud.barrels[0]?.userData.dir) {
+          ud.barrels[0].rotateOnAxis(ud.barrels[0].userData.dir, dt * 22 * ud.spin);
+          ud.spin = Math.max(0, ud.spin - dt * 1.2);
         }
         const moving = Math.hypot(u.x - u.px, u.y - u.py) > 0.001;
         if (moving) {

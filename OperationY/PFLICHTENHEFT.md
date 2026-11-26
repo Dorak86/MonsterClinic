@@ -87,6 +87,11 @@ Umgesetzt aus dem GDD des Auftraggebers (eigene Einheitennamen statt der Origina
 | Leerlauf-Animationen | Roboter schauen sich um, strecken sich, treten Steine |
 | 3D-Modelle | alle Roboter und Fahrzeuge aus Blender (Skript), Fahrzeuge mit sichtbarem Fahrer/Schützen |
 
+Fahrzeuge nach Konzeptblatt (v1.5): durchgehend teamfarbene, genietete Panzerplatten mit
+prozeduraler Abnutzung (Schmutz, Rost, Kratzer, Staub); Schwerpanzer mit rotierender Gatling;
+neu: Transporter (4 Roboter, Taste U zum Aussteigen) und Versorger (Tanklaster, repariert
+Fahrzeuge in der Nähe, explodiert bei Zerstörung).
+
 Nicht umgesetzt: 3D-NavMesh (Wegfindung bleibt rasterbasiert, Brücken verändern das Raster),
 überrollbare Bäume, Karten-/Rauch-Idle mit Requisiten.
 

@@ -148,7 +148,7 @@ export class Input {
       w.commandAttack(units, target.id, TEAM.PLAYER);
       g.quip(units[0], 'attack');
       g.renderer.marker(target.kind === 'building' ? target.cx : target.x, target.kind === 'building' ? target.cy : target.y, 0xff5040);
-    } else if (target && w.canBoard(target) && units.some((id) => w.byId.get(id).cls === 'robot')) {
+    } else if (target && w.canBoard(target, TEAM.PLAYER) && units.some((id) => w.byId.get(id).cls === 'robot')) {
       w.commandBoard(units, target.id, TEAM.PLAYER);
       g.quip(units.find((id) => w.byId.get(id).cls === 'robot'), 'board');
       g.renderer.marker(target.kind === 'unit' ? target.x : target.cx, target.kind === 'unit' ? target.y : target.cy, 0xffd060);
@@ -214,6 +214,7 @@ export class Input {
     }
     switch (e.code) {
       case 'KeyX': w.commandStop([...g.selection], 1); g.audio.play('order'); break;
+      case 'KeyU': w.commandUnload([...g.selection], 1); g.audio.play('order'); break;
       case 'KeyC': {
         const r = g.renderer;
         if (r.follow) { r.follow = null; r.cam.tdist = 34; g.hud.message('Action-Kamera aus', 'info'); }

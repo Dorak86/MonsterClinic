@@ -56,6 +56,8 @@ export class AI {
           mediumtank: 2 + foeVeh * 0.2,
           heavytank: 1 + foeVeh * 0.4 + (this.diff === 2 ? 1 : 0),
           launcher: 1 + (foeRob > 8 ? 1 : 0),
+          transporter: 0.4,
+          fueltruck: 0.35,
         });
       } else {
         const opts = b.def.produces;

@@ -34,6 +34,7 @@ export const WEAPONS = {
   assaultmg: { dmg: 6, cd: 0.16, range: 5, kind: 'mg', proj: 'tracer', speed: 32, sound: 'mg' },
   flame: { dmg: 10, cd: 0.3, range: 3.2, kind: 'flame', proj: 'flame', speed: 10, splash: 0.9, burn: 4, sound: 'flame' },
   laser: { dmg: 38, cd: 1.7, range: 7.5, kind: 'laser', proj: 'laser', speed: 90, sound: 'laser' },
+  gatling: { dmg: 9, cd: 0.22, range: 6.5, kind: 'shell', proj: 'tracer', speed: 30, sound: 'mg' },
   medcannon: { dmg: 40, cd: 1.55, range: 7, kind: 'shell', proj: 'shell', speed: 21, splash: 0.75, sound: 'cannon' },
   mg: { dmg: 5, cd: 0.18, range: 5.5, kind: 'mg', proj: 'tracer', speed: 32, sound: 'mg' },
   cannon: { dmg: 36, cd: 1.9, range: 6.5, kind: 'shell', proj: 'shell', speed: 20, splash: 0.7, sound: 'cannon' },
@@ -96,8 +97,18 @@ export const UNITS = {
   },
   heavytank: {
     name: 'Schwerpanzer', cls: 'vehicle', armor: 'heavy', hp: 720, speed: 1.8, sight: 8,
-    weapon: 'twincannon', build: 50, radius: 0.85, turnRate: 2.2,
-    desc: 'Langsam, aber kaum aufzuhalten.',
+    weapon: 'gatling', build: 50, radius: 0.9, turnRate: 2.2,
+    desc: 'Langsam, schwer gepanzert, mit rotierender Gatling-Kanone.',
+  },
+  transporter: {
+    name: 'Transporter', cls: 'vehicle', armor: 'medium', hp: 320, speed: 3.3, sight: 8,
+    weapon: 'mg', build: 26, radius: 0.85, turnRate: 3, carry: 4,
+    desc: 'Bringt bis zu vier Roboter schnell an die Front. Roboter steigen per Rechtsklick ein, Taste U lässt sie aussteigen.',
+  },
+  fueltruck: {
+    name: 'Versorger', cls: 'vehicle', armor: 'medium', hp: 240, speed: 2.7, sight: 7,
+    weapon: null, build: 28, radius: 0.85, turnRate: 2.8, support: true,
+    desc: 'Tanklaster: repariert eigene Fahrzeuge in der Nähe. Explodiert gewaltig, wenn er getroffen wird.',
   },
   launcher: {
     name: 'Raketenwerfer', cls: 'vehicle', armor: 'medium', hp: 220, speed: 2.3, sight: 8,
@@ -119,7 +130,7 @@ export const BUILDINGS = {
   },
   vehicle: {
     name: 'Fahrzeugwerk', w: 3, h: 3, hp: 1600, sight: 6,
-    produces: ['buggy', 'lighttank', 'mediumtank', 'heavytank', 'launcher'],
+    produces: ['buggy', 'lighttank', 'mediumtank', 'heavytank', 'launcher', 'transporter', 'fueltruck'],
     desc: 'Baut Fahrzeuge. Repariert Fahrzeuge in der Nähe.',
   },
   radar: {

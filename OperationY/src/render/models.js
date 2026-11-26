@@ -17,6 +17,8 @@ import glbLight from '../models/vehicle_lighttank.glb';
 import glbMedium from '../models/vehicle_mediumtank.glb';
 import glbHeavy from '../models/vehicle_heavytank.glb';
 import glbLauncher from '../models/vehicle_launcher.glb';
+import glbTransporter from '../models/vehicle_transporter.glb';
+import glbFuel from '../models/vehicle_fueltruck.glb';
 import { mat, TEAM_COLORS, panelTex, treadTex, patchFow } from './materials.js';
 
 let PANEL = null, TREAD = null;
@@ -512,7 +514,7 @@ function instance(key, build) {
 
 // ---------- Roboter aus Blender (GLB mit Skelett und Animationen) ----------
 const ROBOT_GLB = { runner: glbRunner, grenadier: glbGrenadier, rocketeer: glbRocketeer, sniper: glbSniper, assault: glbAssault, flamer: glbFlamer, laser: glbLaser };
-const VEHICLE_GLB = { buggy: glbBuggy, lighttank: glbLight, mediumtank: glbMedium, heavytank: glbHeavy, launcher: glbLauncher };
+const VEHICLE_GLB = { buggy: glbBuggy, lighttank: glbLight, mediumtank: glbMedium, heavytank: glbHeavy, launcher: glbLauncher, transporter: glbTransporter, fueltruck: glbFuel };
 const robotSrc = {};
 const vehicleSrc = {};
 const robotMatCache = new Map();
@@ -526,6 +528,67 @@ export async function loadRobotModels() {
     loader.parse(buf, '', (g) => { out[type] = g; res(); }, rej);
   }));
   await Promise.all([...load(ROBOT_GLB, robotSrc), ...load(VEHICLE_GLB, vehicleSrc)]);
+}
+
+// Abgenutzte Lackierung: Schmutz, Rostflecken, Kratzer, Staub (prozedural)
+let WEATHER = null;
+function weatherTex() {
+  if (WEATHER) return WEATHER;
+  const S = 512;
+  const c = document.createElement('canvas');
+  c.width = c.height = S;
+  const g = c.getContext('2d');
+  g.fillStyle = '#eeeae4'; g.fillRect(0, 0, S, S);
+  const blot = (x, y, r, col) => {
+    const gr = g.createRadialGradient(x, y, 0, x, y, r);
+    gr.addColorStop(0, col); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = gr; g.fillRect(x - r, y - r, 2 * r, 2 * r);
+  };
+  for (let i = 0; i < 260; i++) blot(Math.random() * S, Math.random() * S, 8 + Math.random() * 40, `rgba(60,50,40,${0.05 + Math.random() * 0.1})`);
+  for (let i = 0; i < 90; i++) blot(Math.random() * S, Math.random() * S, 3 + Math.random() * 14, `rgba(120,60,25,${0.2 + Math.random() * 0.35})`);
+  // Rostläufer
+  for (let i = 0; i < 40; i++) {
+    const x = Math.random() * S, y = Math.random() * S, l = 20 + Math.random() * 60;
+    const gr = g.createLinearGradient(x, y, x, y + l);
+    gr.addColorStop(0, 'rgba(110,55,20,0.35)'); gr.addColorStop(1, 'rgba(110,55,20,0)');
+    g.fillStyle = gr; g.fillRect(x, y, 2 + Math.random() * 3, l);
+  }
+  // Kratzer
+  g.lineWidth = 1;
+  for (let i = 0; i < 160; i++) {
+    const x = Math.random() * S, y = Math.random() * S, a = Math.random() * 6.28, l = 4 + Math.random() * 18;
+    g.strokeStyle = `rgba(255,250,240,${0.25 + Math.random() * 0.3})`;
+    g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); g.stroke();
+  }
+  // Staub nach unten
+  const dust = g.createLinearGradient(0, S * 0.6, 0, S);
+  dust.addColorStop(0, 'rgba(150,120,80,0)'); dust.addColorStop(1, 'rgba(150,120,80,0.35)');
+  g.fillStyle = dust; g.fillRect(0, 0, S, S);
+  WEATHER = new THREE.CanvasTexture(c);
+  WEATHER.colorSpace = THREE.SRGBColorSpace;
+  WEATHER.wrapS = WEATHER.wrapT = THREE.RepeatWrapping;
+  WEATHER.anisotropy = 4;
+  return WEATHER;
+}
+
+const vehMatCache = new Map();
+function vehicleMaterial(m, team) {
+  const key = m.name + (m.name === 'Team' || m.name === 'TeamGlow' ? team : '');
+  if (vehMatCache.has(key)) return vehMatCache.get(key);
+  let out;
+  if (m.name === 'Team') {
+    const tc = TEAM_COLORS[team].clone().lerp(new THREE.Color(0x6a5e52), team === 0 ? 0.45 : 0.32).multiplyScalar(0.8);
+    out = new THREE.MeshStandardMaterial({ color: tc, map: weatherTex(), roughness: 0.68, metalness: 0.35 });
+  } else if (m.name === 'TeamGlow' || m.name === 'Tread') {
+    return robotMaterial(m, team);
+  } else {
+    out = m.clone();
+    if (['Armor', 'Dark', 'Metal'].includes(m.name) || m.name.startsWith('Crate')) out.map = weatherTex();
+    out.roughness = Math.max(out.roughness, 0.45);
+  }
+  patchFow(out);
+  vehMatCache.set(key, out);
+  return out;
 }
 
 let TREAD_TEX = null;
@@ -586,7 +649,7 @@ export function makeVehicle(type, team) {
   if (!templates.has(key)) {
     const src = vehicleSrc[type].scene.clone();
     src.traverse((c) => {
-      if (c.isMesh) { c.material = robotMaterial(c.material, team); c.castShadow = true; c.receiveShadow = true; }
+      if (c.isMesh) { c.material = vehicleMaterial(c.material, team); c.castShadow = true; c.receiveShadow = true; }
       // herrenlose Fahrzeuge haben keinen Fahrer
       if ((c.name === 'Driver' || c.name === 'Gunner') && team === 0) c.visible = false;
     });

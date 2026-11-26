@@ -118,7 +118,7 @@ export class World {
       hp: def.hp, maxHp: def.hp, radius: def.radius,
       path: null, pi: 0, order: { kind: 'idle' }, target: null, cd: Math.random() * 0.5, salvo: 0, salvoT: 0,
       gx: x, gy: y, stuckT: 0, sx: x, sy: y, repaths: 0, moving: false, scanT: Math.random() * 0.3,
-      walk: 0, recoil: 0, driver: def.cls === 'vehicle' ? 'runner' : null, born: this.time,
+      walk: 0, recoil: 0, driver: def.cls === 'vehicle' ? 'runner' : null, born: this.time, passengers: def.carry ? [] : null,
       needPath: false, dest: null, hitT: -9, idleT: 0, killT: -9,
     };
     this.units.push(u);
@@ -179,15 +179,23 @@ export class World {
     }
   }
 
-  canBoard(v) {
+  canBoard(v, team) {
     if (!v || v.dead || v.destroyed) return false;
+    if (v.kind === 'unit' && v.def.carry && team && v.team === team) return v.passengers.length < v.def.carry;
     if (v.kind === 'unit') return v.cls === 'vehicle' && v.team === TEAM.NEUTRAL;
     return v.type === 'turret' && v.manned === false;
   }
 
   commandBoard(ids, vehicleId, team) {
     const v = this.byId.get(vehicleId);
-    if (!this.canBoard(v)) return;
+    if (!this.canBoard(v, team)) return;
+    if (v.def.carry && v.team === team) {
+      // Transporter: mehrere Roboter steigen nacheinander ein
+      const free = v.def.carry - v.passengers.length;
+      const robots = this.ownUnits(ids, team).filter((u) => u.cls === 'robot').slice(0, free);
+      for (const r of robots) { r.order = { kind: 'board', id: vehicleId }; r.target = null; this.requestPath(r, v.x, v.y); }
+      return;
+    }
     const vx = v.kind === 'unit' ? v.x : v.cx, vy = v.kind === 'unit' ? v.y : v.cy;
     // nur ein Roboter steigt ein: der nächstgelegene
     const robots = this.ownUnits(ids, team).filter((u) => u.cls === 'robot');
@@ -198,6 +206,27 @@ export class World {
     r.target = null;
     this.requestPath(r, vx, vy + (v.kind === 'unit' ? 0 : 1));
     if (robots.length > 1) this.commandMove(robots.slice(1).map((u) => u.id), vx, vy + 1.5, team);
+  }
+
+  commandUnload(ids, team) {
+    for (const v of this.ownUnits(ids, team)) {
+      if (!v.passengers || !v.passengers.length) continue;
+      this.unload(v, 1);
+    }
+  }
+
+  unload(v, hpMul) {
+    const out = [];
+    v.passengers.forEach((p, i) => {
+      const a = (i / Math.max(1, v.passengers.length)) * Math.PI * 2;
+      const q = nearestPassable(this.map, v.x - 0.5 + Math.cos(a) * 1.2, v.y - 0.5 + Math.sin(a) * 1.2, 'robot', 4);
+      if (!q) return;
+      const r = this.addUnit(p.type, q[0] + 0.5, q[1] + 0.5, v.team);
+      r.hp = Math.max(1, p.hp * hpMul);
+      out.push(r.id);
+    });
+    v.passengers = [];
+    this.emit({ t: 'disembark', vid: v.id, ids: out, team: v.team, x: v.x, y: v.y });
   }
 
   // Zerstörte Brücke reparieren lassen
@@ -339,7 +368,7 @@ export class World {
 
   countUnits(team) {
     let c = 0;
-    for (const u of this.units) if (!u.dead && u.team === team && u.cls !== 'prop') c++;
+    for (const u of this.units) if (!u.dead && u.team === team && u.cls !== 'prop') c += 1 + (u.passengers ? u.passengers.length : 0);
     return c;
   }
 
@@ -417,7 +446,7 @@ export class World {
 
   updateUnit(u, dt) {
     const def = u.def;
-    const wpn = WEAPONS[def.weapon];
+    const wpn = def.weapon ? WEAPONS[def.weapon] : null;
     u.cd -= dt;
     u.recoil = Math.max(0, u.recoil - dt * 4);
 
@@ -430,7 +459,8 @@ export class World {
       if (!this.alive(ot)) { u.order = { kind: 'idle' }; u.gx = u.x; u.gy = u.y; u.path = null; }
       else tgt = ot;
     }
-    if (u.order.kind !== 'board' && u.scanT <= 0) {
+    if (!wpn) { tgt = null; if (u.order.kind === 'attack') { u.order = { kind: 'idle' }; u.path = null; } }
+    if (wpn && u.order.kind !== 'board' && u.scanT <= 0) {
       u.scanT = 0.3;
       if (u.order.kind !== 'attack') {
         const inRange = this.findTarget(u, u.x, u.y, wpn.range, def.weapon, u.team);
@@ -481,8 +511,16 @@ export class World {
 
     if (u.order.kind === 'board') {
       const v = this.byId.get(u.order.id);
-      if (!this.canBoard(v)) { u.order = { kind: 'idle' }; u.gx = u.x; u.gy = u.y; u.path = null; }
-      else if (v.kind === 'unit' ? Math.hypot(v.x - u.x, v.y - u.y) < v.radius + 0.7 : this.distToBuilding(u.x, u.y, v) < 1.0) {
+      if (!this.canBoard(v, u.team)) { u.order = { kind: 'idle' }; u.gx = u.x; u.gy = u.y; u.path = null; }
+      else if (v.def?.carry && v.team === u.team) {
+        if (Math.hypot(v.x - u.x, v.y - u.y) < v.radius + 0.8) {
+          v.passengers.push({ type: u.type, hp: u.hp });
+          u.dead = true;
+          this.emit({ t: 'embark', id: u.id, vid: v.id, team: u.team, x: v.x, y: v.y, n: v.passengers.length });
+          return;
+        }
+        if (!u.path && !u.needPath) this.requestPath(u, v.x, v.y);
+      } else if (v.kind === 'unit' ? Math.hypot(v.x - u.x, v.y - u.y) < v.radius + 0.7 : this.distToBuilding(u.x, u.y, v) < 1.0) {
         v.team = u.team;
         v.driver = u.type;
         if (v.kind === 'unit') { v.order = { kind: 'idle' }; v.gx = v.x; v.gy = v.y; } else { v.manned = true; v.target = null; }
@@ -852,16 +890,19 @@ export class World {
     if (u.dead) return;
     u.dead = true;
     this.emit({ t: 'barrel', x: u.x, y: u.y, id: u.id });
-    const R = 2.3;
+    this.explodeAt(u.x, u.y, 2.3, 70);
+  }
+
+  explodeAt(x, y, R, dmg) {
     for (const o of this.units) {
       if (o.dead) continue;
-      const d = Math.hypot(o.x - u.x, o.y - u.y);
-      if (d < R) this.damage(o, 70 * (1 - d / R * 0.5), 'shell', 0);
+      const d = Math.hypot(o.x - x, o.y - y);
+      if (d < R) this.damage(o, dmg * (1 - d / R * 0.5), 'shell', 0);
     }
     for (const b of this.buildings) {
-      if (!b.destroyed && b.team && this.distToBuilding(u.x, u.y, b) < R * 0.6) this.damage(b, 80, 'shell', 0);
+      if (!b.destroyed && b.team && this.distToBuilding(x, y, b) < R * 0.6) this.damage(b, dmg * 1.1, 'shell', 0);
     }
-    this.splashBridge(u.x, u.y, R, 160);
+    this.splashBridge(x, y, R, dmg * 2.2);
   }
 
   killUnit(u, byTeam) {
@@ -871,6 +912,12 @@ export class World {
     if (this.stats[byTeam]) this.stats[byTeam].kills++;
     for (const o of this.units) if (!o.dead && o.team === byTeam && o.target === u.id) o.killT = this.time;
     this.emit({ t: 'death', x: u.x, y: u.y, cls: u.cls, type: u.type, team: u.team, id: u.id, angle: u.angle });
+    if (u.passengers && u.passengers.length) this.unload(u, 0.5);
+    if (u.def.support) {
+      // Versorger: Tankexplosion
+      this.emit({ t: 'barrel', x: u.x, y: u.y, id: -1, big: true });
+      this.explodeAt(u.x, u.y, 3.2, 110);
+    }
     if (u.cls === 'vehicle' && u.team && this.rng() < 0.35) {
       const p = nearestPassable(this.map, u.x - 0.5, u.y - 0.5, 'robot', 3);
       if (p) {
@@ -975,6 +1022,8 @@ export class World {
       if (u.cls === 'vehicle') {
         const st = this.buildings.find((b) => b.type === 'repair' && !b.destroyed && b.team === u.team && this.distToBuilding(u.x, u.y, b) < 1.6);
         if (st) { u.hp = Math.min(u.maxHp, u.hp + u.maxHp * 0.15 * dt); u.repairing = this.time; continue; }
+        const ft = this.units.find((o) => !o.dead && o !== u && o.def.support && o.team === u.team && Math.hypot(o.x - u.x, o.y - u.y) < 2.8);
+        if (ft) { u.hp = Math.min(u.maxHp, u.hp + u.maxHp * 0.06 * dt); u.repairing = this.time; continue; }
       }
       if (this.time - u.hitT < 4) continue;
       for (const b of this.buildings) {
