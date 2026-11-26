@@ -19,6 +19,13 @@ import glbHeavy from '../models/vehicle_heavytank.glb';
 import glbLauncher from '../models/vehicle_launcher.glb';
 import glbTransporter from '../models/vehicle_transporter.glb';
 import glbFuel from '../models/vehicle_fueltruck.glb';
+import bFort from '../models/building_fort.glb';
+import bRobot from '../models/building_robot.glb';
+import bVehicle from '../models/building_vehicle.glb';
+import bRadar from '../models/building_radar.glb';
+import bTurret from '../models/building_turret.glb';
+import bMg from '../models/building_mgturret.glb';
+import bRepair from '../models/building_repair.glb';
 import { mat, TEAM_COLORS, panelTex, treadTex, patchFow } from './materials.js';
 
 let PANEL = null, TREAD = null;
@@ -515,8 +522,10 @@ function instance(key, build) {
 // ---------- Roboter aus Blender (GLB mit Skelett und Animationen) ----------
 const ROBOT_GLB = { runner: glbRunner, grenadier: glbGrenadier, rocketeer: glbRocketeer, sniper: glbSniper, assault: glbAssault, flamer: glbFlamer, laser: glbLaser };
 const VEHICLE_GLB = { buggy: glbBuggy, lighttank: glbLight, mediumtank: glbMedium, heavytank: glbHeavy, launcher: glbLauncher, transporter: glbTransporter, fueltruck: glbFuel };
+const BUILDING_GLB = { fort: bFort, robot: bRobot, vehicle: bVehicle, radar: bRadar, turret: bTurret, mgturret: bMg, repair: bRepair };
 const robotSrc = {};
 const vehicleSrc = {};
+const buildingSrc = {};
 const robotMatCache = new Map();
 
 export async function loadRobotModels() {
@@ -527,7 +536,7 @@ export async function loadRobotModels() {
     const buf = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
     loader.parse(buf, '', (g) => { out[type] = g; res(); }, rej);
   }));
-  await Promise.all([...load(ROBOT_GLB, robotSrc), ...load(VEHICLE_GLB, vehicleSrc)]);
+  await Promise.all([...load(ROBOT_GLB, robotSrc), ...load(VEHICLE_GLB, vehicleSrc), ...load(BUILDING_GLB, buildingSrc)]);
 }
 
 // Abgenutzte Lackierung: Schmutz, Rostflecken, Kratzer, Staub (prozedural)
@@ -583,7 +592,7 @@ function vehicleMaterial(m, team) {
     return robotMaterial(m, team);
   } else {
     out = m.clone();
-    if (['Armor', 'Dark', 'Metal'].includes(m.name) || m.name.startsWith('Crate')) out.map = weatherTex();
+    if (['Armor', 'Dark', 'Metal', 'Concrete', 'Hazard', 'Joint'].includes(m.name) || m.name.startsWith('Crate')) out.map = weatherTex();
     out.roughness = Math.max(out.roughness, 0.45);
   }
   patchFow(out);
@@ -616,7 +625,7 @@ export function makeRobot(type, team) {
   if (!templates.has(key)) {
     const src = robotSrc[type].scene.clone();
     src.traverse((c) => {
-      if (c.isMesh) { c.material = robotMaterial(c.material, team); c.castShadow = true; c.receiveShadow = true; }
+      if (c.isMesh) { c.material = vehicleMaterial(c.material, team); c.castShadow = true; c.receiveShadow = true; }
     });
     templates.set(key, src);
   }
@@ -705,12 +714,49 @@ export function makeBarrel() {
 }
 
 export function makeBuilding(type, team) {
-  const o = instance('b' + type + team, () => buildBuilding(type, team));
-  const ud = o.userData;
-  ud.turret = o.getObjectByName('turret') || null;
-  ud.spin = o.getObjectByName('spin') || null;
-  ud.barrels = [];
-  for (let i = 0; i < ud.nb; i++) ud.barrels.push(o.getObjectByName('barrel' + i));
+  if (!buildingSrc[type]) {
+    const o = instance('b' + type + team, () => buildBuilding(type, team));
+    const ud = o.userData;
+    ud.turret = o.getObjectByName('turret') || null;
+    ud.spin = o.getObjectByName('spin') || null;
+    ud.barrels = [];
+    for (let i = 0; i < ud.nb; i++) ud.barrels.push(o.getObjectByName('barrel' + i));
+    return o;
+  }
+  const key = 'gb' + type + team;
+  if (!templates.has(key)) {
+    const src = buildingSrc[type].scene.clone();
+    src.traverse((c) => { if (c.isMesh) { c.material = vehicleMaterial(c.material, team); c.castShadow = true; c.receiveShadow = true; } });
+    templates.set(key, src);
+  }
+  const o = templates.get(key).clone();
+  const ud = { kind: 'building', glb: true, turretOffset: Math.PI / 2, barrels: [], muzzles: [], chimneys: [] };
+  ud.turret = o.getObjectByName('Turret') || null;
+  ud.spin = o.getObjectByName('Spin') || null;
+  for (let i = 0; i < 4; i++) {
+    const b = o.getObjectByName('Barrel' + i);
+    if (!b) break;
+    const m = o.getObjectByName('Muzzle' + i);
+    b.userData.base = b.position.clone();
+    b.userData.dir = m ? m.position.clone().normalize() : new THREE.Vector3(0, 0, 1);
+    ud.barrels.push(b);
+    ud.muzzles.push(m || b);
+  }
+  o.updateMatrixWorld(true);
+  for (let i = 0; i < 4; i++) {
+    const c = o.getObjectByName('Chimney' + i);
+    if (c) { const p = c.getWorldPosition(new THREE.Vector3()); ud.chimneys.push([p.x, p.y, p.z]); }
+  }
+  // Förderband mit eigener, laufender Textur
+  const belt = o.getObjectByName('Belt');
+  if (belt && belt.isMesh) {
+    belt.material = patchFow(belt.material.clone());
+    belt.material.map = TREAD.clone();
+    belt.material.map.repeat.set(1, 3);
+    belt.material.map.needsUpdate = true;
+    ud.belt = belt.material.map;
+  }
+  o.userData = ud;
   return o;
 }
 

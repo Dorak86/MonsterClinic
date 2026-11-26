@@ -85,7 +85,7 @@ export class AI {
 
     // Herrenlose Fahrzeuge und unbemannte Geschütze kapern
     const boardables = w.units.filter((v) => !v.dead && v.cls === 'vehicle' && v.team === 0)
-      .concat(w.buildings.filter((b) => b.type === 'turret' && b.manned === false && !b.destroyed));
+      .concat(w.buildings.filter((b) => b.def.manned && b.manned === false && !b.destroyed));
     for (const v of boardables) {
       const vx = v.kind === 'unit' ? v.x : v.cx, vy = v.kind === 'unit' ? v.y : v.cy;
       if ([...this.tasks.values()].some((t) => t.kind === 'board' && t.id === v.id)) continue;

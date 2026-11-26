@@ -165,9 +165,10 @@ def build(kind):
     reset()
     M = mats()
     arm = armature()
-    heavy = kind in ('grenadier', 'assault')
+    heavy = kind in ('grenadier', 'assault', 'rocketeer')
     slim = kind == 'sniper'
-    w = 1.12 if heavy else 0.9 if slim else 1.0
+    w = 1.32 if kind == 'rocketeer' else 1.12 if heavy else 0.8 if slim else 1.0
+    paint = M['armor'] if slim else M['team']
     P = []
 
     def part(bone, *args, **kw):
@@ -181,10 +182,10 @@ def build(kind):
         x = 0.13 * s
         part(f'Thigh.{side}', 'sph', (0.085, 0.085, 0.085), (x, 0, 0.93), mat=M['joint'])
         limb((x, 0, 0.9), (x, 0.01, 0.57), 0.07 * w, M['dark'], arm, f'Thigh.{side}')
-        part(f'Thigh.{side}', 'box', (0.15 * w, 0.17 * w, 0.26), (x + 0.0, -0.025, 0.74), mat=M['armor'], bevel=0.05)
+        part(f'Thigh.{side}', 'box', (0.15 * w, 0.17 * w, 0.26), (x + 0.0, -0.025, 0.74), mat=paint, bevel=0.05)
         part(f'Shin.{side}', 'sph', (0.075, 0.075, 0.075), (x, 0.01, 0.53), mat=M['joint'])
         part(f'Shin.{side}', 'box', (0.13 * w, 0.16 * w, 0.1), (x, -0.07, 0.53), mat=M['team'], bevel=0.035)  # Knieschutz
-        limb((x, 0.01, 0.5), (x, 0, 0.17), 0.075 * w, M['armor'], arm, f'Shin.{side}', 0.085 * w)
+        limb((x, 0.01, 0.5), (x, 0, 0.17), 0.075 * w, paint, arm, f'Shin.{side}', 0.085 * w)
         part(f'Foot.{side}', 'sph', (0.06, 0.06, 0.06), (x, 0, 0.13), mat=M['joint'])
         part(f'Foot.{side}', 'box', (0.16 * w, 0.3, 0.1), (x, -0.06, 0.06), mat=M['dark'], bevel=0.035)
         part(f'Foot.{side}', 'box', (0.17 * w, 0.08, 0.05), (x, -0.19, 0.035), mat=M['armor'], bevel=0.02)
@@ -192,8 +193,8 @@ def build(kind):
     # Becken, Rumpf
     part('Hips', 'box', (0.34 * w, 0.24 * w, 0.16), (0, 0, 0.97), mat=M['dark'], bevel=0.06)
     part('Spine', 'cyl', (0.08, 0.08, 0.14), (0, 0, 1.08), mat=M['joint'], verts=20)
-    part('Spine', 'sph', (0.24 * w, 0.2 * w, 0.22), (0, 0.01, 1.27), mat=M['armor'], verts=32)
-    part('Spine', 'box', (0.34 * w, 0.12, 0.26), (0, -0.14 * w, 1.27), mat=M['team'], bevel=0.05)  # Brustplatte
+    part('Spine', 'sph', (0.24 * w, 0.2 * w, 0.22), (0, 0.01, 1.27), mat=paint, verts=32)
+    part('Spine', 'box', (0.34 * w, 0.12, 0.26), (0, -0.14 * w, 1.27), mat=M['dark'] if not slim else M['team'], bevel=0.05)  # Brustplatte
     part('Spine', 'box', (0.2, 0.03, 0.025), (0, -0.205 * w, 1.33), mat=M['glow'], bevel=0.01, sub=0)
     part('Spine', 'box', (0.28 * w, 0.18, 0.3), (0, 0.2 * w, 1.28), mat=M['dark'], bevel=0.05)  # Rucksack
     part('Spine', 'cyl', (0.04, 0.04, 0.05), (0, 0.29 * w, 1.34), (math.pi / 2, 0, 0), mat=M['glow'], verts=16, sub=0)
@@ -203,25 +204,25 @@ def build(kind):
     # Kopf / Helm
     part('Head', 'cyl', (0.06, 0.06, 0.1), (0, 0, 1.48), mat=M['joint'], verts=16)
     if kind == 'rocketeer':
-        part('Head', 'sph', (0.15, 0.16, 0.15), (0, 0, 1.62), mat=M['armor'], verts=32)
+        part('Head', 'sph', (0.15, 0.16, 0.15), (0, 0, 1.62), mat=paint, verts=32)
         for s in (1, -1):
             part('Head', 'cyl', (0.065, 0.065, 0.05), (0.15 * s, 0, 1.61), (0, math.pi / 2, 0), mat=M['dark'], verts=20)
         part('Head', 'box', (0.18, 0.05, 0.05), (0, -0.14, 1.62), mat=M['glow'], bevel=0.02)
     elif kind == 'grenadier':
-        part('Head', 'sph', (0.17, 0.17, 0.14), (0, 0, 1.62), mat=M['armor'], verts=32)
+        part('Head', 'sph', (0.17, 0.17, 0.14), (0, 0, 1.62), mat=paint, verts=32)
         part('Head', 'box', (0.05, 0.26, 0.05), (0, 0.0, 1.76), mat=M['team'], bevel=0.02)  # Kamm
         part('Head', 'box', (0.24, 0.08, 0.09), (0, -0.13, 1.58), mat=M['dark'], bevel=0.03)
         part('Head', 'box', (0.2, 0.04, 0.035), (0, -0.165, 1.63), mat=M['glow'], bevel=0.012)
     elif kind == 'assault':
         # Stürmer: kantiger Sturmhelm mit Doppelvisier
-        part('Head', 'box', (0.27, 0.28, 0.24), (0, 0, 1.62), mat=M['armor'], bevel=0.07)
+        part('Head', 'box', (0.27, 0.28, 0.24), (0, 0, 1.62), mat=paint, bevel=0.07)
         part('Head', 'box', (0.29, 0.06, 0.05), (0, -0.15, 1.66), mat=M['glow'], bevel=0.02)
         part('Head', 'box', (0.29, 0.06, 0.04), (0, -0.15, 1.58), mat=M['dark'], bevel=0.015)
         for s in (1, -1):
             part('Head', 'box', (0.05, 0.12, 0.08), (0.15 * s, 0.02, 1.7), (0.3, 0, 0), mat=M['team'], bevel=0.02)
     elif kind == 'flamer':
         # Brenner: Atemmaske mit zwei Filtern
-        part('Head', 'sph', (0.15, 0.15, 0.15), (0, 0, 1.63), mat=M['armor'], verts=32)
+        part('Head', 'sph', (0.15, 0.15, 0.15), (0, 0, 1.63), mat=paint, verts=32)
         part('Head', 'sph', (0.1, 0.07, 0.08), (0, -0.13, 1.57), mat=M['dark'], verts=24)
         for s in (1, -1):
             part('Head', 'cyl', (0.045, 0.045, 0.07), (0.09 * s, -0.17, 1.55), (math.pi / 2, 0, 0), mat=M['metal'], verts=20)
@@ -229,19 +230,20 @@ def build(kind):
             part('Head', 'sph', (0.045, 0.02, 0.045), (0.06 * s, -0.14, 1.66), mat=M['glow'], verts=20)
     elif kind == 'laser':
         # Lasergardist: schlanker Elitehelm mit Kamm und Leuchtband
-        part('Head', 'sph', (0.14, 0.17, 0.15), (0, 0, 1.63), mat=M['armor'], verts=32)
+        part('Head', 'sph', (0.14, 0.17, 0.15), (0, 0, 1.63), mat=paint, verts=32)
         part('Head', 'box', (0.04, 0.3, 0.08), (0, 0.02, 1.78), mat=M['team'], bevel=0.02)
         part('Head', 'box', (0.24, 0.03, 0.035), (0, -0.155, 1.63), mat=M['glow'], bevel=0.012)
         part('Head', 'box', (0.2, 0.06, 0.12), (0, -0.12, 1.53), mat=M['metal'], bevel=0.03)
     elif kind == 'sniper':
-        part('Head', 'sph', (0.13, 0.14, 0.14), (0, 0, 1.62), mat=M['armor'], verts=32)
+        part('Head', 'sph', (0.13, 0.14, 0.14), (0, 0, 1.62), mat=paint, verts=32)
         part('Head', 'cyl', (0.045, 0.045, 0.1), (0.05, -0.13, 1.63), (math.pi / 2, 0, 0), mat=M['dark'], verts=20)
         part('Head', 'cyl', (0.035, 0.035, 0.012), (0.05, -0.185, 1.63), (math.pi / 2, 0, 0), mat=M['glow'], verts=20, sub=0)
         part('Head', 'cyl', (0.008, 0.008, 0.35), (-0.08, 0.06, 1.85), mat=M['metal'], verts=8, sub=0)
     else:
-        part('Head', 'sph', (0.14, 0.15, 0.14), (0, 0, 1.62), mat=M['armor'], verts=32)
-        part('Head', 'box', (0.07, 0.18, 0.03), (0, 0.0, 1.76), mat=M['team'], bevel=0.012)
-        part('Head', 'box', (0.17, 0.05, 0.04), (0, -0.135, 1.62), mat=M['glow'], bevel=0.018)
+        part('Head', 'sph', (0.12, 0.13, 0.13), (0, 0, 1.6), mat=M['dark'], verts=24)
+        part('Head', 'sph', (0.17, 0.18, 0.12), (0, 0.01, 1.68), mat=paint, verts=32)
+        part('Head', 'torus', (0.17, 0.022), (0, 0.01, 1.64), mat=paint)
+        part('Head', 'box', (0.16, 0.04, 0.035), (0, -0.125, 1.6), mat=M['glow'], bevel=0.015)
 
     # Arme mit Ellbogen
     for s, side in ((1, 'L'), (-1, 'R')):
@@ -253,16 +255,19 @@ def build(kind):
         part(ua, 'sph', (0.07, 0.07, 0.07), tuple(h), mat=M['joint'])
         limb(tuple(h), tuple(t), 0.055 * w, M['dark'], arm, ua)
         part(fa, 'sph', (0.06, 0.06, 0.06), tuple(bf.head_local), mat=M['joint'])
-        limb(tuple(bf.head_local), tuple(bf.tail_local), 0.06 * w, M['armor'], arm, fa, 0.07 * w)
+        limb(tuple(bf.head_local), tuple(bf.tail_local), 0.06 * w, paint, arm, fa, 0.07 * w)
         part(fa, 'sph', (0.06, 0.07, 0.06), tuple(bf.tail_local), mat=M['dark'])  # Hand
 
     # Waffe (am Rumpf, wird von den Händen gehalten)
     g = 'Gun'
     if kind == 'rocketeer':
-        part(g, 'cyl', (0.085, 0.085, 0.85), (-0.24, -0.05, 1.5), (math.pi / 2, 0, 0), mat=M['metal'], verts=24)
-        part(g, 'cyl', (0.1, 0.1, 0.14), (-0.24, 0.32, 1.5), (math.pi / 2, 0, 0), mat=M['dark'], verts=24)
-        part(g, 'cyl', (0.095, 0.095, 0.03), (-0.24, -0.48, 1.5), (math.pi / 2, 0, 0), mat=M['glow'], verts=24, sub=0)
-        muzzle = (-0.24, -0.5, 1.5)
+        part('Spine', 'box', (0.55, 0.75, 0.34), (0, 0.12, 1.72), mat=paint, bevel=0.05)
+        part('Spine', 'box', (0.3, 0.2, 0.18), (0, 0.3, 1.5), mat=M['dark'], bevel=0.03)
+        for zz in (0.08, -0.08):
+            for xx in (0.13, -0.13):
+                part('Spine', 'cyl', (0.06, 0.06, 0.03), (xx, -0.26, 1.72 + zz), (math.pi / 2, 0, 0), mat=M['glow'], verts=16, sub=0)
+        part(g, 'box', (0.1, 0.36, 0.12), (-0.06, -0.28, 1.08), mat=M['dark'], bevel=0.03)
+        muzzle = (0, -0.3, 1.72)
     elif kind == 'grenadier':
         part(g, 'box', (0.12, 0.42, 0.13), (-0.06, -0.3, 1.08), mat=M['dark'], bevel=0.035)
         part(g, 'cyl', (0.1, 0.1, 0.13), (-0.06, -0.24, 1.0), mat=M['metal'], verts=24)
@@ -302,7 +307,7 @@ def build(kind):
     bpy.ops.object.empty_add(location=muzzle)
     mz = bpy.context.object
     mz.name = 'Muzzle'
-    attach(mz, arm, 'Gun')
+    attach(mz, arm, 'Spine' if kind == 'rocketeer' else 'Gun')
 
     animate(arm)
     path = f'{OUT}/robot_{kind}.glb'
@@ -405,7 +410,7 @@ def export(path):
     bpy.ops.export_scene.gltf(
         filepath=path, export_format='GLB', export_apply=True, export_yup=True,
         export_animation_mode='NLA_TRACKS', export_force_sampling=True,
-        export_texcoords=False, export_normals=True, export_cameras=False, export_lights=False,
+        export_texcoords=True, export_normals=True, export_cameras=False, export_lights=False,
     )
 
 

@@ -41,6 +41,7 @@ export const WEAPONS = {
   twincannon: { dmg: 44, cd: 1.15, range: 7, kind: 'shell', proj: 'shell', speed: 20, splash: 0.8, sound: 'cannon' },
   salvo: { dmg: 20, cd: 6.5, range: 11, minRange: 2.5, kind: 'rocket', proj: 'missile', speed: 10, splash: 1.2, salvo: 4, arc: 3, sound: 'salvo' },
   fortgun: { dmg: 40, cd: 0.75, range: 7.5, kind: 'shell', proj: 'shell', speed: 22, splash: 0.9, sound: 'cannon' },
+  turretmg: { dmg: 6, cd: 0.14, range: 6.5, kind: 'mg', proj: 'tracer', speed: 32, sound: 'mg' },
   turretgun: { dmg: 26, cd: 1.4, range: 7, kind: 'shell', proj: 'shell', speed: 22, splash: 0.5, sound: 'cannon' },
 };
 
@@ -143,7 +144,11 @@ export const BUILDINGS = {
   },
   turret: {
     name: 'Geschützturm', w: 1, h: 1, hp: 650, weapon: 'turretgun', sight: 8, manned: true,
-    desc: 'Feste Verteidigung, von einem Roboter bemannt. Ohne Schützen kann ihn jeder Roboter kapern.',
+    desc: 'Kanonenturm, von einem Roboter bemannt. Ohne Schützen kann ihn jeder Roboter kapern.',
+  },
+  mgturret: {
+    name: 'MG-Stellung', w: 1, h: 1, hp: 420, weapon: 'turretmg', sight: 8, manned: true,
+    desc: 'Zwillings-MG auf Dreibein, mäht Roboter nieder. Bemannt; ohne Schützen kaperbar.',
   },
 };
 

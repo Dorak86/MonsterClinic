@@ -343,7 +343,7 @@ export class Hud {
           html += '</div><p class="desc blocked" data-b="' + o.id + '" style="color:var(--warn)" hidden>Einheitenlimit erreicht.</p><p class="desc" style="margin:4px 0 0">Rechtsklick auf das Gelände setzt den Sammelpunkt.</p>';
         } else if (d.produces && o.team === 2 && !o.destroyed && this.hasRadar) {
           html += `<p class="desc" data-eprod="${o.id}" style="color:var(--enemy)"></p>`;
-        } else if (d.type === 'turret' || (o.type === 'turret' && o.manned === false)) {
+        } else if (d.manned && o.manned === false) {
           html += '<p class="desc" style="color:var(--warn)">Unbemannt – ein Roboter kann es per Rechtsklick kapern.</p>';
         } else if (d.produces && o.team === 0) {
           html += '<p class="desc" style="color:var(--warn)">Erobern Sie die Flagge dieses Sektors, um das Werk zu übernehmen.</p>';

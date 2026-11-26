@@ -499,9 +499,9 @@ export class Renderer {
     const ud = obj.userData;
     obj.updateMatrixWorld(true);
     let bar = null;
-    if (ud.kind === 'vehicle' && ud.muzzles?.length) {
+    if ((ud.kind === 'vehicle' || ud.glb) && ud.muzzles?.length) {
       ud.barrelIdx = ((ud.barrelIdx || 0) + 1) % ud.muzzles.length;
-      ud.barrels[ud.barrelIdx].userData.kick = e.u?.type === 'heavytank' ? 0.15 : 1;
+      ud.barrels[ud.barrelIdx].userData.kick = e.u?.type === 'heavytank' || e.b?.type === 'mgturret' ? 0.15 : 1;
       if (e.u?.type === 'heavytank') ud.spin = 1;
       return ud.muzzles[ud.barrelIdx].getWorldPosition(new THREE.Vector3());
     }
@@ -613,13 +613,15 @@ export class Renderer {
       const ud = e.obj.userData;
       if (ud.turret) {
         e.turretAngle = angLerp(e.turretAngle, b.turret, Math.min(1, dt * 10));
-        ud.turret.rotation.y = -e.turretAngle;
+        ud.turret.rotation.y = (ud.turretOffset || 0) - e.turretAngle;
         for (const br of ud.barrels) {
           br.userData.kick = Math.max(0, (br.userData.kick || 0) - dt * 3);
-          br.position.x = (br.userData.baseX ??= br.position.x) - br.userData.kick * 0.3;
+          if (br.userData.base) br.position.copy(br.userData.base).addScaledVector(br.userData.dir, -br.userData.kick * 0.3);
+          else br.position.x = (br.userData.baseX ??= br.position.x) - br.userData.kick * 0.3;
         }
       }
-      if (ud.spin) ud.spin.rotation.y += dt * 1.2;
+      if (ud.spin) ud.spin.rotation.y += dt * (ud.glb ? 0.6 : 1.2);
+      if (ud.belt && b.produce && b.team) ud.belt.offset.y += dt * 0.6;
       for (const em of e.emitters) {
         em.hidden = !w.explored[1][Math.floor(b.cy) * w.map.w + Math.floor(b.cx)];
         if (em.kind === 'chimney') em.rate = b.produce && b.team ? 4 : 0.5;

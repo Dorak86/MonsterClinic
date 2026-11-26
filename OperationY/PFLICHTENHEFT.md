@@ -92,6 +92,11 @@ prozeduraler Abnutzung (Schmutz, Rost, Kratzer, Staub); Schwerpanzer mit rotiere
 neu: Transporter (4 Roboter, Taste U zum Aussteigen) und Versorger (Tanklaster, repariert
 Fahrzeuge in der Nähe, explodiert bei Zerstörung).
 
+Gebäude und Roboter nach Konzeptblättern (v1.6): Fort mit Torhaus, Zinnen und Ecktürmen,
+Werke mit Tunneltor und laufendem Förderband, Radarstation mit Gittermast und drehender Schüssel,
+Kanonenturm und neue MG-Stellung (Dreibein); Roboter mit lackierter, abgenutzter Rüstung,
+wuchtiger Panzerjäger mit Raketenkasten, schlanker Scharfschütze. Eigene Entwürfe und Namen.
+
 Nicht umgesetzt: 3D-NavMesh (Wegfindung bleibt rasterbasiert, Brücken verändern das Raster),
 überrollbare Bäume, Karten-/Rauch-Idle mit Requisiten.
 

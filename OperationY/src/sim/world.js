@@ -183,7 +183,7 @@ export class World {
     if (!v || v.dead || v.destroyed) return false;
     if (v.kind === 'unit' && v.def.carry && team && v.team === team) return v.passengers.length < v.def.carry;
     if (v.kind === 'unit') return v.cls === 'vehicle' && v.team === TEAM.NEUTRAL;
-    return v.type === 'turret' && v.manned === false;
+    return !!v.def.manned && v.manned === false;
   }
 
   commandBoard(ids, vehicleId, team) {
