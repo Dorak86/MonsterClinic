@@ -9,7 +9,8 @@ import { Renderer } from './render/renderer.js';
 import { TILE } from './render/materials.js';
 import { Hud } from './ui/hud.js';
 import { Input } from './ui/input.js';
-import { renderIcons, drawPortrait } from './ui/icons.js';
+import { renderIcons } from './ui/icons.js';
+import { Portrait } from './ui/portrait.js';
 import { Audio } from './audio.js';
 
 const $ = (id) => document.getElementById(id);
@@ -119,6 +120,8 @@ class Game {
 
   showScreen(name) {
     document.querySelectorAll('.screen').forEach((s) => { s.hidden = s.id !== 'scr-' + name; });
+    if (name !== 'briefing') { this.portrait?.stop(); clearInterval(this.typeTimer); }
+    this.renderer.setMenuView?.(name === 'menu' && this.demo);
     if (name === 'campaign') this.buildCampaign();
     if (name === 'skirmish') this.buildSkirmish();
   }
@@ -180,10 +183,25 @@ class Game {
     const l = LEVELS[i];
     $('br-title').textContent = `Einsatz ${l.id}: ${l.name}`;
     $('br-meta').textContent = `${BIOMES[l.biome].name} · ${l.w}×${l.h} Felder · ${l.sectors.length} Sektoren`;
-    $('br-text').textContent = l.briefing;
     $('br-diff').value = String(this.difficulty);
-    drawPortrait($('portrait'), i);
     this.showScreen('briefing');
+    // Funkspruch: Text erscheint Zeichen für Zeichen, die Kommandantin spricht
+    if (!this.portrait) this.portrait = new Portrait($('portrait'));
+    try { this.portrait.start(); } catch (e) { console.warn(e); }
+    const text = l.briefing;
+    const el = $('br-text');
+    el.textContent = '';
+    clearInterval(this.typeTimer);
+    let n = 0;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) { el.textContent = text; return; }
+    this.typeTimer = setInterval(() => {
+      n += 2;
+      el.textContent = text.slice(0, n);
+      this.portrait?.speak(0.15);
+      if (n >= text.length) clearInterval(this.typeTimer);
+    }, 28);
+    el.onclick = () => { clearInterval(this.typeTimer); el.textContent = text; };
   }
 
   // Hintergrund im Menü: langsam kreisende Kamera über Level 1 mit KI gegen KI
@@ -194,8 +212,23 @@ class Game {
     this.world.vis[1].fill(1);
     this.world.explored[1].fill(1);
     this.demo = true;
-    this.renderer.cam.tdist = 60;
+    this.renderer.cam.tdist = 30;
+    this.renderer.cam.dist = 30;
     this.renderer.lookAt(this.world.map.w / 2, this.world.map.h / 2, true);
+    this.demoFocusT = 0;
+    this.renderer.setMenuView(this.state === 'menu');
+  }
+
+  updateDemoCamera(dt) {
+    this.demoFocusT -= dt;
+    if (this.demoFocusT > 0) return;
+    this.demoFocusT = 9;
+    const w = this.world;
+    const fighters = w.units.filter((u) => !u.dead && u.target);
+    const pool = fighters.length ? fighters : w.units.filter((u) => !u.dead);
+    const u = pool[Math.floor(Math.random() * pool.length)];
+    if (u) this.renderer.lookAt(u.x, u.y);
+    this.renderer.cam.tdist = 22 + Math.random() * 12;
   }
 
   // ---------- Spiel ----------
@@ -217,6 +250,8 @@ class Game {
         this.speed = 1;
         $('btn-speed').textContent = '1×';
         this.demo = false;
+        this.renderer.setMenuView(false);
+        this.renderer.cam.tdist = 34;
         this.acc = 0;
         this.ended = false;
         this.tipIdx = level.tips ? 0 : -1;
@@ -367,7 +402,8 @@ class Game {
       this.handleEvents();
     }
     if (this.demo) {
-      this.renderer.cam.yaw += dt * 0.04;
+      this.renderer.cam.yaw += dt * 0.05;
+      this.updateDemoCamera(dt);
       this.world.vis[1].fill(1);
     }
     this.input.update(dt);

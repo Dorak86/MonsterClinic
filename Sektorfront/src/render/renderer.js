@@ -24,7 +24,7 @@ export class Renderer {
     this.canvas = canvas;
     this.quality = quality;
     const r = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
-    r.setPixelRatio(Math.min(window.devicePixelRatio, quality > 0 ? 2 : 1));
+    r.setPixelRatio(Math.min(window.devicePixelRatio, quality > 0 ? 2 : 1.25));
     r.shadowMap.enabled = true;
     r.shadowMap.type = quality > 0 ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
     r.toneMapping = THREE.ACESFilmicToneMapping;
@@ -135,7 +135,7 @@ export class Renderer {
 
   setupComposer() {
     const size = this.r.getSize(new THREE.Vector2());
-    const rt = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType, samples: this.quality > 0 ? 4 : 0 });
+    const rt = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType, samples: this.quality > 0 ? 4 : 2 });
     this.composer = new EffectComposer(this.r, rt);
     this.composer.addPass(new RenderPass(this.scene, this.camera));
     this.bloom = new UnrealBloomPass(new THREE.Vector2(size.x / 2, size.y / 2), 0.55, 0.45, 0.92);
@@ -157,6 +157,7 @@ export class Renderer {
     this.r.setSize(w, h, false);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
+    if (this.menuView) this.setMenuView(true);
     if (this.composer) {
       this.composer.setSize(w, h);
       this.composer.setPixelRatio(this.r.getPixelRatio());
@@ -168,6 +169,15 @@ export class Renderer {
   lookAt(tx, ty, instant = false) {
     this.cam.tx = tx * TILE; this.cam.tz = ty * TILE;
     if (instant) { this.cam.x = this.cam.tx; this.cam.z = this.cam.tz; }
+  }
+
+  // Menüansicht: flachere Kamera, Bildmitte nach rechts verschoben (Platz für das Menü)
+  setMenuView(on) {
+    this.menuView = on;
+    const w = window.innerWidth, h = window.innerHeight;
+    if (on && w > 900) this.camera.setViewOffset(w, h, -w * 0.17, 0, w, h);
+    else this.camera.clearViewOffset();
+    this.camera.updateProjectionMatrix();
   }
 
   pan(dx, dz) {
@@ -191,7 +201,7 @@ export class Renderer {
     c.x += (c.tx - c.x) * k;
     c.z += (c.tz - c.z) * k;
     c.dist += (c.tdist - c.dist) * k;
-    const pitch = 0.78 + (c.dist - 16) / 69 * 0.32;
+    const pitch = this.menuView ? 0.5 : 0.78 + (c.dist - 16) / 69 * 0.32;
     const gy = this.terrain.unitHeight(c.x / TILE, c.z / TILE);
     const sh = this.effects.shake * 0.35;
     const ox = Math.sin(c.yaw) * Math.cos(pitch) * c.dist;
@@ -486,10 +496,11 @@ export class Renderer {
         const amp = moving ? 0.6 : 0;
         ud.legs[0].rotation.z = Math.sin(ph) * amp;
         ud.legs[1].rotation.z = -Math.sin(ph) * amp;
-        ud.body.position.y = moving ? Math.abs(Math.cos(ph)) * 0.05 : 0;
-        ud.torso.rotation.y = -(angLerp(0, e.turret - e.angle, 1));
-        ud.torso.rotation.z = moving ? -0.08 : 0;
-        ud.arms.rotation.z = -u.recoil * 0.25;
+        ud.body.position.y = moving ? Math.abs(Math.cos(ph)) * 0.05 : Math.sin(time * 2.2 + u.id) * 0.008;
+        ud.torso.rotation.y = -(angLerp(0, e.turret - e.angle, 1)) + (moving ? Math.sin(ph) * 0.12 : 0);
+        ud.torso.rotation.z = moving ? -0.1 : Math.sin(time * 1.3 + u.id * 2) * 0.02;
+        ud.torso.rotation.x = moving ? Math.sin(ph) * 0.04 : 0;
+        ud.arms.rotation.z = -u.recoil * 0.3 + (moving ? Math.cos(ph * 2) * 0.03 : 0);
       } else {
         ud.turret.rotation.y = -(e.turret - e.angle);
         for (const b of ud.barrels) {

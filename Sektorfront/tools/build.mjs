@@ -17,7 +17,8 @@ const res = await build({
   legalComments: 'none',
 });
 const js = res.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
-const css = readFileSync(join(root, 'src/style.css'), 'utf8');
+const font = (w) => `@font-face{font-family:"Chakra Petch";font-weight:${w};font-style:normal;font-display:swap;src:url(data:font/woff2;base64,${readFileSync(join(root, `src/fonts/chakra-petch-${w}.woff2`)).toString('base64')}) format("woff2")}`;
+const css = readFileSync(join(root, 'src/style.css'), 'utf8').replace('/*__FONTS__*/', () => font(500) + font(700));
 let html = readFileSync(join(root, 'src/index.html'), 'utf8');
 html = html.replace('/*__CSS__*/', () => css).replace('/*__JS__*/', () => js);
 mkdirSync(join(root, 'dist'), { recursive: true });

@@ -15,11 +15,17 @@ function G(key, make) {
   if (!geoCache.has(key)) geoCache.set(key, make());
   return geoCache.get(key);
 }
-const rbox = (w, h, d, r = 0.06, s = 2) => G(`rb${w},${h},${d},${r}`, () => new RoundedBoxGeometry(w, h, d, s, r));
+const rbox = (w, h, d, r = 0.06, s = 3) => G(`rb${w},${h},${d},${r},${s}`, () => new RoundedBoxGeometry(w, h, d, s, r));
 const box = (w, h, d) => G(`b${w},${h},${d}`, () => new THREE.BoxGeometry(w, h, d));
-const cyl = (rt, rb, h, n = 12) => G(`c${rt},${rb},${h},${n}`, () => new THREE.CylinderGeometry(rt, rb, h, n));
-const cylR = (ax, rt, rb, h, n = 12) => G(`cr${ax}${rt},${rb},${h},${n}`, () => new THREE.CylinderGeometry(rt, rb, h, n)[ax === 'z' ? 'rotateZ' : 'rotateX'](Math.PI / 2));
-const sph = (r, ws = 12, hs = 8) => G(`s${r},${ws}`, () => new THREE.SphereGeometry(r, ws, hs));
+const cyl = (rt, rb, h, n = 20) => G(`c${rt},${rb},${h},${n}`, () => new THREE.CylinderGeometry(rt, rb, h, n));
+const cylR = (ax, rt, rb, h, n = 20) => G(`cr${ax}${rt},${rb},${h},${n}`, () => new THREE.CylinderGeometry(rt, rb, h, n)[ax === 'z' ? 'rotateZ' : 'rotateX'](Math.PI / 2));
+const sph = (r, ws = 20, hs = 14) => G(`s${r},${ws}`, () => new THREE.SphereGeometry(r, ws, hs));
+const sphS = (x, y, z) => G(`ss${x},${y},${z}`, () => new THREE.SphereGeometry(1, 24, 16).scale(x, y, z));
+const caps = (r, len, ax = 'y') => G(`cp${r},${len},${ax}`, () => {
+  const g = new THREE.CapsuleGeometry(r, len, 6, 16);
+  if (ax === 'x') g.rotateZ(Math.PI / 2); else if (ax === 'z') g.rotateX(Math.PI / 2);
+  return g;
+});
 
 const teamMats = new Map();
 export function teamMat(team, kind = 'paint') {
@@ -56,89 +62,115 @@ function mesh(geo, material, x = 0, y = 0, z = 0, parent) {
 
 // ---------------- Roboter ----------------
 function buildRobot(type, team) {
+  // Eigenes Design: kräftiger Kampfroboter mit Kapsel-Gliedmaßen, Kugelgelenken und Visierhelm
   const root = new THREE.Group();
   const body = new THREE.Group();
   body.name = 'body';
   root.add(body);
-  const paint = teamMat(team, 'paint'), glow = teamMat(team, 'glow'), dk = darkMetal(), mt = metal(0x7a8088);
-  const legs = [];
+  const paint = teamMat(team, 'paint'), glow = teamMat(team, 'glow'), dk = darkMetal(), mt = metal(0x8a9098);
+  const joint = mat(0x3a3f46, { r: 0.35, m: 0.8 });
+  const heavy = type === 'grenadier';
+  const slim = type === 'sniper';
+  const bw = heavy ? 1.12 : slim ? 0.9 : 1;
   for (const side of [-1, 1]) {
     const hip = new THREE.Group();
     hip.name = side < 0 ? 'legL' : 'legR';
-    hip.position.set(0, 0.62, side * 0.13);
-    const thigh = mesh(rbox(0.14, 0.34, 0.14, 0.04), dk, 0, -0.17, 0, hip);
-    const shin = mesh(rbox(0.16, 0.32, 0.16, 0.04), mt, 0.02, -0.45, 0, hip);
-    mesh(rbox(0.26, 0.07, 0.17, 0.03), dk, 0.05, -0.6, 0, hip);
+    hip.position.set(0, 0.6, side * 0.13 * bw);
+    mesh(sph(0.075, 16, 12), joint, 0, 0, 0, hip);
+    mesh(caps(0.06 * bw, 0.2), dk, 0, -0.15, 0, hip);
+    mesh(sph(0.065, 16, 12), joint, 0.01, -0.3, 0, hip);
+    mesh(caps(0.085 * bw, 0.16), paint, 0.015, -0.43, 0, hip);
+    mesh(rbox(0.26, 0.09, 0.17 * bw, 0.04, 4), dk, 0.05, -0.56, 0, hip);
     body.add(hip);
-    legs.push(hip);
-    void thigh; void shin;
   }
   const torso = new THREE.Group();
   torso.name = 'torso';
-  torso.position.y = 0.62;
+  torso.position.y = 0.6;
   body.add(torso);
-  mesh(rbox(0.3, 0.14, 0.36, 0.04), dk, 0, 0.05, 0, torso);
-  mesh(rbox(0.36, 0.42, 0.46, 0.08), paint, 0, 0.34, 0, torso);
-  mesh(box(0.02, 0.18, 0.3), glow, 0.185, 0.36, 0, torso); // Brustleuchte
-  // Kopf
-  const head = new THREE.Group();
-  head.userData.flatten = true;
-  head.position.set(0.02, 0.66, 0);
-  torso.add(head);
-  if (type === 'sniper') {
-    mesh(rbox(0.26, 0.2, 0.22, 0.05), paint, 0, 0.08, 0, head);
-    mesh(cylR('z', 0.05, 0.05, 0.12, 10), glow, 0.15, 0.1, 0.05, head);
-    mesh(cyl(0.01, 0.01, 0.45, 4), dk, -0.05, 0.38, -0.08, head);
-  } else if (type === 'grenadier') {
-    mesh(rbox(0.3, 0.22, 0.3, 0.07), paint, 0, 0.09, 0, head);
-    mesh(box(0.04, 0.06, 0.24), glow, 0.15, 0.1, 0, head);
-  } else if (type === 'rocketeer') {
-    mesh(sph(0.15, 12, 10), paint, 0, 0.1, 0, head);
-    mesh(box(0.05, 0.05, 0.2), glow, 0.13, 0.11, 0, head);
-  } else {
-    mesh(rbox(0.24, 0.2, 0.24, 0.06), paint, 0, 0.08, 0, head);
-    mesh(box(0.04, 0.05, 0.2), glow, 0.12, 0.1, 0, head);
+  // Becken + Rumpf
+  mesh(sphS(0.17 * bw, 0.1, 0.2 * bw), dk, 0, 0.06, 0, torso);
+  mesh(caps(0.07, 0.08), joint, 0, 0.16, 0, torso);
+  mesh(sphS(0.21 * bw, 0.22, 0.25 * bw), paint, 0.01, 0.36, 0, torso);
+  mesh(rbox(0.12, 0.22, 0.3 * bw, 0.05, 4), mt, 0.15 * bw, 0.36, 0, torso);
+  mesh(caps(0.018, 0.16, 'x'), glow, 0.215 * bw, 0.4, 0, torso);
+  mesh(caps(0.018, 0.16, 'x'), glow, 0.215 * bw, 0.34, 0, torso);
+  // Schulterpanzer
+  for (const side of [-1, 1]) {
+    mesh(sphS(0.12 * bw, 0.09, 0.12), paint, 0, 0.52, side * 0.27 * bw, torso);
+    mesh(caps(0.012, 0.12), glow, 0.06, 0.55, side * 0.33 * bw, torso);
   }
   // Rucksack
-  mesh(rbox(0.16, 0.3, 0.3, 0.04), dk, -0.24, 0.36, 0, torso);
+  mesh(rbox(0.16, 0.28, 0.3 * bw, 0.06, 4), dk, -0.22 * bw, 0.38, 0, torso);
+  mesh(cyl(0.045, 0.045, 0.06, 16), glow, -0.31 * bw, 0.44, 0, torso);
+  if (type === 'sniper') mesh(cyl(0.008, 0.012, 0.5, 12), dk, -0.26, 0.7, -0.09, torso);
+  // Helm
+  const head = new THREE.Group();
+  head.userData.flatten = true;
+  head.position.set(0.02, 0.64, 0);
+  torso.add(head);
+  mesh(caps(0.05, 0.04), joint, 0, -0.04, 0, head);
+  if (type === 'rocketeer') {
+    mesh(sphS(0.15, 0.14, 0.15), paint, 0, 0.1, 0, head);
+    for (const side of [-1, 1]) mesh(cylR('x', 0.06, 0.06, 0.05, 16), dk, 0, 0.1, side * 0.15, head);
+    mesh(caps(0.035, 0.16, 'z'), glow, 0.13, 0.1, 0, head);
+  } else if (type === 'grenadier') {
+    mesh(sphS(0.17, 0.13, 0.17), paint, 0, 0.1, 0, head);
+    mesh(rbox(0.22, 0.04, 0.05, 0.02, 3), mt, -0.01, 0.23, 0, head);
+    mesh(rbox(0.1, 0.07, 0.26, 0.03, 3), dk, 0.12, 0.05, 0, head);
+    mesh(caps(0.028, 0.18, 'z'), glow, 0.14, 0.12, 0, head);
+  } else if (type === 'sniper') {
+    mesh(sphS(0.12, 0.13, 0.13), paint, 0, 0.1, 0, head);
+    mesh(cylR('z', 0.045, 0.05, 0.09, 16), dk, 0.12, 0.11, 0.05, head);
+    mesh(cylR('z', 0.035, 0.035, 0.02, 16), glow, 0.17, 0.11, 0.05, head);
+    mesh(caps(0.02, 0.06, 'z'), glow, 0.11, 0.11, -0.05, head);
+  } else {
+    mesh(sphS(0.14, 0.13, 0.14), paint, 0, 0.1, 0, head);
+    mesh(rbox(0.06, 0.035, 0.14, 0.015, 3), mt, 0.07, 0.21, 0, head);
+    mesh(caps(0.03, 0.15, 'z'), glow, 0.125, 0.1, 0, head);
+  }
   // Arme + Waffe
   const arms = new THREE.Group();
   arms.name = 'arms';
-  arms.position.set(0, 0.48, 0);
+  arms.position.set(0, 0.46, 0);
   torso.add(arms);
   for (const side of [-1, 1]) {
-    mesh(rbox(0.14, 0.14, 0.14, 0.04), paint, 0, 0, side * 0.29, arms);
-    mesh(rbox(0.28, 0.1, 0.1, 0.03), dk, 0.14, -0.1, side * 0.26, arms);
+    mesh(caps(0.055 * bw, 0.12), dk, 0.04, -0.06, side * 0.28 * bw, arms);
+    mesh(sph(0.055, 14, 10), joint, 0.08, -0.15, side * 0.27 * bw, arms);
+    mesh(caps(0.06 * bw, 0.16, 'x'), paint, 0.18, -0.16, side * 0.2 * bw, arms);
   }
   const gun = new THREE.Group();
   gun.name = 'gun';
   gun.userData.flatten = true;
-  gun.position.set(0.25, -0.1, 0.12);
+  gun.position.set(0.26, -0.12, 0.1);
   arms.add(gun);
   let muzzle = 0.6;
   if (type === 'rocketeer') {
-    // Rohr auf der Schulter
-    gun.position.set(0.05, 0.1, 0.24);
-    mesh(cylR('z', 0.08, 0.08, 0.8, 12), mt, 0.1, 0, 0, gun);
-    mesh(cylR('z', 0.09, 0.09, 0.06, 12), glow, 0.5, 0, 0, gun);
+    gun.position.set(0.05, 0.12, 0.25);
+    mesh(cylR('z', 0.085, 0.085, 0.8, 20), mt, 0.1, 0, 0, gun);
+    mesh(cylR('z', 0.1, 0.09, 0.12, 20), dk, -0.28, 0, 0, gun);
+    mesh(cylR('z', 0.095, 0.095, 0.05, 20), glow, 0.5, 0, 0, gun);
+    mesh(rbox(0.12, 0.1, 0.04, 0.02, 3), dk, 0.15, -0.1, 0, gun);
     muzzle = 0.55;
   } else if (type === 'grenadier') {
-    mesh(rbox(0.36, 0.14, 0.12, 0.03), dk, 0.1, 0, 0, gun);
-    mesh(cyl(0.09, 0.09, 0.12, 10), mt, 0.02, -0.06, 0, gun);
-    mesh(cylR('z', 0.05, 0.05, 0.3, 10), mt, 0.36, 0.02, 0, gun);
+    mesh(rbox(0.36, 0.14, 0.12, 0.04, 3), dk, 0.1, 0, 0, gun);
+    mesh(cyl(0.1, 0.1, 0.13, 20), mt, 0.04, -0.07, 0, gun);
+    mesh(cylR('z', 0.055, 0.055, 0.32, 16), mt, 0.38, 0.02, 0, gun);
+    mesh(cylR('z', 0.06, 0.06, 0.03, 16), glow, 0.53, 0.02, 0, gun);
     muzzle = 0.55;
   } else if (type === 'sniper') {
-    mesh(rbox(0.4, 0.08, 0.07, 0.02), dk, 0.12, 0, 0, gun);
-    mesh(cylR('z', 0.02, 0.02, 0.55, 6), mt, 0.55, 0.01, 0, gun);
-    mesh(cylR('z', 0.03, 0.03, 0.16, 8), glow, 0.12, 0.07, 0, gun);
-    muzzle = 0.85;
+    mesh(rbox(0.42, 0.08, 0.07, 0.03, 3), dk, 0.12, 0, 0, gun);
+    mesh(cylR('z', 0.022, 0.022, 0.6, 20), mt, 0.58, 0.01, 0, gun);
+    mesh(cylR('z', 0.032, 0.032, 0.18, 16), dk, 0.12, 0.075, 0, gun);
+    mesh(cylR('z', 0.025, 0.025, 0.01, 16), glow, 0.215, 0.075, 0, gun);
+    muzzle = 0.88;
   } else {
-    mesh(rbox(0.38, 0.09, 0.08, 0.02), dk, 0.12, 0, 0, gun);
-    mesh(cylR('z', 0.025, 0.025, 0.2, 6), mt, 0.38, 0.01, 0, gun);
-    muzzle = 0.5;
+    mesh(rbox(0.38, 0.1, 0.08, 0.03, 3), dk, 0.12, 0, 0, gun);
+    mesh(cylR('z', 0.028, 0.028, 0.22, 20), mt, 0.4, 0.01, 0, gun);
+    mesh(rbox(0.08, 0.12, 0.05, 0.02, 3), dk, 0.08, -0.08, 0, gun);
+    muzzle = 0.52;
   }
-  root.userData = { kind: 'robot', muzzleLen: muzzle, scale: 1.5 };
-  root.scale.setScalar(1.5);
+  root.userData = { kind: 'robot', muzzleLen: muzzle, scale: 1.55 };
+  root.scale.setScalar(1.55);
   return root;
 }
 
@@ -146,7 +178,7 @@ function buildRobot(type, team) {
 function wheel(r, wdt) {
   const g = new THREE.Group();
   mesh(cylR('x', r, r, wdt, 16), rubber(), 0, 0, 0, g);
-  mesh(cylR('x', r * 0.55, r * 0.55, wdt + 0.02, 8), metal(0x9098a0), 0, 0, 0, g);
+  mesh(cylR('x', r * 0.55, r * 0.55, wdt + 0.02, 16), metal(0x9098a0), 0, 0, 0, g);
   return g;
 }
 
@@ -160,7 +192,7 @@ function tracks(len, hgt, wdt, z, parent) {
     const t = mesh(rbox(len, hgt, wdt, 0.08), tm, 0, hgt / 2, side * z, parent);
     t.userData.track = true;
     for (let i = 0; i < 4; i++) {
-      mesh(cylR('x', hgt * 0.32, hgt * 0.32, wdt + 0.04, 10), darkMetal(), -len / 2 + 0.25 + i * (len - 0.5) / 3, hgt * 0.45, side * z, parent);
+      mesh(cylR('x', hgt * 0.32, hgt * 0.32, wdt + 0.04, 20), darkMetal(), -len / 2 + 0.25 + i * (len - 0.5) / 3, hgt * 0.45, side * z, parent);
     }
   }
   return tm;
@@ -182,8 +214,8 @@ function buildVehicle(type, team) {
     mesh(rbox(0.8, 0.3, 0.95, 0.1), dk, -0.2, 0.85, 0, hull);
     mesh(box(0.06, 0.1, 0.9), glow, 0.95, 0.6, 0, hull);
     // Überrollbügel
-    for (const z of [-0.42, 0.42]) mesh(cyl(0.04, 0.04, 0.6, 6), mt, -0.45, 1.05, z, hull);
-    mesh(cylR('x', 0.04, 0.04, 0.88, 6), mt, -0.45, 1.35, 0, hull);
+    for (const z of [-0.42, 0.42]) mesh(cyl(0.04, 0.04, 0.6, 12), mt, -0.45, 1.05, z, hull);
+    mesh(cylR('x', 0.04, 0.04, 0.88, 12), mt, -0.45, 1.35, 0, hull);
     for (const [x, z] of [[0.62, 0.62], [0.62, -0.62], [-0.62, 0.62], [-0.62, -0.62]]) {
       const wh = wheel(0.32, 0.26);
       wh.position.set(x, 0.32, z);
@@ -191,11 +223,11 @@ function buildVehicle(type, team) {
       wheels.push(wh);
     }
     turret.position.set(0.15, 1.05, 0);
-    mesh(cyl(0.16, 0.2, 0.18, 10), dk, 0, 0, 0, turret);
+    mesh(cyl(0.16, 0.2, 0.18, 20), dk, 0, 0, 0, turret);
     const b = new THREE.Group();
     b.position.set(0.1, 0.06, 0);
     mesh(rbox(0.38, 0.14, 0.14, 0.03), mt, 0.12, 0, 0, b);
-    mesh(cylR('z', 0.03, 0.03, 0.4, 6), dk, 0.48, 0, 0, b);
+    mesh(cylR('z', 0.03, 0.03, 0.4, 12), dk, 0.48, 0, 0, b);
     turret.add(b);
     barrels.push(b);
     muzzle = 0.75;
@@ -210,8 +242,8 @@ function buildVehicle(type, team) {
     mesh(box(0.3, 0.12, 0.3), dk, -0.3, 0.22, 0.2, turret);
     const b = new THREE.Group();
     b.position.set(0.45, 0.02, 0);
-    mesh(cylR('z', 0.07, 0.08, 1.2, 10), mt, 0.6, 0, 0, b);
-    mesh(cylR('z', 0.1, 0.1, 0.16, 10), dk, 1.2, 0, 0, b);
+    mesh(cylR('z', 0.07, 0.08, 1.2, 20), mt, 0.6, 0, 0, b);
+    mesh(cylR('z', 0.1, 0.1, 0.16, 20), dk, 1.2, 0, 0, b);
     turret.add(b);
     barrels.push(b);
     muzzle = 1.7;
@@ -227,8 +259,8 @@ function buildVehicle(type, team) {
     for (const z of [-0.2, 0.2]) {
       const b = new THREE.Group();
       b.position.set(0.6, 0.02, z);
-      mesh(cylR('z', 0.08, 0.09, 1.4, 10), mt, 0.7, 0, 0, b);
-      mesh(cylR('z', 0.11, 0.11, 0.18, 10), dk, 1.4, 0, 0, b);
+      mesh(cylR('z', 0.08, 0.09, 1.4, 20), mt, 0.7, 0, 0, b);
+      mesh(cylR('z', 0.11, 0.11, 0.18, 20), dk, 1.4, 0, 0, b);
       turret.add(b);
       barrels.push(b);
     }
@@ -244,13 +276,13 @@ function buildVehicle(type, team) {
       wheels.push(wh);
     }
     turret.position.set(-0.45, 1.0, 0);
-    mesh(cyl(0.3, 0.35, 0.16, 12), mt, 0, 0, 0, turret);
+    mesh(cyl(0.3, 0.35, 0.16, 20), mt, 0, 0, 0, turret);
     const b = new THREE.Group();
     b.position.set(0, 0.35, 0);
     b.rotation.z = 0.35;
     mesh(rbox(1.2, 0.5, 0.9, 0.08), paint, 0, 0, 0, b);
     for (const [yy, zz] of [[0.12, 0.22], [0.12, -0.22], [-0.12, 0.22], [-0.12, -0.22]]) {
-      mesh(cylR('z', 0.09, 0.09, 0.06, 10), glow, 0.6, yy, zz, b);
+      mesh(cylR('z', 0.09, 0.09, 0.06, 20), glow, 0.6, yy, zz, b);
     }
     turret.add(b);
     barrels.push(b);
@@ -284,7 +316,7 @@ function buildBuilding(type, team) {
     for (const [x, z] of [[2.4, 2.4], [-2.4, 2.4], [2.4, -2.4], [-2.4, -2.4]]) {
       mesh(cyl(0.75, 0.9, 2.6, 8), concrete, x, 1.3, z, root);
       mesh(cyl(0.8, 0.8, 0.2, 8), paint, x, 2.7, z, root);
-      mesh(cyl(0.3, 0.3, 0.12, 12), glow, x, 2.86, z, root);
+      mesh(cyl(0.3, 0.3, 0.12, 20), glow, x, 2.86, z, root);
     }
     for (const side of [-1, 1]) {
       mesh(box(4.2, 0.12, 0.08), glow, 0, 1.6, side * 2.52, root);
@@ -298,15 +330,15 @@ function buildBuilding(type, team) {
     for (const z of [-0.3, 0.3]) {
       const b = new THREE.Group();
       b.position.set(0.7, 0.05, z);
-      mesh(cylR('z', 0.1, 0.12, 1.8, 10), mt, 0.9, 0, 0, b);
-      mesh(cylR('z', 0.14, 0.14, 0.2, 10), dk, 1.8, 0, 0, b);
+      mesh(cylR('z', 0.1, 0.12, 1.8, 20), mt, 0.9, 0, 0, b);
+      mesh(cylR('z', 0.14, 0.14, 0.2, 20), dk, 1.8, 0, 0, b);
       tur.add(b);
       ud.barrels.push(b);
     }
     root.add(tur);
     ud.turret = tur;
     // Antenne
-    mesh(cyl(0.03, 0.05, 2.4, 6), mt, -1.9, 3.8, -1.9, root);
+    mesh(cyl(0.03, 0.05, 2.4, 12), mt, -1.9, 3.8, -1.9, root);
     mesh(sph(0.1), glow, -1.9, 5.0, -1.9, root);
     ud.muzzleLen = 1.9;
   } else if (type === 'robot') {
@@ -320,7 +352,7 @@ function buildBuilding(type, team) {
     mesh(box(2.4, 0.1, 0.12), glow, 0, 1.72, 1.74, root);
     for (const x of [-1.2, 1.2]) mesh(box(0.1, 1.4, 0.12), glow, x, 0.95, 1.74, root);
     for (const x of [-2.0, 2.0]) {
-      mesh(cyl(0.22, 0.28, 1.6, 10), mt, x, 2.6, -1.1, root);
+      mesh(cyl(0.22, 0.28, 1.6, 20), mt, x, 2.6, -1.1, root);
       ud.chimneys.push([x, 3.5, -1.1]);
     }
     mesh(rbox(1.0, 0.5, 0.7, 0.08), dk, 2.2, 0.55, 1.6, root);
@@ -335,17 +367,17 @@ function buildBuilding(type, team) {
     // Kran
     mesh(box(0.25, 2.8, 0.25), mt, 2.5, 3.0, 2.2, root);
     mesh(box(0.2, 0.2, 2.6), mt, 2.5, 4.3, 1.0, root);
-    mesh(cyl(0.3, 0.3, 0.8, 10), dk, -2.0, 3.3, -2.0, root);
+    mesh(cyl(0.3, 0.3, 0.8, 20), dk, -2.0, 3.3, -2.0, root);
     ud.chimneys.push([-2.0, 3.8, -2.0]);
     // Lichter
     mesh(sph(0.12), glow, 2.5, 4.5, 2.2, root);
   } else if (type === 'radar') {
     mesh(rbox(1.8, 0.3, 1.8, 0.1), concreteDark, 0, 0.15, 0, root);
     for (const [x, z] of [[0.45, 0.45], [-0.45, 0.45], [0.45, -0.45], [-0.45, -0.45]]) {
-      const leg = mesh(cyl(0.05, 0.07, 3.2, 6), mt, x * 0.6, 1.8, z * 0.6, root);
+      const leg = mesh(cyl(0.05, 0.07, 3.2, 12), mt, x * 0.6, 1.8, z * 0.6, root);
       leg.rotation.set(z * 0.18, 0, -x * 0.18);
     }
-    mesh(cyl(0.22, 0.22, 0.4, 10), dk, 0, 3.4, 0, root);
+    mesh(cyl(0.22, 0.22, 0.4, 20), dk, 0, 3.4, 0, root);
     const spin = new THREE.Group();
     spin.position.set(0, 3.7, 0);
     const dish = mesh(G('dish', () => new THREE.SphereGeometry(1.0, 20, 10, 0, Math.PI * 2, 0, Math.PI * 0.32)), mat(0xd8dade, { r: 0.35, m: 0.5 }), 0, 0, 0, spin);
@@ -356,15 +388,15 @@ function buildBuilding(type, team) {
     root.add(spin);
     ud.spin = spin;
   } else if (type === 'turret') {
-    mesh(cyl(0.95, 1.05, 0.9, 10), concrete, 0, 0.45, 0, root);
-    mesh(cyl(1.0, 1.0, 0.12, 10), paint, 0, 0.95, 0, root);
+    mesh(cyl(0.95, 1.05, 0.9, 24), concrete, 0, 0.45, 0, root);
+    mesh(cyl(1.0, 1.0, 0.12, 20), paint, 0, 0.95, 0, root);
     const tur = new THREE.Group();
     tur.position.set(0, 1.25, 0);
     mesh(rbox(1.1, 0.5, 0.9, 0.15), paint, 0, 0, 0, tur);
     mesh(box(0.06, 0.1, 0.6), glow, 0.55, 0.05, 0, tur);
     const b = new THREE.Group();
     b.position.set(0.5, 0.05, 0);
-    mesh(cylR('z', 0.08, 0.09, 1.2, 10), mt, 0.6, 0, 0, b);
+    mesh(cylR('z', 0.08, 0.09, 1.2, 20), mt, 0.6, 0, 0, b);
     tur.add(b);
     ud.barrels.push(b);
     root.add(tur);
@@ -495,8 +527,8 @@ export function makeBuilding(type, team) {
 
 export function makeRuin(type, w, h) {
   const root = new THREE.Group();
-  const c = mat(0x3a3836, { r: 1, flat: true });
-  const c2 = mat(0x24221f, { r: 1, flat: true });
+  const c = mat(0x3a3836, { r: 1 });
+  const c2 = mat(0x24221f, { r: 1 });
   const W = w * 2, H = h * 2;
   mesh(box(W * 0.95, 0.35, H * 0.95), c2, 0, 0.17, 0, root);
   const n = 6 + w * h;
@@ -520,7 +552,7 @@ export function makeFlag() {
   const root = new THREE.Group();
   const pad = mesh(cyl(1.0, 1.15, 0.16, 24), mat(0x55585c, { r: 0.6, m: 0.5 }), 0, 0.08, 0, root);
   pad.castShadow = false;
-  mesh(cyl(0.05, 0.06, 3.2, 8), metal(0xb8bcc2), 0, 1.6, 0, root);
+  mesh(cyl(0.05, 0.06, 3.2, 16), metal(0xb8bcc2), 0, 1.6, 0, root);
   mesh(sph(0.09), metal(0xd0d4d8), 0, 3.25, 0, root);
   const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9, side: THREE.DoubleSide });
   const ring = new THREE.Mesh(new THREE.RingGeometry(0.85, 1.0, 40), ringMat);

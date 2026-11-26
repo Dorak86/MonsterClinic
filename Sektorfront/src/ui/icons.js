@@ -8,7 +8,7 @@ import { UNITS, BUILDINGS } from '../sim/defs.js';
 
 export function renderIcons() {
   const icons = {};
-  const size = 128;
+  const size = 192;
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = size;
   const r = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, preserveDrawingBuffer: true });

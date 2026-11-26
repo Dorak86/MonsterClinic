@@ -34,18 +34,20 @@
 
 <div id="screens">
   <section id="scr-menu" class="screen">
-    <div class="title-wrap">
-      <h1 class="logo">SEKTOR<span>FRONT</span></h1>
-      <p class="sub">Echtzeit-Strategie um Flaggen, Fabriken und jeden Meter Boden</p>
+    <div class="menu-panel">
+      <div class="eyebrow">Taktische Robotergefechte · 3. Feldkorps</div>
+      <h1 class="logo"><span class="l1">SEKTOR</span><span class="l2">FRONT</span></h1>
+      <div class="logo-rule"><i></i></div>
+      <p class="sub">Erobern Sie Flaggen, übernehmen Sie Fabriken, halten Sie jeden Meter Boden.</p>
+      <nav class="menu">
+        <button data-go="campaign" class="big primary">Kampagne</button>
+        <button data-go="skirmish" class="big">Gefecht</button>
+        <button data-go="help">Steuerung</button>
+        <button data-go="options">Optionen</button>
+      </nav>
+      <p id="touchnote" class="muted" hidden>Sektorfront ist für Maus und Tastatur am Desktop ausgelegt.</p>
     </div>
-    <nav class="menu">
-      <button data-go="campaign" class="big">Kampagne</button>
-      <button data-go="skirmish" class="big">Gefecht</button>
-      <button data-go="help">Steuerung</button>
-      <button data-go="options">Optionen</button>
-    </nav>
-    <p id="touchnote" class="muted" hidden>Sektorfront ist für Maus und Tastatur am Desktop ausgelegt.</p>
-    <p class="foot">Eigenständiges Spiel im Stil klassischer Territorial-RTS · v1.0</p>
+    <p class="foot">Eigenständiges Spiel im Stil klassischer Territorial-RTS · v1.1</p>
   </section>
 
   <section id="scr-campaign" class="screen" hidden>
@@ -67,8 +69,11 @@
 
   <section id="scr-briefing" class="screen" hidden>
     <div class="brief">
-      <canvas id="portrait" width="220" height="260"></canvas>
-      <div>
+      <div class="comm">
+        <canvas id="portrait"></canvas>
+        <div class="comm-label"><b>Kdt. Vey</b><span>3. Feldkorps · Funkverbindung</span></div>
+      </div>
+      <div class="brief-body">
         <h2 id="br-title"></h2>
         <p id="br-meta" class="muted"></p>
         <p id="br-text"></p>

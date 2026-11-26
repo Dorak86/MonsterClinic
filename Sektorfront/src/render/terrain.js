@@ -5,10 +5,14 @@ import { T } from '../sim/defs.js';
 import { fbm, mulberry32 } from '../sim/rng.js';
 import { TILE, patchFow, groundDetailTex, heightToNormalTex, mat, canvasTex } from './materials.js';
 import { mergeChildren } from './models.js';
+import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 const R = 2; // Vertices pro Feld
 
 function jitter(geo, amt, sy = 1, seed = 1) {
+  geo.deleteAttribute('normal');
+  geo.deleteAttribute('uv');
+  geo = mergeVertices(geo);
   const p = geo.attributes.position;
   for (let i = 0; i < p.count; i++) {
     const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
@@ -235,8 +239,8 @@ export class Terrain {
     const q = this.quality;
 
     // Felsen
-    const rockGeo = jitter(new THREE.IcosahedronGeometry(1, 1), 0.35, 0.75, 3);
-    const rockMat = mat(biome.rock, { r: 0.85, flat: true });
+    const rockGeo = jitter(new THREE.IcosahedronGeometry(1, 3), 0.18, 0.7, 3);
+    const rockMat = mat(biome.rock, { r: 0.8 });
     const rockSpots = [];
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
       const t = tiles[y * w + x];
@@ -270,24 +274,24 @@ export class Terrain {
     let trunkGeo, crownGeo, crown2Geo = null;
     if (kind === 'pine') {
       trunkGeo = new THREE.CylinderGeometry(0.08, 0.14, 1.0, 6).translate(0, 0.5, 0);
-      crownGeo = new THREE.ConeGeometry(0.9, 1.8, 7).translate(0, 1.6, 0);
-      crown2Geo = new THREE.ConeGeometry(0.65, 1.4, 7).translate(0, 2.5, 0);
+      crownGeo = new THREE.ConeGeometry(0.9, 1.8, 14).translate(0, 1.6, 0);
+      crown2Geo = new THREE.ConeGeometry(0.65, 1.4, 14).translate(0, 2.5, 0);
     } else if (kind === 'willow') {
       trunkGeo = new THREE.CylinderGeometry(0.12, 0.22, 1.4, 6).translate(0, 0.7, 0);
-      crownGeo = new THREE.IcosahedronGeometry(0.95, 1).scale(1.1, 0.7, 1.1).translate(0, 1.9, 0);
-      crown2Geo = new THREE.IcosahedronGeometry(0.7, 1).scale(1, 0.9, 1).translate(0.4, 1.6, 0.3);
+      crownGeo = new THREE.IcosahedronGeometry(0.95, 3).scale(1.1, 0.7, 1.1).translate(0, 1.9, 0);
+      crown2Geo = new THREE.IcosahedronGeometry(0.7, 3).scale(1, 0.9, 1).translate(0.4, 1.6, 0.3);
     } else if (kind === 'dead') {
       trunkGeo = new THREE.CylinderGeometry(0.05, 0.15, 2.2, 5).translate(0, 1.1, 0);
       crownGeo = new THREE.CylinderGeometry(0.03, 0.07, 1.1, 4).rotateZ(0.9).translate(0.35, 1.5, 0);
       crown2Geo = new THREE.CylinderGeometry(0.03, 0.06, 0.9, 4).rotateZ(-1.0).translate(-0.3, 1.8, 0);
     } else {
       trunkGeo = new THREE.CylinderGeometry(0.1, 0.16, 1.1, 6).translate(0, 0.55, 0);
-      crownGeo = new THREE.IcosahedronGeometry(0.95, 1).translate(0, 1.7, 0);
-      crown2Geo = new THREE.IcosahedronGeometry(0.6, 1).translate(0.35, 2.2, -0.2);
+      crownGeo = new THREE.IcosahedronGeometry(0.95, 3).translate(0, 1.7, 0);
+      crown2Geo = new THREE.IcosahedronGeometry(0.6, 3).translate(0.35, 2.2, -0.2);
     }
-    if (kind === 'round' || kind === 'willow') jitter(crownGeo, 0.22, 1, 7);
+    if (kind === 'round' || kind === 'willow') { crownGeo = jitter(crownGeo, 0.16, 1, 7); crown2Geo = jitter(crown2Geo, 0.16, 1, 9); }
     const trunkMat = mat(kind === 'dead' ? 0x221a16 : 0x4a3626, { r: 0.9 });
-    const crownMat = mat(0xffffff, { r: 0.85, flat: true });
+    const crownMat = mat(0xffffff, { r: 0.8 });
     const trunks = new THREE.InstancedMesh(trunkGeo, trunkMat, treeSpots.length);
     const crowns = new THREE.InstancedMesh(crownGeo, kind === 'dead' ? trunkMat : crownMat, treeSpots.length);
     const crowns2 = new THREE.InstancedMesh(crown2Geo, kind === 'dead' ? trunkMat : crownMat, treeSpots.length);
