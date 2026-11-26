@@ -465,34 +465,45 @@ export class Terrain {
 
   buildBridges() {
     const { w, h, tiles } = this.map;
+    const at = this.map.bridgeAt;
     const deckMat = mat(0x6a5444, { r: 0.8 });
     const railMat = mat(0x3c4046, { r: 0.5, m: 0.6 });
     const pillarMat = mat(0x5a5650, { r: 0.9 });
-    const group = new THREE.Group();
+    this.bridgeGroups = [];
     const isB = (x, y) => x >= 0 && y >= 0 && x < w && y < h && tiles[y * w + x] === T.BRIDGE;
     const walk = (x, y) => x >= 0 && y >= 0 && x < w && y < h && tiles[y * w + x] !== T.WATER && tiles[y * w + x] !== T.ROCK;
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
       if (!isB(x, y)) continue;
+      const id = at ? at[y * w + x] - 1 : 0;
+      let group = this.bridgeGroups[id];
+      if (!group) { group = new THREE.Group(); this.bridgeGroups[id] = group; }
       const horiz = (walk(x - 1, y) || isB(x - 1, y)) && (walk(x + 1, y) || isB(x + 1, y));
       const deck = new THREE.Mesh(new THREE.BoxGeometry(TILE * 1.02, 0.25, TILE * 1.02), deckMat);
       deck.position.set((x + 0.5) * TILE, 0.2, (y + 0.5) * TILE);
-      deck.castShadow = true; deck.receiveShadow = true;
       group.add(deck);
       for (const side of [-1, 1]) {
-        const rail = new THREE.Mesh(new THREE.BoxGeometry(horiz ? TILE : 0.12, 0.35, horiz ? 0.12 : TILE), railMat);
-        const off = side * (TILE / 2 - 0.08);
         const needRail = horiz ? !isB(x, y + side) : !isB(x + side, y);
         if (!needRail) continue;
+        const rail = new THREE.Mesh(new THREE.BoxGeometry(horiz ? TILE : 0.12, 0.35, horiz ? 0.12 : TILE), railMat);
+        const off = side * (TILE / 2 - 0.08);
         rail.position.set((x + 0.5) * TILE + (horiz ? 0 : off), 0.5, (y + 0.5) * TILE + (horiz ? off : 0));
-        rail.castShadow = true;
         group.add(rail);
       }
-      const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, 1.8, 8), pillarMat);
+      const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, 1.8, 12), pillarMat);
       pillar.position.set((x + 0.5) * TILE, -0.8, (y + 0.5) * TILE);
       group.add(pillar);
     }
-    mergeChildren(group);
-    this.group.add(group);
+    for (const g of this.bridgeGroups) {
+      if (!g) continue;
+      mergeChildren(g);
+      g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+      this.group.add(g);
+    }
+  }
+
+  setBridge(id, alive) {
+    const g = this.bridgeGroups?.[id];
+    if (g) g.visible = alive;
   }
 
   update(dt, time) {

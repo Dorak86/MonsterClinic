@@ -2,6 +2,7 @@
 
 import { UNITS, BUILDINGS, T, productionFactor, UNIT_CAP } from '../sim/defs.js';
 import { TEAM_CSS } from '../render/materials.js';
+import { FaceCam, moodOf } from './facecam.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -20,6 +21,10 @@ export class Hud {
     this.onMinimap = null;
     this.onPanel = null;
     this.bubbles = [];
+    this.facecam = new FaceCam(112);
+    this.fcUnit = null;
+    this.factories = document.getElementById('factories');
+    this.facKey = '';
     this.mmDown = false;
     this.mm.addEventListener('mousedown', (e) => this.mmClick(e, true));
     this.mm.addEventListener('mousemove', (e) => { if (this.mmDown) this.mmClick(e, false); });
@@ -152,6 +157,7 @@ export class Hud {
   // ---------- Minikarte ----------
   drawMinimap() {
     const w = this.w, { w: mw, h: mh } = w.map;
+    this.hasRadar = w.buildings.some((b) => b.type === 'radar' && b.team === 1 && !b.destroyed);
     const g = this.mg;
     g.imageSmoothingEnabled = false;
     g.drawImage(this.mmBase, 0, 0);
@@ -198,7 +204,8 @@ export class Hud {
     // Einheiten
     for (const u of w.units) {
       if (u.dead) continue;
-      if (u.team !== 1 && !w.isVisible(1, u.x, u.y)) continue;
+      if (u.cls === 'prop') continue;
+      if (u.team !== 1 && (!this.hasRadar || !w.isVisible(1, u.x, u.y))) continue;
       g.fillStyle = u.team === 1 ? '#ff8a70' : u.team === 2 ? '#7cb8ff' : '#bbb';
       const s = u.cls === 'vehicle' ? 1.3 : 0.9;
       g.fillRect(u.x - s / 2, u.y - s / 2, s, s);
@@ -211,6 +218,33 @@ export class Hud {
     pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
     g.closePath();
     g.stroke();
+    if (!this.hasRadar) {
+      g.save();
+      g.setTransform(1, 0, 0, 1, 0, 0);
+      g.fillStyle = 'rgba(11,15,20,0.75)';
+      g.fillRect(0, this.mm.height - 22 * (window.devicePixelRatio || 1), this.mm.width, 22 * (window.devicePixelRatio || 1));
+      g.fillStyle = '#ffb347';
+      g.font = `${11 * (window.devicePixelRatio || 1)}px "Chakra Petch", sans-serif`;
+      g.fillText('KEIN RADAR: Feindbewegungen unbekannt', 6 * (window.devicePixelRatio || 1), this.mm.height - 7 * (window.devicePixelRatio || 1));
+      g.restore();
+    }
+  }
+
+  // Schnellzugriff auf eigene Fabriken
+  updateFactories() {
+    const w = this.w;
+    const fs = w.buildings.filter((b) => b.team === 1 && !b.destroyed && b.def.produces);
+    const key = fs.map((b) => b.id + (b.produce || '-')).join(',');
+    if (key !== this.facKey) {
+      this.facKey = key;
+      this.factories.innerHTML = fs.map((b) => `<button class="fq" data-b="${b.id}" title="${b.def.name}: ${b.produce ? UNITS[b.produce].name : 'angehalten'}">
+        ${b.produce && this.icons[b.produce] ? `<img src="${this.icons[b.produce]}" alt="">` : '<span>❚❚</span>'}<i></i></button>`).join('');
+      for (const el of this.factories.querySelectorAll('.fq')) el.addEventListener('click', () => this.onPanel?.('selectBuilding', +el.dataset.b));
+    }
+    for (const el of this.factories.querySelectorAll('.fq')) {
+      const b = w.byId.get(+el.dataset.b);
+      if (b) el.querySelector('i').style.width = (b.produce ? b.progress * 100 : 0) + '%';
+    }
   }
 
   // ---------- Panel ----------
@@ -245,6 +279,21 @@ export class Hud {
         t.textContent = Math.round(time) + ' s';
       }
     }
+    if (this.fcUnit) {
+      const u = w.byId.get(this.fcUnit);
+      const now = performance.now();
+      if (u && !u.dead && now - (this.fcLast || 0) > 60) {
+        this.facecam.render(Math.min(0.1, (now - (this.fcLast || now)) / 1000), u.cls === 'vehicle' && !u.team ? 'bored' : moodOf(u, w.time));
+        this.fcLast = now;
+        const m = this.panel.querySelector('.mood');
+        if (m) m.textContent = { panic: 'Unter Beschuss!', grin: 'Treffer!', angry: 'Im Gefecht', bored: 'Langweilt sich', neutral: 'Bereit' }[moodOf(u, w.time)];
+      }
+    }
+    const eprod = this.panel.querySelector('[data-eprod]');
+    if (eprod) {
+      const b = w.byId.get(+eprod.dataset.eprod);
+      eprod.textContent = b && b.produce ? `Produziert: ${UNITS[b.produce].name} (${Math.round(b.progress * 100)} %)` : 'Produktion ruht';
+    }
     const blk = this.panel.querySelector('.blocked');
     if (blk) {
       const b = w.byId.get(+blk.dataset.b);
@@ -255,6 +304,7 @@ export class Hud {
   buildPanel(objs) {
     const p = this.panel;
     p.innerHTML = '';
+    this.fcUnit = null;
     if (!objs.length) return;
     const img = (key) => this.icons[key] ? `<img src="${this.icons[key]}" alt="">` : '';
     if (objs.length === 1) {
@@ -263,12 +313,19 @@ export class Hud {
       if (o.kind === 'unit') {
         const d = UNITS[o.type];
         const extra = o.team === 0 ? '<p class="desc" style="color:var(--warn)">Herrenlos – einen Roboter auswählen und per Rechtsklick einsteigen lassen.</p>' : '';
-        p.innerHTML = `<div class="icon">${img(o.type)}</div>
+        p.innerHTML = `<div class="icon fc"></div>
           <div><h3>${d.name} <span class="muted" style="font-size:12px;font-weight:400">· ${teamName}</span></h3>
-          <p class="desc">${d.desc}</p>${extra}
+          <p class="desc">${d.desc}</p>${extra}${o.team === 1 ? '<p class="desc mood" style="color:var(--player);margin:0 0 4px"></p>' : ''}
           <div class="hpbar" data-hp="${o.id}"><div></div></div>
           <div class="kv" style="margin-top:6px"><span>Struktur</span><span data-hptext="${o.id}"></span>
           <span>Reichweite</span><span>${weaponRange(d)}</span><span>Panzerung</span><span>${armorName(d.armor)}</span></div></div>`;
+        if (o.cls !== 'prop') {
+          try {
+            this.facecam.set(o.cls === 'robot' ? o.type : (o.driver || 'runner'), o.team);
+            p.querySelector('.fc').appendChild(this.facecam.canvas);
+            this.fcUnit = o.id;
+          } catch (e) { console.warn(e); }
+        }
       } else {
         const d = BUILDINGS[o.type];
         let html = `<div class="icon">${img('b_' + o.type)}</div><div style="flex:1"><h3>${d.name}${o.destroyed ? ' (zerstört)' : ''} <span class="muted" style="font-size:12px;font-weight:400">· ${o.team === 1 ? 'Eigenes Gebäude' : o.team === 2 ? 'Feind' : 'Neutral'}</span></h3>
@@ -281,6 +338,10 @@ export class Hud {
           }
           html += `<button class="pbtn ${o.produce ? '' : 'on'}" data-b="${o.id}" data-type="" title="Produktion anhalten"><span style="font-size:28px;line-height:52px">❚❚</span><span>Anhalten</span><span class="t"></span><span class="prog"></span></button>`;
           html += '</div><p class="desc blocked" data-b="' + o.id + '" style="color:var(--warn)" hidden>Einheitenlimit erreicht.</p><p class="desc" style="margin:4px 0 0">Rechtsklick auf das Gelände setzt den Sammelpunkt.</p>';
+        } else if (d.produces && o.team === 2 && !o.destroyed && this.hasRadar) {
+          html += `<p class="desc" data-eprod="${o.id}" style="color:var(--enemy)"></p>`;
+        } else if (d.type === 'turret' || (o.type === 'turret' && o.manned === false)) {
+          html += '<p class="desc" style="color:var(--warn)">Unbemannt – ein Roboter kann es per Rechtsklick kapern.</p>';
         } else if (d.produces && o.team === 0) {
           html += '<p class="desc" style="color:var(--warn)">Erobern Sie die Flagge dieses Sektors, um das Werk zu übernehmen.</p>';
         }

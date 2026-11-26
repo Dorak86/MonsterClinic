@@ -78,7 +78,7 @@ export class Audio {
     const a = this.att(x, y) * vol;
     if (a < 0.03) return;
     const now = this.ctx.currentTime;
-    const lim = { rifle: 0.05, mg: 0.05, cannon: 0.08, impact: 0.05, explode: 0.06, thump: 0.08, rocket: 0.08, sniper: 0.1, salvo: 0.1 }[name] || 0.04;
+    const lim = { flame: 0.12, laser: 0.08, rifle: 0.05, mg: 0.05, cannon: 0.08, impact: 0.05, explode: 0.06, thump: 0.08, rocket: 0.08, sniper: 0.1, salvo: 0.1 }[name] || 0.04;
     if ((this.last.get(name) || 0) > now - lim) return;
     this.last.set(name, now);
     const fn = this['s_' + name];
@@ -124,6 +124,12 @@ export class Audio {
 
   s_rifle(t, a) { this.shot(t, a, 2400, 1.2, 0.09, 0.4, 0.45); this.boom(t, a * 0.3, 180, 0.06); }
   s_mg(t, a) { this.shot(t, a, 1900, 1.4, 0.07, 0.5, 0.4); }
+  s_flame(t, a) { this.shot(t, a, 500, 0.6, 0.35, 0.8, 0.35); }
+  s_laser(t, a) {
+    const c = this.ctx, o = c.createOscillator(), g = c.createGain();
+    o.type = 'sawtooth'; o.frequency.setValueAtTime(1800, t); o.frequency.exponentialRampToValueAtTime(300, t + 0.25);
+    this.env(g, t, 0.005, 0.25, 0.25); o.connect(g); this.out(g, a, 0.4); o.start(t); o.stop(t + 0.3);
+  }
   s_sniper(t, a) { this.shot(t, a, 3200, 0.8, 0.25, 0.2, 0.6); this.boom(t, a * 0.5, 220, 0.2); }
   s_cannon(t, a) { this.shot(t, a, 700, 0.7, 0.35, 0.25, 0.8); this.boom(t, a, 110, 0.4); }
   s_thump(t, a) { this.boom(t, a, 160, 0.18, 0.7); this.shot(t, a * 0.5, 500, 1, 0.12, 0.5); }

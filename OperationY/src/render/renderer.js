@@ -9,7 +9,7 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { TILE, shared, TEAM_COLORS } from './materials.js';
 import { Terrain } from './terrain.js';
 import { Effects } from './effects.js';
-import { makeRobot, makeVehicle, makeBuilding, makeRuin, makeFlag, wreckify } from './models.js';
+import { makeRobot, makeVehicle, makeBuilding, makeRuin, makeFlag, wreckify, makeBarrel } from './models.js';
 import { T } from '../sim/defs.js';
 
 function angLerp(a, b, t) {
@@ -188,12 +188,24 @@ export class Renderer {
   }
 
   zoom(f) {
-    this.cam.tdist = Math.max(16, Math.min(85, this.cam.tdist * f));
+    this.cam.tdist = Math.max(this.follow ? 6 : 12, Math.min(85, this.cam.tdist * f));
   }
 
   updateCamera(dt) {
     const c = this.cam;
     const map = this.world.map;
+    // Action-Kamera: folgt einer Einheit von schräg hinten
+    const fu = this.follow ? this.world.byId.get(this.follow) : null;
+    if (this.follow && (!fu || fu.dead)) this.follow = null;
+    if (fu) {
+      c.tx = fu.x * TILE; c.tz = fu.y * TILE;
+      const wantYaw = Math.atan2(Math.cos(fu.angle), -Math.sin(fu.angle));
+      let d = wantYaw - c.yaw;
+      while (d > Math.PI) d -= Math.PI * 2;
+      while (d < -Math.PI) d += Math.PI * 2;
+      c.yaw += d * Math.min(1, dt * 2.5);
+      c.tdist = 11;
+    }
     const m = Math.min(10, c.dist * 0.25);
     c.tx = Math.max(m, Math.min(map.w * TILE - m, c.tx));
     c.tz = Math.max(m * 1.6, Math.min(map.h * TILE - m * 0.5, c.tz));
@@ -201,7 +213,7 @@ export class Renderer {
     c.x += (c.tx - c.x) * k;
     c.z += (c.tz - c.z) * k;
     c.dist += (c.tdist - c.dist) * k;
-    const pitch = this.menuView ? 0.5 : 0.78 + (c.dist - 16) / 69 * 0.32;
+    const pitch = this.menuView ? 0.5 : this.follow ? 0.42 : 0.78 + (c.dist - 16) / 69 * 0.32;
     const gy = this.terrain.unitHeight(c.x / TILE, c.z / TILE);
     const sh = this.effects.shake * 0.35;
     const ox = Math.sin(c.yaw) * Math.cos(pitch) * c.dist;
@@ -260,6 +272,9 @@ export class Renderer {
     const pos = [], col = [];
     const tc = new THREE.Color();
     const push = (x0, z0, x1, z1, nx, nz, owner) => {
+      // gestrichelt: jedes zweite Teilstück auslassen
+      const mx = Math.floor((x0 + x1) / 2 / TILE), mz = Math.floor((z0 + z1) / 2 / TILE);
+      if ((mx + mz) % 2) return;
       // schmales Band auf dem Boden, um 0.12 nach innen versetzt
       const off = 0.16, wd = 0.14;
       const ax = x0 + nx * off, az = z0 + nz * off, bx = x1 + nx * off, bz = z1 + nz * off;
@@ -351,7 +366,7 @@ export class Renderer {
   }
 
   createUnit(u) {
-    const obj = u.cls === 'robot' ? makeRobot(u.type, u.team) : makeVehicle(u.type, u.team);
+    const obj = u.cls === 'prop' ? makeBarrel() : u.cls === 'robot' ? makeRobot(u.type, u.team) : makeVehicle(u.type, u.team);
     this.scene.add(obj);
     const e = { obj, u, team: u.team, angle: u.angle, turret: u.turret, born: performance.now(), fire: 0, smokeT: 0 };
     this.entities.set(u.id, e);
@@ -364,12 +379,16 @@ export class Renderer {
     const wx = ev.x * TILE, wz = ev.y * TILE;
     obj.position.set(wx, this.terrain.unitHeight(ev.x, ev.y), wz);
     obj.rotation.y = -ev.angle;
-    obj.userData.turret.rotation.y = (Math.random() - 0.5) * 2;
-    obj.userData.turret.position.y += 0.15;
-    obj.userData.turret.rotation.z = (Math.random() - 0.5) * 0.4;
+    const tu = obj.userData.turret;
+    if (tu) { tu.rotation.y = (Math.random() - 0.5) * 2; tu.rotation.z = (Math.random() - 0.5) * 0.3; tu.position.y += 0.12; }
+    obj.traverse((c) => { if (c.name === 'Driver' || c.name === 'Gunner') c.visible = false; });
+    obj.rotation.z = (Math.random() - 0.5) * 0.08;
     this.scene.add(obj);
     const em = this.effects.addEmitter({ kind: 'fire', x: wx, y: obj.position.y + 0.8, z: wz, r: 0.8, rate: 10, life: 14 });
-    this.wrecks.push({ obj, life: 0, max: 30, em, ux: ev.x, uy: ev.y });
+    this.effects.addEmitter({ kind: 'smoke', x: wx, y: obj.position.y + 1, z: wz, rate: 1.2, life: 60 });
+    // Wracks bleiben als Kampfspuren liegen (älteste verschwinden bei sehr vielen)
+    this.wrecks.push({ obj, life: 0, max: Infinity, em, ux: ev.x, uy: ev.y });
+    if (this.wrecks.length > 40) { const old = this.wrecks.shift(); this.scene.remove(old.obj); }
   }
 
   // ---------- Ereignisse ----------
@@ -393,7 +412,13 @@ export class Renderer {
         break;
       }
       case 'impact':
-        if (vis(ev.x, ev.y)) this.effects.impact(ev);
+        if (vis(ev.x, ev.y)) {
+          if (ev.kind === 'flame') {
+            const wx = ev.x * TILE, wz = ev.y * TILE;
+            this.effects.addEmitter({ kind: 'fire', x: wx, y: this.terrain.unitHeight(ev.x, ev.y) + 0.1, z: wz, r: 1.2, rate: 8, life: 4 });
+            this.effects.addScorch(wx, wz, 1.4);
+          } else this.effects.impact(ev);
+        }
         break;
       case 'death': {
         const e = this.entities.get(ev.id);
@@ -433,8 +458,37 @@ export class Renderer {
         }
         break;
       case 'board': {
+        if (ev.turret) { const b = w.byId.get(ev.vid); if (b) this.syncBuilding(b); break; }
         const v = this.entities.get(ev.vid);
         if (v) { this.scene.remove(v.obj); this.entities.delete(ev.vid); }
+        break;
+      }
+      case 'driverKilled': {
+        if (ev.turret) { const b = w.byId.get(ev.id); if (b) this.syncBuilding(b); }
+        if (!vis(ev.x, ev.y)) break;
+        const wx = ev.x * TILE, wz = ev.y * TILE, wy = this.terrain.unitHeight(ev.x, ev.y) + 1.4;
+        for (let i = 0; i < 14; i++) this.effects.glow.spawn({ x: wx, y: wy, z: wz, vx: (Math.random() - 0.5) * 3, vy: 1 + Math.random() * 3, vz: (Math.random() - 0.5) * 3, life: 0.5, s0: 0.35, s1: 0.05, c0: [0.6, 0.85, 1.0], a0: 1, a1: 0, g: 8 });
+        this.effects.smoke.spawn({ x: wx, y: wy, z: wz, vy: 1, life: 1.5, s0: 0.5, s1: 1.8, c0: [0.3, 0.3, 0.3], a0: 0.6, a1: 0 });
+        break;
+      }
+      case 'barrel': {
+        const e = this.entities.get(ev.id);
+        if (e) { this.scene.remove(e.obj); this.entities.delete(ev.id); }
+        if (!vis(ev.x, ev.y)) break;
+        const wx = ev.x * TILE, wz = ev.y * TILE, wy = this.terrain.unitHeight(ev.x, ev.y);
+        this.effects.bigExplosion(wx, wy + 0.5, wz, 1.4);
+        this.effects.addEmitter({ kind: 'fire', x: wx, y: wy + 0.2, z: wz, r: 1.6, rate: 14, life: 6 });
+        break;
+      }
+      case 'bridge': {
+        this.terrain.setBridge(ev.id, !ev.destroyed);
+        const wx = ev.x * TILE, wz = ev.y * TILE;
+        if (ev.destroyed) {
+          this.effects.bigExplosion(wx, 0.3, wz, 1.8);
+          for (let i = 0; i < 20; i++) this.effects.spawnDebris(wx + (Math.random() - 0.5) * 3, 0.6, wz + (Math.random() - 0.5) * 3, 1.2);
+        } else {
+          for (let i = 0; i < 30; i++) this.effects.glow.spawn({ x: wx + (Math.random() - 0.5) * 4, y: 0.6, z: wz + (Math.random() - 0.5) * 4, vy: 2, life: 0.8, s0: 0.4, s1: 0.05, c0: [1, 0.8, 0.4], a0: 1, a1: 0 });
+        }
         break;
       }
     }
@@ -445,6 +499,11 @@ export class Renderer {
     const ud = obj.userData;
     obj.updateMatrixWorld(true);
     let bar = null;
+    if (ud.kind === 'vehicle' && ud.muzzles?.length) {
+      ud.barrelIdx = ((ud.barrelIdx || 0) + 1) % ud.muzzles.length;
+      ud.barrels[ud.barrelIdx].userData.kick = 1;
+      return ud.muzzles[ud.barrelIdx].getWorldPosition(new THREE.Vector3());
+    }
     if (ud.kind === 'vehicle' || ud.kind === 'building') {
       if (ud.barrels && ud.barrels.length) {
         ud.barrelIdx = ((ud.barrelIdx || 0) + 1) % ud.barrels.length;
@@ -494,8 +553,17 @@ export class Renderer {
         e.obj.scale.setScalar((ud.scale || 1) * s);
       } else e.obj.scale.setScalar(ud.scale || 1);
       if (!visible) continue;
+      if (ud.kind === 'prop') continue;
       if (ud.kind === 'robot') {
         const moving = Math.hypot(u.x - u.px, u.y - u.py) > 0.001;
+        // Leerlauf: gelegentlich umschauen, strecken, Steine treten
+        ud.still = moving ? 0 : (ud.still || 0) + dt;
+        if (ud.still > 9 && Math.random() < dt * 0.12 && ud.actions.Fidget && !ud.actions.Fidget.isRunning()) {
+          const f = ud.actions.Fidget;
+          f.setLoop(THREE.LoopOnce, 1); f.reset(); f.setEffectiveWeight(1); f.play();
+          ud.still = 0;
+        }
+        if (moving && ud.actions.Fidget?.isRunning()) ud.actions.Fidget.stop();
         // weiche Überblendung Stand <-> Lauf, Schrittfrequenz passend zur Geschwindigkeit
         ud.walkW += ((moving ? 1 : 0) - ud.walkW) * Math.min(1, dt * 8);
         ud.actions.Walk.setEffectiveWeight(ud.walkW);
@@ -503,14 +571,14 @@ export class Renderer {
         ud.actions.Walk.timeScale = u.def.speed / 2.0;
         ud.mixer.update(dt);
       } else {
-        ud.turret.rotation.y = -(e.turret - e.angle);
+        if (ud.turret) ud.turret.rotation.y = -(e.turret - e.angle);
         for (const b of ud.barrels) {
           b.userData.kick = Math.max(0, (b.userData.kick || 0) - dt * 4);
-          b.position.x = (b.userData.baseX ??= b.position.x) - b.userData.kick * 0.25;
+          if (b.userData.base) b.position.copy(b.userData.base).addScaledVector(b.userData.dir, -b.userData.kick * 0.22);
         }
         const moving = Math.hypot(u.x - u.px, u.y - u.py) > 0.001;
         if (moving) {
-          for (const wh of ud.wheels) wh.rotation.z -= dt * 8;
+          for (const wh of ud.wheels) wh.rotation.x += dt * 9;
           if (ud.trackMat) ud.trackMat.map.offset.y -= dt * 1.5;
           ud.hull.rotation.z = Math.sin(time * 18 + u.id) * 0.008;
           // Staub
@@ -575,7 +643,7 @@ export class Renderer {
     // Wracks
     this.wrecks = this.wrecks.filter((wr) => {
       wr.life += dt;
-      if (wr.life > wr.max - 4) wr.obj.position.y -= dt * 0.4;
+      if (wr.life > wr.max - 4) wr.obj.position.y -= dt * 0.4; // (unbegrenzt: bleibt liegen)
       wr.obj.visible = w.explored[1][Math.floor(wr.uy) * w.map.w + Math.floor(wr.ux)] === 1;
       if (wr.life > wr.max) { this.scene.remove(wr.obj); return false; }
       return true;

@@ -75,7 +75,10 @@ class Game {
     };
     this.hud.onPanel = (kind, a, b) => {
       if (kind === 'produce') { this.world.setProduction(a, b, 1); this.audio.play('click'); }
-      else if (kind === 'subselect') {
+      else if (kind === 'selectBuilding') {
+        const b = this.world.byId.get(a);
+        if (b) { this.selection.clear(); this.selection.add(a); this.renderer.lookAt(b.cx, b.cy + 2); this.audio.play('click'); }
+      } else if (kind === 'subselect') {
         for (const id of [...this.selection]) { const o = this.world.byId.get(id); if (!o || o.type !== a) this.selection.delete(id); }
       }
     };
@@ -456,6 +459,22 @@ class Game {
           if (ev.team === 1) { this.audio.play('board'); this.hud.message('Fahrzeug übernommen', 'good', ev.x, ev.y); this.radio(RADIO.board); }
           else { this.hud.message('Gegner übernimmt ein herrenloses Fahrzeug', 'bad', ev.x, ev.y); this.radio(RADIO.enemyBoard, 0.6); }
           break;
+        case 'driverKilled':
+          if (ev.by === 1) { this.hud.message(ev.turret ? 'Geschützschütze ausgeschaltet – Geschütz kapern!' : 'Fahrer ausgeschaltet – Fahrzeug kapern!', 'good', ev.x, ev.y); this.radio(RADIO.driverKilled, 0.8); }
+          else if (ev.by === 2) { this.hud.message(ev.turret ? 'Unser Geschützschütze wurde getroffen' : 'Ein Fahrer wurde ausgeschaltet', 'bad', ev.x, ev.y); this.radio(RADIO.driverLost, 0.6); }
+          this.audio.play('sniper', ev.x, ev.y, 0.8);
+          break;
+        case 'barrel':
+          this.audio.play('bigexplode', ev.x, ev.y, 1);
+          if (vis(ev.x, ev.y)) this.radio(RADIO.barrel, 0.3);
+          break;
+        case 'bridge':
+          if (ev.destroyed) { this.audio.play('bigexplode', ev.x, ev.y, 1.2); this.hud.message('Brücke gesprengt', 'bad', ev.x, ev.y); this.radio(RADIO.bridgeDown, 0.8); }
+          else { this.audio.play('capture'); this.hud.message('Brücke repariert', 'good', ev.x, ev.y); if (ev.team === 1) this.radio(RADIO.bridgeUp, 0.8); }
+          break;
+        case 'impatient':
+          if (ev.team === 1) { this.hud.bubble(ev.id, pick(QUIPS.impatient)); }
+          break;
         case 'eject':
           if (ev.team === 1) this.radio(RADIO.eject, 0.3);
           break;
@@ -488,6 +507,7 @@ class Game {
         fort: win ? 'Das feindliche Fort wurde zerstört.' : 'Ihr Fort wurde zerstört.',
         flag: win ? 'Die Flagge des feindlichen Forts ist in Ihrer Hand.' : 'Der Feind hat die Flagge Ihres Forts erobert.',
         goal: 'Einsatzziel erfüllt: ' + (level.goal?.text || '') + '.',
+        annihilation: win ? 'Der Gegner hat keine Einheiten und keine Fabriken mehr.' : 'Sie haben keine Einheiten und keine Fabriken mehr.',
       };
       $('end-reason').textContent = reasons[ev.reason] + ' Spielzeit ' + fmt(w.time) + '.';
       const s1 = w.stats[1], s2 = w.stats[2];
@@ -558,6 +578,7 @@ class Game {
         this.hudT = 0.2;
         this.hud.updateTop();
         this.hud.drawMinimap();
+        this.hud.updateFactories();
         this.updateTips();
       }
       if (this.state === 'play') {

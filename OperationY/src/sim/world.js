@@ -1,6 +1,6 @@
 // Spielsimulation: Einheiten, Gebäude, Geschosse, Sektoren, Produktion, Sicht
 
-import { T, TEAM, UNITS, BUILDINGS, WEAPONS, DAMAGE, UNIT_CAP, SIM_DT, productionFactor } from './defs.js';
+import { T, TEAM, UNITS, BUILDINGS, WEAPONS, DAMAGE, UNIT_CAP, SIM_DT, productionFactor, BARREL } from './defs.js';
 import { generateMap } from './mapgen.js';
 import { findPath, nearestPassable, passable } from './path.js';
 
@@ -47,17 +47,71 @@ export class World {
       const sec = this.sectors[spot.sector];
       this.addBuilding(spot.type, spot.x, spot.y, sec.owner, spot.sector);
     }
+    this.fires = [];
+    this.initBridges();
     for (const [type, x, y, team] of level.units || []) {
       const cls = UNITS[type].cls;
       const p = nearestPassable(this.map, x, y, cls, 6) || [x, y];
       this.addUnit(type, p[0] + 0.5, p[1] + 0.5, team);
     }
+    this.placeBarrels();
     this.updateVisibility();
+  }
+
+  // Zusammenhängende Brückenfelder zu Brücken gruppieren
+  initBridges() {
+    const { w, h, tiles } = this.map;
+    this.bridgeAt = new Int16Array(w * h);
+    this.bridges = [];
+    for (let i = 0; i < w * h; i++) {
+      if (tiles[i] !== T.BRIDGE || this.bridgeAt[i]) continue;
+      const br = { id: this.bridges.length, tiles: [], hp: 320, maxHp: 320, destroyed: false };
+      const stack = [i];
+      this.bridgeAt[i] = br.id + 1;
+      while (stack.length) {
+        const c = stack.pop();
+        br.tiles.push(c);
+        const cx = c % w, cy = (c / w) | 0;
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const nx = cx + dx, ny = cy + dy;
+          if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+          const n = ny * w + nx;
+          if (tiles[n] === T.BRIDGE && !this.bridgeAt[n]) { this.bridgeAt[n] = br.id + 1; stack.push(n); }
+        }
+      }
+      let sx = 0, sy = 0;
+      for (const t of br.tiles) { sx += t % w + 0.5; sy += ((t / w) | 0) + 0.5; }
+      br.x = sx / br.tiles.length; br.y = sy / br.tiles.length;
+      this.bridges.push(br);
+    }
+    this.map.bridgeAt = this.bridgeAt;
+  }
+
+  // Explosive Fässer an Straßenrändern verteilen (deterministisch)
+  placeBarrels() {
+    const { w, h, tiles } = this.map;
+    const n = Math.round(w * h / 300);
+    let tries = 0, placed = 0;
+    while (placed < n && tries++ < 4000) {
+      const x = Math.floor(this.rng() * w), y = Math.floor(this.rng() * h);
+      if (!passable(this.map, x, y, 'vehicle') || tiles[y * w + x] === T.ROAD || tiles[y * w + x] === T.BRIDGE) continue;
+      let nearRoad = false;
+      for (let dy = -2; dy <= 2 && !nearRoad; dy++) for (let dx = -2; dx <= 2; dx++) {
+        const nx = x + dx, ny = y + dy;
+        if (nx >= 0 && ny >= 0 && nx < w && ny < h && tiles[ny * w + nx] === T.ROAD) { nearRoad = true; break; }
+      }
+      if (!nearRoad) continue;
+      if (this.sectors.some((s) => Math.hypot(s.x - x, s.y - y) < 4.5)) continue;
+      if (this.buildings.some((b) => this.distToBuilding(x + 0.5, y + 0.5, b) < 2.5)) continue;
+      const k = 1 + Math.floor(this.rng() * 3);
+      for (let i = 0; i < k; i++) this.addUnit('barrel', x + 0.3 + this.rng() * 0.4, y + 0.3 + this.rng() * 0.4, TEAM.NEUTRAL);
+      placed++;
+    }
   }
 
   // ---------- Erzeugung ----------
   addUnit(type, x, y, team) {
-    const def = UNITS[type];
+    const def = type === 'barrel' ? BARREL : UNITS[type];
     const u = {
       id: this.nextId++, kind: 'unit', type, def, cls: def.cls, team,
       x, y, px: x, py: y, angle: team === TEAM.ENEMY ? Math.PI : 0, turret: team === TEAM.ENEMY ? Math.PI : 0,
@@ -65,7 +119,7 @@ export class World {
       path: null, pi: 0, order: { kind: 'idle' }, target: null, cd: Math.random() * 0.5, salvo: 0, salvoT: 0,
       gx: x, gy: y, stuckT: 0, sx: x, sy: y, repaths: 0, moving: false, scanT: Math.random() * 0.3,
       walk: 0, recoil: 0, driver: def.cls === 'vehicle' ? 'runner' : null, born: this.time,
-      needPath: false, dest: null, hitT: -9,
+      needPath: false, dest: null, hitT: -9, idleT: 0, killT: -9,
     };
     this.units.push(u);
     this.byId.set(u.id, u);
@@ -79,6 +133,7 @@ export class World {
       cx: x + def.w / 2, cy: y + def.h / 2, hp: def.hp, maxHp: def.hp, sector,
       produce: def.produces && team ? DEFAULT_PROD[type] : null, progress: 0, rally: null,
       cd: 0, turret: team === TEAM.ENEMY ? Math.PI : 0, destroyed: false, salvo: 0, hitT: -9,
+      manned: def.manned ? true : undefined,
     };
     for (let yy = y; yy < y + def.h; yy++) for (let xx = x; xx < x + def.w; xx++) {
       if (xx >= 0 && yy >= 0 && xx < this.map.w && yy < this.map.h) this.map.occ[yy * this.map.w + xx] = b.id;
@@ -124,18 +179,50 @@ export class World {
     }
   }
 
+  canBoard(v) {
+    if (!v || v.dead || v.destroyed) return false;
+    if (v.kind === 'unit') return v.cls === 'vehicle' && v.team === TEAM.NEUTRAL;
+    return v.type === 'turret' && v.manned === false;
+  }
+
   commandBoard(ids, vehicleId, team) {
     const v = this.byId.get(vehicleId);
-    if (!v || v.dead || v.team !== TEAM.NEUTRAL || v.kind !== 'unit') return;
+    if (!this.canBoard(v)) return;
+    const vx = v.kind === 'unit' ? v.x : v.cx, vy = v.kind === 'unit' ? v.y : v.cy;
     // nur ein Roboter steigt ein: der nächstgelegene
     const robots = this.ownUnits(ids, team).filter((u) => u.cls === 'robot');
     if (!robots.length) return;
-    robots.sort((a, b) => Math.hypot(a.x - v.x, a.y - v.y) - Math.hypot(b.x - v.x, b.y - v.y));
+    robots.sort((a, b) => Math.hypot(a.x - vx, a.y - vy) - Math.hypot(b.x - vx, b.y - vy));
     const r = robots[0];
     r.order = { kind: 'board', id: vehicleId };
     r.target = null;
-    this.requestPath(r, v.x, v.y);
-    if (robots.length > 1) this.commandMove(robots.slice(1).map((u) => u.id), v.x, v.y + 1.5, team);
+    this.requestPath(r, vx, vy + (v.kind === 'unit' ? 0 : 1));
+    if (robots.length > 1) this.commandMove(robots.slice(1).map((u) => u.id), vx, vy + 1.5, team);
+  }
+
+  // Zerstörte Brücke reparieren lassen
+  commandFixBridge(ids, bridgeId, team) {
+    const br = this.bridges[bridgeId];
+    if (!br || !br.destroyed) return;
+    const robots = this.ownUnits(ids, team).filter((u) => u.cls === 'robot');
+    if (!robots.length) return;
+    // nächstes begehbares Ufer neben der Brücke
+    let best = null, bd = 1e9;
+    const { w } = this.map;
+    for (const t of br.tiles) {
+      const tx = t % w, ty = (t / w) | 0;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        if (!passable(this.map, tx + dx, ty + dy, 'robot')) continue;
+        const d = Math.hypot(tx + dx - robots[0].x, ty + dy - robots[0].y);
+        if (d < bd) { bd = d; best = [tx + dx + 0.5, ty + dy + 0.5]; }
+      }
+    }
+    if (!best) return;
+    for (const r of robots.slice(0, 3)) {
+      r.order = { kind: 'fixbridge', b: bridgeId, x: best[0], y: best[1] };
+      r.target = null;
+      this.requestPath(r, best[0], best[1]);
+    }
   }
 
   commandStop(ids, team) {
@@ -236,7 +323,9 @@ export class World {
       if (b.def.produces) this.updateProduction(b, dt);
     }
     this.updateProjectiles(dt);
+    this.updateFires(dt);
     this.updateSectors();
+    if (this.tick % 40 === 0) this.checkAnnihilation();
     if (this.tick % 5 === 0) this.updateVisibility();
     if (this.tick % 10 === 0) this.repair(dt * 10);
     // Tote entfernen
@@ -250,8 +339,30 @@ export class World {
 
   countUnits(team) {
     let c = 0;
-    for (const u of this.units) if (!u.dead && u.team === team) c++;
+    for (const u of this.units) if (!u.dead && u.team === team && u.cls !== 'prop') c++;
     return c;
+  }
+
+  updateFires(dt) {
+    if (!this.fires.length) return;
+    this.fires = this.fires.filter((f) => {
+      f.t -= dt;
+      for (const o of this.units) {
+        if (o.dead || o.cls === 'prop' || !this.isEnemy(f.team, o.team)) continue;
+        if (Math.hypot(o.x - f.x, o.y - f.y) < 0.85) this.damage(o, 9 * dt, 'flame', f.team);
+      }
+      return f.t > 0;
+    });
+  }
+
+  // Totale Vernichtung: keine Einheiten und keine produzierenden Gebäude mehr
+  checkAnnihilation() {
+    if (this.over) return;
+    for (const team of [1, 2]) {
+      const units = this.countUnits(team);
+      const prod = this.buildings.some((b) => b.team === team && !b.destroyed && b.def.produces);
+      if (!units && !prod) { this.gameOver(team === 1 ? 2 : 1, 'annihilation'); return; }
+    }
   }
 
   territory(team) {
@@ -272,6 +383,7 @@ export class World {
       if (d > r || (w.minRange && d < w.minRange)) continue;
       const eff = DAMAGE[w.kind][o.def.armor];
       let s = eff * 10 - d + (src.target === o.id ? 3 : 0) + (1 - o.hp / o.maxHp) * 2;
+      if (w.driverSnipe && o.cls === 'vehicle') s += 9;
       // Gebäude schützen zuerst die eigene Flagge
       if (src.kind === 'building' && o.cls === 'robot') {
         const sec = this.sectors[src.sector];
@@ -364,23 +476,49 @@ export class World {
       u.chase = null;
       if (Math.hypot(u.gx - u.x, u.gy - u.y) > 1.5) this.requestPath(u, u.gx, u.gy);
     }
-    if (u.order.kind === 'move' || u.order.kind === 'amove' || u.order.kind === 'board') wantMove = true;
+    if (u.order.kind === 'move' || u.order.kind === 'amove' || u.order.kind === 'board' || u.order.kind === 'fixbridge') wantMove = true;
     if (u.order.kind === 'amove' && tgt && this.distTo(u, tgt) <= wpn.range) wantMove = false;
 
     if (u.order.kind === 'board') {
       const v = this.byId.get(u.order.id);
-      if (!v || v.dead || v.team !== TEAM.NEUTRAL) { u.order = { kind: 'idle' }; u.gx = u.x; u.gy = u.y; u.path = null; }
-      else if (Math.hypot(v.x - u.x, v.y - u.y) < v.radius + 0.7) {
+      if (!this.canBoard(v)) { u.order = { kind: 'idle' }; u.gx = u.x; u.gy = u.y; u.path = null; }
+      else if (v.kind === 'unit' ? Math.hypot(v.x - u.x, v.y - u.y) < v.radius + 0.7 : this.distToBuilding(u.x, u.y, v) < 1.0) {
         v.team = u.team;
         v.driver = u.type;
-        v.order = { kind: 'idle' };
-        v.gx = v.x; v.gy = v.y;
-        v.angle = v.angle || 0;
+        if (v.kind === 'unit') { v.order = { kind: 'idle' }; v.gx = v.x; v.gy = v.y; } else { v.manned = true; v.target = null; }
         u.dead = true;
-        this.emit({ t: 'board', x: v.x, y: v.y, team: u.team, vid: v.id, uid: u.id });
+        this.emit({ t: 'board', x: v.kind === 'unit' ? v.x : v.cx, y: v.kind === 'unit' ? v.y : v.cy, team: u.team, vid: v.id, uid: u.id, turret: v.kind !== 'unit' });
         return;
       }
     }
+    if (u.order.kind === 'fixbridge') {
+      const br = this.bridges[u.order.b];
+      if (!br || !br.destroyed) { this.finishOrder(u); }
+      else if (Math.hypot(u.order.x - u.x, u.order.y - u.y) < 1.2) {
+        u.path = null;
+        br.repairT = (br.repairT || 0) + dt;
+        u.angle = Math.atan2(br.y - u.y, br.x - u.x);
+        if (br.repairT >= 8) this.restoreBridge(br, u.team);
+        return;
+      }
+    }
+    // Ungeduldige Einheiten stürmen nach langer Wartezeit los
+    if (def.impatient && u.order.kind === 'idle' && !u.target && !u.chase) {
+      u.idleT += dt;
+      if (u.idleT > 25) {
+        u.idleT = -15;
+        let best = null, bd = 14;
+        for (const o of this.units) {
+          if (o.dead || o.cls === 'prop' || !this.isEnemy(u.team, o.team)) continue;
+          const d = Math.hypot(o.x - u.x, o.y - u.y);
+          if (d < bd) { bd = d; best = o; }
+        }
+        if (best) {
+          this.commandMove([u.id], best.x, best.y, u.team, true);
+          this.emit({ t: 'impatient', id: u.id, team: u.team, x: u.x, y: u.y });
+        }
+      }
+    } else if (def.impatient) u.idleT = Math.min(u.idleT, 0);
 
     u.moving = false;
     if (wantMove && u.path && u.pi < u.path.length) {
@@ -543,6 +681,7 @@ export class World {
   }
 
   updateGun(b, dt) {
+    if (b.manned === false) return;
     const wpn = WEAPONS[b.def.weapon];
     b.cd -= dt;
     b.scanT = (b.scanT || 0) - dt;
@@ -609,11 +748,13 @@ export class World {
   impact(p) {
     const w = p.wpn;
     p.done = true;
+    if (w.burn) this.fires.push({ x: p.tx, y: p.ty, t: w.burn, team: p.team });
     if (w.splash) {
+      this.splashBridge(p.tx, p.ty, w.splash, w.dmg * (w.kind === 'flame' ? 0 : 1));
       for (const o of this.units) {
-        if (o.dead || !this.isEnemy(p.team, o.team)) continue;
+        if (o.dead || !(this.isEnemy(p.team, o.team) || o.cls === 'prop')) continue;
         const d = Math.hypot(o.x - p.tx, o.y - p.ty) - o.radius * 0.5;
-        if (d < w.splash) this.damage(o, w.dmg * (1 - (Math.max(0, d) / w.splash) * 0.6), w.kind, p.team);
+        if (d < w.splash) this.damage(o, w.dmg * (1 - (Math.max(0, d) / w.splash) * 0.6), w.kind, p.team, w);
       }
       for (const b of this.buildings) {
         if (b.destroyed || !this.isEnemy(p.team, b.team)) continue;
@@ -623,15 +764,72 @@ export class World {
       const t = this.byId.get(p.tid);
       if (this.alive(t)) {
         const d = t.kind === 'building' ? this.distToBuilding(p.tx, p.ty, t) : Math.hypot(t.x - p.tx, t.y - p.ty);
-        if (d < (t.kind === 'building' ? 0.6 : t.radius + 0.55)) this.damage(t, w.dmg, w.kind, p.team);
+        if (d < (t.kind === 'building' ? 0.6 : t.radius + 0.55)) this.damage(t, w.dmg, w.kind, p.team, w);
       }
     }
     const tile = this.map.tiles[Math.floor(p.ty) * this.map.w + Math.floor(p.tx)];
     this.emit({ t: 'impact', x: p.tx, y: p.ty, kind: p.kind, w: p.wname, splash: w.splash || 0, water: tile === T.WATER });
   }
 
-  damage(e, amount, kind, byTeam) {
+  splashBridge(x, y, r, dmg) {
+    if (!dmg || !this.bridges.length) return;
+    const xi = Math.floor(x), yi = Math.floor(y);
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      const nx = xi + dx, ny = yi + dy;
+      if (nx < 0 || ny < 0 || nx >= this.map.w || ny >= this.map.h) continue;
+      const id = this.bridgeAt[ny * this.map.w + nx];
+      if (!id) continue;
+      const br = this.bridges[id - 1];
+      if (br.destroyed || Math.hypot(nx + 0.5 - x, ny + 0.5 - y) > r + 0.6) continue;
+      br.hp -= dmg * 0.5;
+      if (br.hp <= 0) this.destroyBridge(br);
+      return;
+    }
+  }
+
+  destroyBridge(br) {
+    br.destroyed = true;
+    br.hp = 0;
+    br.repairT = 0;
+    const { w } = this.map;
+    for (const t of br.tiles) this.map.tiles[t] = T.WATER;
+    for (const u of this.units) {
+      if (u.dead || u.cls === 'prop') continue;
+      const i = Math.floor(u.y) * w + Math.floor(u.x);
+      if (this.bridgeAt[i] === br.id + 1) this.killUnit(u, 0);
+    }
+    this.emit({ t: 'bridge', id: br.id, destroyed: true, x: br.x, y: br.y });
+  }
+
+  restoreBridge(br, team) {
+    br.destroyed = false;
+    br.hp = br.maxHp;
+    br.repairT = 0;
+    for (const t of br.tiles) this.map.tiles[t] = T.BRIDGE;
+    for (const u of this.units) if (!u.dead && u.order.kind === 'fixbridge' && u.order.b === br.id) this.finishOrder(u);
+    this.emit({ t: 'bridge', id: br.id, destroyed: false, x: br.x, y: br.y, team });
+  }
+
+  killDriver(v, byTeam) {
+    v.team = TEAM.NEUTRAL;
+    v.driver = null;
+    v.order = { kind: 'idle' };
+    v.path = null; v.target = null; v.salvo = 0;
+    if (this.stats[byTeam]) this.stats[byTeam].kills++;
+    this.emit({ t: 'driverKilled', x: v.x ?? v.cx, y: v.y ?? v.cy, id: v.id, by: byTeam });
+  }
+
+  damage(e, amount, kind, byTeam, wpn) {
     if (e.dead || e.destroyed) return;
+    // Fahrer-/Schützenabschuss: Scharfschützen gezielt, sonst kritischer Treffer bei schwerem Schaden
+    if (e.team && wpn && ((e.kind === 'unit' && e.cls === 'vehicle') || e.manned === true)) {
+      const chance = wpn.driverSnipe || (e.hp < e.maxHp * 0.35 ? 0.03 : 0);
+      if (chance && this.rng() < chance) {
+        if (e.kind === 'unit') this.killDriver(e, byTeam);
+        else { e.manned = false; e.team = TEAM.NEUTRAL; e.target = null; this.emit({ t: 'driverKilled', x: e.cx, y: e.cy, id: e.id, by: byTeam, turret: true }); }
+        if (wpn.driverSnipe) return;
+      }
+    }
     const armor = e.kind === 'building' ? 'structure' : e.def.armor;
     e.hp -= amount * DAMAGE[kind][armor];
     e.hitT = this.time;
@@ -644,15 +842,34 @@ export class World {
     }
     if (e.hp <= 0) {
       e.hp = 0;
-      if (e.kind === 'unit') this.killUnit(e, byTeam);
+      if (e.cls === 'prop') this.explodeBarrel(e);
+      else if (e.kind === 'unit') this.killUnit(e, byTeam);
       else this.destroyBuilding(e, byTeam);
     }
   }
 
+  explodeBarrel(u) {
+    if (u.dead) return;
+    u.dead = true;
+    this.emit({ t: 'barrel', x: u.x, y: u.y, id: u.id });
+    const R = 2.3;
+    for (const o of this.units) {
+      if (o.dead) continue;
+      const d = Math.hypot(o.x - u.x, o.y - u.y);
+      if (d < R) this.damage(o, 70 * (1 - d / R * 0.5), 'shell', 0);
+    }
+    for (const b of this.buildings) {
+      if (!b.destroyed && b.team && this.distToBuilding(u.x, u.y, b) < R * 0.6) this.damage(b, 80, 'shell', 0);
+    }
+    this.splashBridge(u.x, u.y, R, 160);
+  }
+
   killUnit(u, byTeam) {
+    if (u.dead) return;
     u.dead = true;
     if (this.stats[u.team]) this.stats[u.team].lost++;
     if (this.stats[byTeam]) this.stats[byTeam].kills++;
+    for (const o of this.units) if (!o.dead && o.team === byTeam && o.target === u.id) o.killT = this.time;
     this.emit({ t: 'death', x: u.x, y: u.y, cls: u.cls, type: u.type, team: u.team, id: u.id, angle: u.angle });
     if (u.cls === 'vehicle' && u.team && this.rng() < 0.35) {
       const p = nearestPassable(this.map, u.x - 0.5, u.y - 0.5, 'robot', 3);
@@ -683,12 +900,17 @@ export class World {
       const ex = b.cx, ey = b.y + b.h + 0.6;
       const p = nearestPassable(this.map, ex - 0.5, ey - 0.5, def.cls, 6);
       if (!p) return;
-      const u = this.addUnit(b.produce, p[0] + 0.5, p[1] + 0.5, b.team);
-      u.angle = Math.PI / 2; u.turret = u.angle;
-      if (this.stats[b.team]) this.stats[b.team].built++;
-      this.emit({ t: 'spawn', id: u.id, x: u.x, y: u.y, team: b.team, type: b.produce, from: b.id });
+      const n = Math.max(1, Math.min(def.squad || 1, UNIT_CAP - this.countUnits(b.team)));
+      const ids = [];
+      for (let k = 0; k < n; k++) {
+        const u = this.addUnit(b.produce, p[0] + 0.5 + (k - (n - 1) / 2) * 0.5, p[1] + 0.5 + (k % 2) * 0.3, b.team);
+        u.angle = Math.PI / 2; u.turret = u.angle;
+        ids.push(u.id);
+        if (this.stats[b.team]) this.stats[b.team].built++;
+        this.emit({ t: 'spawn', id: u.id, x: u.x, y: u.y, team: b.team, type: b.produce, from: b.id });
+      }
       const r = b.rally || [b.cx + (this.rng() - 0.5) * 3, b.y + b.h + 2.5];
-      this.commandMove([u.id], r[0], r[1], b.team);
+      this.commandMove(ids, r[0], r[1], b.team);
     }
   }
 
@@ -735,6 +957,7 @@ export class World {
       const b = this.byId.get(id);
       if (!b) continue;
       if (b.type === 'fort' && !b.destroyed && b.team && b.team !== team) hasFort = b;
+      if (b.manned === false) continue;
       b.team = team;
       b.target = null;
       b.progress = 0;
@@ -749,6 +972,10 @@ export class World {
   repair(dt) {
     for (const u of this.units) {
       if (u.dead || !u.team || u.hp >= u.maxHp || u.moving) continue;
+      if (u.cls === 'vehicle') {
+        const st = this.buildings.find((b) => b.type === 'repair' && !b.destroyed && b.team === u.team && this.distToBuilding(u.x, u.y, b) < 1.6);
+        if (st) { u.hp = Math.min(u.maxHp, u.hp + u.maxHp * 0.15 * dt); u.repairing = this.time; continue; }
+      }
       if (this.time - u.hitT < 4) continue;
       for (const b of this.buildings) {
         if (b.destroyed || b.team !== u.team || !b.def.produces) continue;

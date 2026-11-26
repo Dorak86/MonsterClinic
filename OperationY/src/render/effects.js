@@ -111,6 +111,8 @@ const PROJ_STYLE = {
   missile: { len: 0.5, w: 0.1, col: new THREE.Color(1.2, 1.2, 1.2) },
   grenade: { len: 0.18, w: 0.16, col: new THREE.Color(0.25, 0.28, 0.2) },
   beam: { len: 0, w: 0, col: new THREE.Color(1, 1, 1) },
+  flame: { len: 0, w: 0, col: new THREE.Color(1, 1, 1) },
+  laser: { len: 0, w: 0, col: new THREE.Color(1, 1, 1) },
 };
 
 export class Effects {
@@ -193,6 +195,22 @@ export class Effects {
 
   addProjectile(p, from) {
     // from: Startpunkt in Weltkoordinaten (Mündung)
+    if (p.kind === 'laser') {
+      const tx = p.tx * TILE, tz = p.ty * TILE;
+      const ty = this.terrain.unitHeight(p.tx, p.ty) + 0.9;
+      const to = new THREE.Vector3(tx, ty, tz);
+      const len = from.distanceTo(to);
+      const col = p.team === 1 ? 0xff5a3a : 0x4aa8ff;
+      const core = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, len, 8, 1, true).rotateX(Math.PI / 2).translate(0, 0, len / 2),
+        new THREE.MeshBasicMaterial({ color: new THREE.Color(col).multiplyScalar(4), transparent: true, opacity: 1, toneMapped: false, blending: THREE.AdditiveBlending, depthWrite: false }));
+      core.position.copy(from);
+      core.lookAt(to);
+      this.scene.add(core);
+      this.beams.push({ line: core, life: 0, max: 0.3 });
+      for (let i = 0; i < 8; i++) this.glow.spawn({ x: tx, y: ty, z: tz, vx: (Math.random() - 0.5) * 3, vy: Math.random() * 2, vz: (Math.random() - 0.5) * 3, life: 0.3, s0: 0.6, s1: 0.1, c0: p.team === 1 ? [1, 0.5, 0.3] : [0.4, 0.7, 1], a0: 1, a1: 0 });
+      this.light(tx, ty + 0.5, tz, col, 18, 0.15);
+      return;
+    }
     if (p.kind === 'beam') {
       const tx = p.tx * TILE, tz = p.ty * TILE;
       const ty = this.terrain.unitHeight(p.tx, p.ty) + 0.9;
@@ -317,10 +335,19 @@ export class Effects {
       d.rotateY(-Math.PI / 2);
       d.scale.set(st.len || 0.2, st.w, st.w);
       d.updateMatrix();
-      if (n < 400) {
+      if (n < 400 && (st.len || st.w)) {
         this.bolts.setMatrixAt(n, d.matrix);
         this.bolts.setColorAt(n, st.col);
         n++;
+      }
+      if (p.kind === 'flame') {
+        // Flammenstrahl aus Partikeln, kein Geschosskörper
+        for (let i = 0; i < 3; i++) {
+          const j = () => (Math.random() - 0.5) * 0.4;
+          this.glow.spawn({ x: x + j(), y: y + j(), z: z + j(), vx: (nx - x) * 8 + j(), vy: 0.6, vz: (nz - z) * 8 + j(), life: 0.25 + Math.random() * 0.2, s0: 0.5 + k * 1.6, s1: 1.8, c0: [1, 0.85, 0.5], c1: [1, 0.3, 0.05], a0: 0.9, a1: 0, drag: 0.3 });
+        }
+        if (Math.random() < 0.3) this.smoke.spawn({ x, y: y + 0.3, z, vy: 1, life: 1, s0: 0.5, s1: 1.6, c0: [0.2, 0.18, 0.16], a0: 0.4, a1: 0 });
+        continue;
       }
       if (p.kind === 'rocket' || p.kind === 'missile') {
         pr.trail += dt;

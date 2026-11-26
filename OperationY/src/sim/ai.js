@@ -36,6 +36,7 @@ export class AI {
     const mine = [], foes = [];
     for (const u of w.units) {
       if (u.dead) continue;
+      if (u.cls === 'prop') continue;
       if (u.team === this.team) mine.push(u);
       else if (u.team === this.enemy) foes.push(u);
     }
@@ -51,7 +52,8 @@ export class AI {
       if (b.type === 'vehicle') {
         choice = this.pick({
           buggy: w.time < 120 ? 3 : 1,
-          lighttank: 4,
+          lighttank: 3,
+          mediumtank: 2 + foeVeh * 0.2,
           heavytank: 1 + foeVeh * 0.4 + (this.diff === 2 ? 1 : 0),
           launcher: 1 + (foeRob > 8 ? 1 : 0),
         });
@@ -59,8 +61,11 @@ export class AI {
         const opts = b.def.produces;
         if (myRob < 5) choice = 'runner';
         else {
-          const wts = { runner: 3, grenadier: 1 + foeRob * 0.15, rocketeer: 1 + foeVeh * 0.7 };
-          if (opts.includes('sniper')) wts.sniper = 0.6 + foeRob * 0.08;
+          const wts = { runner: 3, assault: 2, grenadier: 1 + foeRob * 0.15, rocketeer: 1 + foeVeh * 0.7 };
+          if (opts.includes('sniper')) wts.sniper = 0.6 + foeRob * 0.05 + foeVeh * 0.15;
+          if (opts.includes('flamer')) wts.flamer = 0.8 + foeRob * 0.1;
+          if (opts.includes('laser')) wts.laser = 0.4 + w.time / 600;
+          for (const k of Object.keys(wts)) if (!opts.includes(k)) delete wts[k];
           choice = this.pick(wts);
         }
       }
@@ -74,7 +79,31 @@ export class AI {
       if (task.kind === 'capture' && w.sectors[task.sector].owner === this.team && u.order.kind === 'idle') this.tasks.delete(id);
     }
 
-    const idle = mine.filter((u) => !this.tasks.has(u.id) && u.order.kind === 'idle' && !u.chase);
+    const idle = mine.filter((u) => !this.tasks.has(u.id) && u.order.kind === 'idle' && !u.chase && u.cls !== 'prop');
+
+    // Herrenlose Fahrzeuge und unbemannte Geschütze kapern
+    const boardables = w.units.filter((v) => !v.dead && v.cls === 'vehicle' && v.team === 0)
+      .concat(w.buildings.filter((b) => b.type === 'turret' && b.manned === false && !b.destroyed));
+    for (const v of boardables) {
+      const vx = v.kind === 'unit' ? v.x : v.cx, vy = v.kind === 'unit' ? v.y : v.cy;
+      if ([...this.tasks.values()].some((t) => t.kind === 'board' && t.id === v.id)) continue;
+      const r = idle.filter((u) => u.cls === 'robot' && !this.tasks.has(u.id))
+        .sort((a, b) => Math.hypot(a.x - vx, a.y - vy) - Math.hypot(b.x - vx, b.y - vy))[0];
+      if (r && Math.hypot(r.x - vx, r.y - vy) < 16) {
+        w.commandBoard([r.id], v.id, this.team);
+        this.tasks.set(r.id, { kind: 'board', id: v.id, until: w.time + 30 });
+      }
+    }
+    // Gesprengte Brücken reparieren
+    for (const br of w.bridges) {
+      if (!br.destroyed || [...this.tasks.values()].some((t) => t.kind === 'fix' && t.b === br.id)) continue;
+      const r = idle.filter((u) => u.cls === 'robot' && !this.tasks.has(u.id))
+        .sort((a, b) => Math.hypot(a.x - br.x, a.y - br.y) - Math.hypot(b.x - br.x, b.y - br.y))[0];
+      if (r && Math.hypot(r.x - br.x, r.y - br.y) < 22) {
+        w.commandFixBridge([r.id], br.id, this.team);
+        this.tasks.set(r.id, { kind: 'fix', b: br.id, until: w.time + 40 });
+      }
+    }
 
     // Verteidigung: Feinde nahe eigener Gebäude/Flaggen
     const assets = [];

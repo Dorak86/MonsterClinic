@@ -167,3 +167,13 @@ table.stats th.p { color: var(--player); } table.stats th.e { color: var(--enemy
 #radio span, .radio-line span { font-size: 14px; line-height: 1.4; }
 .radio-line { display: flex; gap: 12px; align-items: center; max-width: 560px; background: var(--panel); border: 1px solid var(--line); padding: 8px 14px 8px 8px; }
 .radio-line img { width: 72px; height: 72px; }
+
+/* Gesichtskamera, Fabrik-Schnellleiste */
+#panel .icon.fc { width: 112px; height: 112px; overflow: hidden; background: radial-gradient(#2a1e1a, #0d0f12); position: relative; }
+#panel .icon.fc::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(0deg, #ffffff07 0 1px, transparent 1px 3px); pointer-events: none; }
+canvas.facecam { width: 112px; height: 112px; display: block; }
+#factories { display: flex; flex-direction: column; gap: 4px; margin-left: auto; }
+#factories:empty { display: none; }
+.fq { width: 52px; height: 52px; padding: 0; position: relative; clip-path: none; border-radius: 4px; background: var(--panel); }
+.fq img { width: 46px; height: 46px; display: block; margin: 2px auto; }
+.fq i { position: absolute; left: 0; bottom: 0; height: 3px; background: var(--ok); }

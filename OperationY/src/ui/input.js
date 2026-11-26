@@ -59,6 +59,7 @@ export class Input {
     if (!this.active) return;
     this.g.audio.init();
     this.mouse.x = e.clientX; this.mouse.y = e.clientY;
+    if (e.button === 1) { e.preventDefault(); this.rotating = { x: e.clientX, yaw: this.g.renderer.cam.yaw }; return; }
     if (e.button === 0) {
       this.mouse.down = true;
       this.mouse.sx = e.clientX; this.mouse.sy = e.clientY;
@@ -72,6 +73,7 @@ export class Input {
     this.mouse.x = e.clientX; this.mouse.y = e.clientY;
     this.mouse.inside = true;
     if (!this.active) return;
+    if (this.rotating) { this.g.renderer.cam.yaw = this.rotating.yaw + (e.clientX - this.rotating.x) * 0.006; return; }
     if (this.mouse.down) {
       if (Math.hypot(e.clientX - this.mouse.sx, e.clientY - this.mouse.sy) > 6) {
         this.box = [this.mouse.sx, this.mouse.sy, e.clientX, e.clientY];
@@ -80,6 +82,7 @@ export class Input {
   }
 
   up(e) {
+    if (e.button === 1) { this.rotating = null; return; }
     if (!this.active || e.button !== 0 || !this.mouse.down) { this.mouse.down = false; return; }
     this.mouse.down = false;
     const g = this.g;
@@ -145,10 +148,18 @@ export class Input {
       w.commandAttack(units, target.id, TEAM.PLAYER);
       g.quip(units[0], 'attack');
       g.renderer.marker(target.kind === 'building' ? target.cx : target.x, target.kind === 'building' ? target.cy : target.y, 0xff5040);
-    } else if (target && target.kind === 'unit' && target.team === TEAM.NEUTRAL && units.some((id) => w.byId.get(id).cls === 'robot')) {
+    } else if (target && w.canBoard(target) && units.some((id) => w.byId.get(id).cls === 'robot')) {
       w.commandBoard(units, target.id, TEAM.PLAYER);
       g.quip(units.find((id) => w.byId.get(id).cls === 'robot'), 'board');
-      g.renderer.marker(target.x, target.y, 0xffd060);
+      g.renderer.marker(target.kind === 'unit' ? target.x : target.cx, target.kind === 'unit' ? target.y : target.cy, 0xffd060);
+    } else if (target && target.cls === 'prop') {
+      w.commandAttack(units, target.id, TEAM.PLAYER);
+      g.renderer.marker(target.x, target.y, 0xff5040);
+      g.quip(units[0], 'attack');
+    } else if (this.bridgeAt(tx, ty) >= 0 && units.some((id) => w.byId.get(id).cls === 'robot')) {
+      w.commandFixBridge(units, this.bridgeAt(tx, ty), TEAM.PLAYER);
+      g.renderer.marker(tx, ty, 0xffd060);
+      g.hud.bubble(units.find((id) => w.byId.get(id).cls === 'robot'), 'Ich hol den Werkzeugkasten.');
     } else {
       w.commandMove(units, tx, ty, TEAM.PLAYER, this.aMode || this.keys.has('KeyF'));
       g.quip(units[0], 'move');
@@ -156,6 +167,18 @@ export class Input {
     }
     this.aMode = false;
     g.audio.play('order');
+  }
+
+  // gesprengte Brücke unter dem Mauszeiger (Index) oder -1
+  bridgeAt(tx, ty) {
+    const w = this.g.world;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      const x = Math.floor(tx) + dx, y = Math.floor(ty) + dy;
+      if (x < 0 || y < 0 || x >= w.map.w || y >= w.map.h) continue;
+      const id = w.bridgeAt[y * w.map.w + x];
+      if (id && w.bridges[id - 1].destroyed) return id - 1;
+    }
+    return -1;
   }
 
   key(e, down) {
@@ -191,6 +214,15 @@ export class Input {
     }
     switch (e.code) {
       case 'KeyX': w.commandStop([...g.selection], 1); g.audio.play('order'); break;
+      case 'KeyC': {
+        const r = g.renderer;
+        if (r.follow) { r.follow = null; r.cam.tdist = 34; g.hud.message('Action-Kamera aus', 'info'); }
+        else {
+          const id = [...g.selection].find((i) => { const o = w.byId.get(i); return o && o.kind === 'unit'; });
+          if (id) { r.follow = id; g.hud.message('Action-Kamera: C zum Beenden', 'info'); }
+        }
+        break;
+      }
       case 'KeyH': {
         const f = w.buildings.find((b) => b.type === 'fort' && b.team === 1);
         if (f) g.renderer.lookAt(f.cx, f.cy + 3);

@@ -4,10 +4,19 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import glbRunner from '../../assets/robot_runner.glb';
-import glbGrenadier from '../../assets/robot_grenadier.glb';
-import glbRocketeer from '../../assets/robot_rocketeer.glb';
-import glbSniper from '../../assets/robot_sniper.glb';
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
+import glbRunner from '../models/robot_runner.glb';
+import glbGrenadier from '../models/robot_grenadier.glb';
+import glbRocketeer from '../models/robot_rocketeer.glb';
+import glbSniper from '../models/robot_sniper.glb';
+import glbAssault from '../models/robot_assault.glb';
+import glbFlamer from '../models/robot_flamer.glb';
+import glbLaser from '../models/robot_laser.glb';
+import glbBuggy from '../models/vehicle_buggy.glb';
+import glbLight from '../models/vehicle_lighttank.glb';
+import glbMedium from '../models/vehicle_mediumtank.glb';
+import glbHeavy from '../models/vehicle_heavytank.glb';
+import glbLauncher from '../models/vehicle_launcher.glb';
 import { mat, TEAM_COLORS, panelTex, treadTex, patchFow } from './materials.js';
 
 let PANEL = null, TREAD = null;
@@ -392,6 +401,18 @@ function buildBuilding(type, team) {
     mesh(sph(0.1), glow, 0.25, 0.1, 0, spin);
     root.add(spin);
     ud.spin = spin;
+  } else if (type === 'repair') {
+    // 4x4 m: Hebebühne mit Kranarm und Werkzeugschild
+    mesh(rbox(4, 0.25, 4, 0.08), concreteDark, 0, 0.12, 0, root);
+    const hazard = mat(0xd8a820, { r: 0.6 });
+    mesh(rbox(2.6, 0.12, 2.6, 0.04), hazard, 0, 0.3, 0, root);
+    mesh(rbox(2.3, 0.14, 2.3, 0.04), mt, 0, 0.42, 0, root);
+    for (const [x, z] of [[1.1, 1.1], [-1.1, 1.1], [1.1, -1.1], [-1.1, -1.1]]) mesh(cyl(0.08, 0.08, 0.5, 16), dk, x, 0.25, z, root);
+    mesh(box(0.25, 3.0, 0.25), paint, -1.7, 1.5, -1.7, root);
+    mesh(box(2.4, 0.22, 0.22), paint, -0.6, 2.95, -1.7, root);
+    mesh(cyl(0.02, 0.02, 1.2, 8), dk, 0.5, 2.3, -1.7, root);
+    mesh(rbox(0.3, 0.3, 0.3, 0.06), dk, 0.5, 1.6, -1.7, root);
+    mesh(cyl(0.35, 0.35, 0.06, 24), glow, -1.7, 3.2, -1.7, root);
   } else if (type === 'turret') {
     mesh(cyl(0.95, 1.05, 0.9, 24), concrete, 0, 0.45, 0, root);
     mesh(cyl(1.0, 1.0, 0.12, 20), paint, 0, 0.95, 0, root);
@@ -490,21 +511,34 @@ function instance(key, build) {
 }
 
 // ---------- Roboter aus Blender (GLB mit Skelett und Animationen) ----------
-const ROBOT_GLB = { runner: glbRunner, grenadier: glbGrenadier, rocketeer: glbRocketeer, sniper: glbSniper };
+const ROBOT_GLB = { runner: glbRunner, grenadier: glbGrenadier, rocketeer: glbRocketeer, sniper: glbSniper, assault: glbAssault, flamer: glbFlamer, laser: glbLaser };
+const VEHICLE_GLB = { buggy: glbBuggy, lighttank: glbLight, mediumtank: glbMedium, heavytank: glbHeavy, launcher: glbLauncher };
 const robotSrc = {};
+const vehicleSrc = {};
 const robotMatCache = new Map();
 
 export async function loadRobotModels() {
+  await MeshoptDecoder.ready;
   const loader = new GLTFLoader();
-  await Promise.all(Object.entries(ROBOT_GLB).map(([type, bytes]) => new Promise((res, rej) => {
+  loader.setMeshoptDecoder(MeshoptDecoder);
+  const load = (dict, out) => Object.entries(dict).map(([type, bytes]) => new Promise((res, rej) => {
     const buf = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
-    loader.parse(buf, '', (g) => { robotSrc[type] = g; res(); }, rej);
-  })));
+    loader.parse(buf, '', (g) => { out[type] = g; res(); }, rej);
+  }));
+  await Promise.all([...load(ROBOT_GLB, robotSrc), ...load(VEHICLE_GLB, vehicleSrc)]);
 }
 
+let TREAD_TEX = null;
 function robotMaterial(m, team) {
   if (m.name === 'Team') return teamMat(team, 'paint');
   if (m.name === 'TeamGlow') return teamMat(team, 'glow');
+  if (m.name === 'Tread') {
+    textures();
+    if (!TREAD_TEX) { TREAD_TEX = TREAD.clone(); TREAD_TEX.repeat.set(1, 6); TREAD_TEX.needsUpdate = true; }
+    const t = new THREE.MeshStandardMaterial({ color: 0xffffff, map: TREAD_TEX, roughness: 0.85, metalness: 0.3 });
+    t.userData.tread = true;
+    return patchFow(t);
+  }
   if (!robotMatCache.has(m.name)) {
     const c = m.clone();
     if (m.name === 'Armor' || m.name === 'Dark') { textures(); c.map = PANEL; }
@@ -548,22 +582,62 @@ export function makeRobot(type, team) {
 }
 
 export function makeVehicle(type, team) {
-  const o = instance('v' + type + team, () => buildVehicle(type, team));
-  const ud = o.userData;
-  ud.hull = o.getObjectByName('hull');
-  ud.turret = o.getObjectByName('turret');
-  ud.barrels = [];
-  for (let i = 0; i < ud.nb; i++) ud.barrels.push(o.getObjectByName('barrel' + i));
-  ud.wheels = [];
-  for (let i = 0; i < ud.nw; i++) ud.wheels.push(o.getObjectByName('wheel' + i));
-  ud.barrelIdx = 0;
+  const key = 'gv' + type + team;
+  if (!templates.has(key)) {
+    const src = vehicleSrc[type].scene.clone();
+    src.traverse((c) => {
+      if (c.isMesh) { c.material = robotMaterial(c.material, team); c.castShadow = true; c.receiveShadow = true; }
+      // herrenlose Fahrzeuge haben keinen Fahrer
+      if ((c.name === 'Driver' || c.name === 'Gunner') && team === 0) c.visible = false;
+    });
+    templates.set(key, src);
+  }
+  const model = templates.get(key).clone();
+  model.rotation.y = Math.PI / 2;
+  const root = new THREE.Group();
+  root.add(model);
+  const ud = { kind: 'vehicle', model, barrelIdx: 0 };
+  ud.hull = model.getObjectByName('Hull') || model;
+  ud.turret = model.getObjectByName('Turret');
+  ud.barrels = []; ud.muzzles = []; ud.wheels = [];
+  for (let i = 0; i < 4; i++) {
+    const b = model.getObjectByName('Barrel' + i);
+    if (!b) break;
+    const m = model.getObjectByName('Muzzle' + i);
+    b.userData.base = b.position.clone();
+    b.userData.dir = m ? m.position.clone().normalize() : new THREE.Vector3(0, 0, 1);
+    ud.barrels.push(b);
+    ud.muzzles.push(m || b);
+  }
+  for (let i = 0; i < 8; i++) { const w = model.getObjectByName('Wheel' + i); if (w) ud.wheels.push(w); }
+  // eigene Kettentextur je Fahrzeug, damit sie nur beim Fahren läuft
   ud.trackMat = null;
-  o.traverse((c) => {
-    if (c.isMesh && c.userData.track) {
+  model.traverse((c) => {
+    if (c.isMesh && c.material.userData.tread) {
       if (!ud.trackMat) { ud.trackMat = patchFow(c.material.clone()); ud.trackMat.map = c.material.map.clone(); ud.trackMat.map.needsUpdate = true; }
       c.material = ud.trackMat;
     }
   });
+  root.userData = ud;
+  return root;
+}
+
+// Explosives Fass
+let barrelTpl = null;
+export function makeBarrel() {
+  if (!barrelTpl) {
+    const g = new THREE.Group();
+    const red = mat(0xb0281c, { r: 0.45, m: 0.5 });
+    const band = mat(0xe0b020, { r: 0.5, m: 0.3 });
+    mesh(cyl(0.28, 0.28, 0.8, 24), red, 0, 0.4, 0, g);
+    for (const y of [0.18, 0.62]) mesh(cyl(0.29, 0.29, 0.06, 24), band, 0, y, 0, g);
+    mesh(cyl(0.06, 0.06, 0.05, 12), mat(0x222222, { r: 0.5 }), 0.12, 0.82, 0, g);
+    mergeChildren(g);
+    barrelTpl = g;
+  }
+  const o = barrelTpl.clone();
+  o.rotation.y = Math.random() * 6;
+  o.userData = { kind: 'prop' };
   return o;
 }
 

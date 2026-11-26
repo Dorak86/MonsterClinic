@@ -30,8 +30,9 @@ enthält alles, läuft offline und braucht keinen Server.
 npm install
 npm run build      # erzeugt dist/operation-y.html
 node tools/previews.mjs   # Level-Vorschaubilder neu rendern (danach erneut bauen)
-# Roboter neu bauen (Blender als Python-Modul bpy):
-# python tools/blender/robots.py assets
+# Modelle neu bauen (Blender als Python-Modul bpy), dann komprimieren:
+# python tools/blender/robots.py assets && python tools/blender/vehicles.py assets
+# sh tools/compress-models.sh
 npm test           # KI gegen KI auf allen Leveln (Simulation, ohne Grafik)
 npm run test:browser   # Headless-Chromium: lädt jedes Level, Screenshots nach dist/shots
 ```

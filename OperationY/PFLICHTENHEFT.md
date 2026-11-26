@@ -67,6 +67,29 @@ Unterteilungsflächen und Fasen, Skelett mit Hüfte, Knien, Knöcheln, Schultern
 Animationen Idle/Walk/Shoot; Export als GLB (`assets/`), im Spiel mit weicher Überblendung.
 Level-Vorschaubilder werden mit der Spiel-Engine gerendert (`tools/previews.mjs`).
 
+### 1.6 Erweiterung nach Game Design Document (v1.4)
+
+Umgesetzt aus dem GDD des Auftraggebers (eigene Einheitennamen statt der Originalnamen):
+
+| GDD-Punkt | Umsetzung |
+| --- | --- |
+| Fahrer abschießen | Scharfschützen treffen Fahrer mit 45 % ohne Rumpfschaden, andere Waffen kritisch (3 %) bei schwer beschädigten Fahrzeugen; Fahrzeug wird grau und kaperbar |
+| Bemannte Geschütze | Geschütztürme haben einen Schützen; ohne Schützen feuern sie nicht und können von jedem Roboter gekapert werden |
+| Trupps | Läufer kommen zu dritt, Grenadiere, Panzerjäger, Stürmer und Brenner zu zweit |
+| Neue Infanterie | Stürmer (MG, ungeduldig), Brenner (Flammenwerfer, Brandflächen), Lasergardist (Elite) |
+| Panzerstufen | Leicht-, Mittel-, Schwerpanzer |
+| Reparaturstation | Hebebühne, repariert eigene Fahrzeuge schnell |
+| Zerstörbare Umgebung | Explosive Fässer mit Kettenreaktion, sprengbare Brücken (Roboter reparieren sie in 8 s), Wracks bleiben liegen |
+| Siegbedingungen | zusätzlich totale Vernichtung (keine Einheiten und keine Fabriken) |
+| Radar | ohne eigenes Radar zeigt die Minikarte keine Feindbewegungen; mit Radar ist gegnerische Produktion einsehbar |
+| HUD | Live-3D-Gesichtskamera der gewählten Einheit mit LED-Mimik (Panik, Grinsen, Langeweile, Gefecht), Fabrik-Schnellleiste, gestrichelte Sektorgrenzen |
+| Kamera | Action-Kamera (Taste C), freie Drehung mit mittlerer Maustaste |
+| Leerlauf-Animationen | Roboter schauen sich um, strecken sich, treten Steine |
+| 3D-Modelle | alle Roboter und Fahrzeuge aus Blender (Skript), Fahrzeuge mit sichtbarem Fahrer/Schützen |
+
+Nicht umgesetzt: 3D-NavMesh (Wegfindung bleibt rasterbasiert, Brücken verändern das Raster),
+überrollbare Bäume, Karten-/Rauch-Idle mit Requisiten.
+
 ## 2. Produkteinsatz
 
 Einzelspieler am Desktop-Rechner (Chrome, Edge, Firefox aktuell; WebGL2). Mindestauflösung
