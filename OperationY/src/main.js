@@ -6,6 +6,8 @@ import { LEVELS, BIOMES } from './sim/levels.js';
 import { generateMap } from './sim/mapgen.js';
 import { SIM_DT, T, UNITS, BUILDINGS } from './sim/defs.js';
 import { Renderer } from './render/renderer.js';
+import { loadRobotModels } from './render/models.js';
+import PREVIEWS from './previews/index.js';
 import { TILE } from './render/materials.js';
 import { Hud } from './ui/hud.js';
 import { Input } from './ui/input.js';
@@ -35,7 +37,7 @@ const TIPS = [
   { text: 'Rechtsklick auf eine Flagge schickt Ihre Roboter dorthin. Ein Roboter auf der Flagge erobert den Sektor samt Gebäuden.', done: (g) => g.world.sectors.filter((s) => s.owner === 1).length >= 2 },
   { text: 'Sichern Sie das Roboterwerk im Norden. Klicken Sie es danach an und wählen Sie, was gebaut wird.', done: (g) => g.world.buildings.some((b) => b.type === 'robot' && b.team === 1) },
   { text: 'Mehr Gebiet bedeutet schnellere Produktion (Anzeige „Bautempo“ oben). Das Fahrzeugwerk in der Mitte liefert Panzer.', done: (g) => g.world.buildings.some((b) => b.type === 'vehicle' && b.team === 1) },
-  { text: 'Ziel: das rote Fort zerstören oder dessen Flagge 12 Sekunden lang halten. Panzerjäger und Panzer sind gegen Gebäude am stärksten.', done: () => false },
+  { text: 'Einsatzziel: alle drei Fabriken und den Kontrollturm der Blauen im Nordosten einnehmen. Alternativ siegt, wer das feindliche Fort zerstört.', done: () => false },
 ];
 
 class Game {
@@ -163,13 +165,13 @@ class Game {
     }
     for (const sp of map.buildingSpots) {
       const o = map.sectors[sp.sector].owner;
-      g.fillStyle = o === 1 ? '#2f9dff' : o === 2 ? '#ff4532' : '#bfc6cc';
+      g.fillStyle = o === 1 ? '#e5452f' : o === 2 ? '#3b8fff' : '#bfc6cc';
       g.fillRect(sp.x * s, sp.y * s, sp.w * s, sp.h * s);
     }
     for (const sec of map.sectors) {
       g.fillStyle = '#fff';
       g.beginPath(); g.arc(sec.x * s, sec.y * s, 4, 0, 7); g.fill();
-      g.fillStyle = sec.owner === 1 ? '#2f9dff' : sec.owner === 2 ? '#ff4532' : '#888';
+      g.fillStyle = sec.owner === 1 ? '#e5452f' : sec.owner === 2 ? '#3b8fff' : '#888';
       g.beginPath(); g.arc(sec.x * s, sec.y * s, 2.6, 0, 7); g.fill();
     }
     return c;
@@ -180,13 +182,44 @@ class Game {
     b.className = 'card' + (locked ? ' locked' : '');
     b.disabled = locked;
     const best = this.save.best[level.id];
-    b.appendChild(this.thumbCache?.[i] || (this.thumbCache = this.thumbCache || {}, this.thumbCache[i] = this.thumb(level)));
-    const info = document.createElement('div');
-    info.className = 'ci';
-    info.innerHTML = `<div class="cn">${level.id}. ${level.name}</div><div class="cm">${BIOMES[level.biome].name} · ${level.sectors.length} Sektoren${best ? ' · Bestzeit ' + fmt(best) : ''}${locked ? ' · gesperrt' : ''}</div>`;
-    b.appendChild(info);
+    const img = PREVIEWS[level.id];
+    b.innerHTML = `<div class="shot"${img ? ` style="background-image:url(${img})"` : ''}>
+        <span class="num">${String(level.id).padStart(2, '0')}</span>
+        ${locked ? '<span class="lock">Gesperrt</span>' : best ? `<span class="done">Bestzeit ${fmt(best)}</span>` : ''}
+      </div>
+      <div class="ci"><div class="cn">${level.name}</div><div class="cm">${level.place || BIOMES[level.biome].name}</div></div>`;
     if (!locked) b.addEventListener('click', () => { this.audio.init(); this.audio.play('click'); onPick(i); });
     return b;
+  }
+
+  // Vorschaubild eines Levels (wird beim Bauen erzeugt)
+  renderPreview(i) {
+    const level = LEVELS[i];
+    this.demo = true;
+    this.world = new World(level, { difficulty: 1 });
+    this.ais = [new AI(this.world, 1, 1), new AI(this.world, 2, 1)];
+    this.renderer.load(this.world);
+    for (let k = 0; k < 520; k++) { for (const a of this.ais) a.update(0.05); this.world.step(); this.renderer.handleEvent && this.world.drainEvents().forEach((e) => this.renderer.handleEvent(e)); }
+    this.world.vis[1].fill(1); this.world.explored[1].fill(1);
+    this.renderer.setMenuView(false);
+    const fort = this.world.buildings.find((b) => b.type === 'fort' && b.team === 1);
+    const cx = this.world.map.w / 2, cy = this.world.map.h / 2;
+    const fighters = this.world.units.filter((u) => !u.dead && u.target);
+    const f = fighters[0];
+    const tx = f ? f.x : fort.cx + (cx - fort.cx) * 0.4, ty = f ? f.y : fort.cy + (cy - fort.cy) * 0.4;
+    this.renderer.lookAt(tx, ty, true);
+    this.renderer.cam.yaw = 0.35;
+    this.renderer.cam.dist = this.renderer.cam.tdist = 30;
+    this.state = 'preview';
+    for (let k = 0; k < 6; k++) this.renderer.frame(0.05, 1, new Set(), 10 + k * 0.05);
+    const src = this.renderer.r.domElement;
+    const c = document.createElement('canvas');
+    c.width = 640; c.height = 360;
+    const g = c.getContext('2d');
+    const sw = src.width, sh = src.height, ar = 16 / 9;
+    const cw = Math.min(sw, sh * ar), ch = cw / ar;
+    g.drawImage(src, (sw - cw) / 2, (sh - ch) / 2, cw, ch, 0, 0, 640, 360);
+    return c.toDataURL('image/jpeg', 0.82);
   }
 
   buildCampaign() {
@@ -218,8 +251,8 @@ class Game {
 
   epilogue() {
     this.toMenu();
-    $('br-title').textContent = 'Epilog: Der Parkplatzfrieden';
-    $('br-meta').textContent = 'Kampagne abgeschlossen · Die Rote Kolonne kapituliert';
+    $('br-title').textContent = 'Epilog: Krieg nur an Feiertagen';
+    $('br-meta').textContent = 'Kampagne abgeschlossen · Der Krieg ist beendet';
     this.showScreen('briefing');
     $('br-start').hidden = true;
     $('br-diff').parentElement.hidden = true;
@@ -242,7 +275,7 @@ class Game {
       const cast = CAST[line.who];
       $('br-name').textContent = cast.name;
       $('br-role').textContent = cast.role;
-      $('br-dialog').classList.toggle('groll', line.who === 'groll');
+      $('br-dialog').classList.toggle('groll', CAST[line.who].side === 'blue');
       $('br-count').textContent = `${d.i + 1} / ${d.lines.length}`;
       $('br-next').textContent = d.i + 1 >= d.lines.length ? 'Einsatz beginnen ▸' : 'Weiter ▸';
       this.portrait?.setSpeaker(line.who);
@@ -369,7 +402,7 @@ class Game {
     $('radio-face').src = this.faces[line.who] || '';
     $('radio-who').textContent = CAST[line.who].name;
     $('radio-text').textContent = line.text;
-    box.classList.toggle('groll', line.who === 'groll');
+    box.classList.toggle('groll', CAST[line.who].side === 'blue');
     box.hidden = false;
     this.radioT = 3 + line.text.length * 0.045;
     this.audio.play('radio');
@@ -454,6 +487,7 @@ class Game {
       const reasons = {
         fort: win ? 'Das feindliche Fort wurde zerstört.' : 'Ihr Fort wurde zerstört.',
         flag: win ? 'Die Flagge des feindlichen Forts ist in Ihrer Hand.' : 'Der Feind hat die Flagge Ihres Forts erobert.',
+        goal: 'Einsatzziel erfüllt: ' + (level.goal?.text || '') + '.',
       };
       $('end-reason').textContent = reasons[ev.reason] + ' Spielzeit ' + fmt(w.time) + '.';
       const s1 = w.stats[1], s2 = w.stats[2];
@@ -470,7 +504,7 @@ class Game {
       $('end-face').src = this.faces[q.who] || '';
       $('end-who').textContent = CAST[q.who].name;
       $('end-text').textContent = q.text;
-      $('end-quote').classList.toggle('groll', q.who === 'groll');
+      $('end-quote').classList.toggle('groll', CAST[q.who].side === 'blue');
       $('radio').hidden = true;
       this.showScreen('end');
     }, 2500);
@@ -542,10 +576,11 @@ function fmt(s) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
 
-function boot() {
+async function boot() {
   try {
     const test = document.createElement('canvas').getContext('webgl2');
     if (!test) throw new Error('WebGL2 wird von diesem Browser nicht unterstützt.');
+    await loadRobotModels();
     window.game = new Game();
   } catch (e) {
     console.error(e);

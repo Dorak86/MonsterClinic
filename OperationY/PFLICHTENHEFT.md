@@ -42,24 +42,30 @@ zerstört oder dem Gegner alle Einheiten und Fabriken nimmt.
 - Kein Karteneditor in Version 1.0.
 - Keine Videosequenzen; Briefings als Text mit Kommandanten-Figur, die neu entworfen ist.
 
-### 1.4 Geschichte und Figuren (v1.2)
+### 1.4 Geschichte und Figuren (v1.3)
 
-Operation Y erzählt eine eigene, humorvolle Geschichte: General Grollmann von der Roten
-Kolonne erklärt der Blauen Allianz den Krieg, weil ein Satellit auf seinem reservierten
-Orbitparkplatz steht. Figuren (alle eigene Entwürfe):
+Grundlage ist das Storykonzept „Operation Y“ des Auftraggebers (8 Level, Abspann): Auf Planet Y
+kämpfen Rote und Blaue Armee seit 127 Jahren, ohne zu wissen warum. Der Spieler führt die
+**Rote Armee**. Figuren: Operator (3D-Büste nach Foto des Auftraggebers), Y-17, Sergeant BOLT
+(Toasterbein), General M.A.X., General B.O.S.S., E.V.A., RICK-3000.
 
-| Figur | Rolle |
-| --- | --- |
-| Operator Ypsilon | Einsatzleitung der Blauen Allianz; 3D-Büste nach dem Foto des Auftraggebers |
-| Bolzen | übermotivierter Läufer-Roboter mit Frosch-Stellvertreter „Leutnant Quak“ |
-| Kurbel | zynischer Grenadier, zählt die Tage bis zur Rente |
-| General Grollmann | pompöser Befehlshaber der Roten Kolonne mit Generalsmütze und Metallschnurrbart |
+| Level | Titel | Schauplatz | Ziel |
+| --- | --- | --- | --- |
+| 1 | Willkommen im Krieg | Schrottwüste · Tutorial | 3 Fabriken + Kontrollturm einnehmen |
+| 2 | Die Fabrik der verlorenen Seelen | Industriekomplex | Fort der Blauen |
+| 3 | Eiszeit für Anfänger | Polarstation | Fort der Blauen |
+| 4 | Der Dschungel lebt | Verwilderte Militärzone | Fort der Blauen |
+| 5 | Die letzte Stadt | Urbaner Krieg | Fort der Blauen |
+| 6 | Akte Y | Geheimbunker | Archivturm erobern |
+| 7 | Der letzte Befehl | Hauptquartier | Fort der Blauen |
+| 8 | Operation Y | Kontrollzentrum | Fort der Blauen, danach Epilog/Abspann |
 
-Umsetzung: Briefing-Dialoge mit wechselnden animierten Sprechern je Level, Funksprüche im
-Spiel bei Ereignissen (Eroberung, Verlust, Beschuss, Fahrzeug übernommen, Gebäude zerstört)
-und zwischendurch, Sprechblasen der Einheiten bei Auswahl und Befehl, Abschlusszeile nach
-jedem Einsatz, Epilog nach Level 8. Der Running Gag um den Namen („Warum Y? Weil Z schon
-vergeben war.“) ist ein Augenzwinkern an das Genre-Vorbild, ohne dessen Inhalte zu übernehmen.
+### 1.5 Grafik-Pipeline (v1.3)
+
+Roboter werden in Blender (bpy) per Skript gebaut (`tools/blender/robots.py`): glatte Teile über
+Unterteilungsflächen und Fasen, Skelett mit Hüfte, Knien, Knöcheln, Schultern, Ellbogen und Kopf,
+Animationen Idle/Walk/Shoot; Export als GLB (`assets/`), im Spiel mit weicher Überblendung.
+Level-Vorschaubilder werden mit der Spiel-Engine gerendert (`tools/previews.mjs`).
 
 ## 2. Produkteinsatz
 

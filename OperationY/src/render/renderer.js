@@ -424,12 +424,12 @@ export class Renderer {
         {
           const s = w.sectors[ev.sector];
           const wx = s.x * TILE, wz = s.y * TILE;
-          const c = ev.team === 1 ? [0.4, 0.75, 1.0] : [1.0, 0.45, 0.3];
+          const c = ev.team === 1 ? [1.0, 0.45, 0.3] : [0.4, 0.75, 1.0];
           for (let i = 0; i < 40; i++) {
             const a = (i / 40) * Math.PI * 2;
             this.effects.glow.spawn({ x: wx, y: 0.4, z: wz, vx: Math.cos(a) * 5, vy: 0.5 + Math.random(), vz: Math.sin(a) * 5, life: 0.8, s0: 0.8, s1: 0.1, c0: c, a0: 1, a1: 0, drag: 0.3 });
           }
-          this.effects.light(wx, 2, wz, ev.team === 1 ? 0x4aa8ff : 0xff5533, 40, 0.6);
+          this.effects.light(wx, 2, wz, ev.team === 1 ? 0xff5533 : 0x4aa8ff, 40, 0.6);
         }
         break;
       case 'board': {
@@ -451,7 +451,11 @@ export class Renderer {
         bar = ud.barrels[ud.barrelIdx];
         bar.userData.kick = 1;
       }
-    } else if (ud.kind === 'robot') bar = ud.gun;
+    } else if (ud.kind === 'robot') {
+      const sh = ud.actions.Shoot;
+      sh.reset(); sh.setEffectiveWeight(1); sh.play();
+      return ud.muzzle.getWorldPosition(new THREE.Vector3());
+    }
     if (!bar) return new THREE.Vector3(ev.x * TILE, this.terrain.unitHeight(ev.x, ev.y) + 1, ev.y * TILE);
     const p = new THREE.Vector3(ud.muzzleLen || 0.6, 0, 0);
     return bar.localToWorld(p);
@@ -492,15 +496,12 @@ export class Renderer {
       if (!visible) continue;
       if (ud.kind === 'robot') {
         const moving = Math.hypot(u.x - u.px, u.y - u.py) > 0.001;
-        const ph = u.walk * 5.2;
-        const amp = moving ? 0.6 : 0;
-        ud.legs[0].rotation.z = Math.sin(ph) * amp;
-        ud.legs[1].rotation.z = -Math.sin(ph) * amp;
-        ud.body.position.y = moving ? Math.abs(Math.cos(ph)) * 0.05 : Math.sin(time * 2.2 + u.id) * 0.008;
-        ud.torso.rotation.y = -(angLerp(0, e.turret - e.angle, 1)) + (moving ? Math.sin(ph) * 0.12 : 0);
-        ud.torso.rotation.z = moving ? -0.1 : Math.sin(time * 1.3 + u.id * 2) * 0.02;
-        ud.torso.rotation.x = moving ? Math.sin(ph) * 0.04 : 0;
-        ud.arms.rotation.z = -u.recoil * 0.3 + (moving ? Math.cos(ph * 2) * 0.03 : 0);
+        // weiche Überblendung Stand <-> Lauf, Schrittfrequenz passend zur Geschwindigkeit
+        ud.walkW += ((moving ? 1 : 0) - ud.walkW) * Math.min(1, dt * 8);
+        ud.actions.Walk.setEffectiveWeight(ud.walkW);
+        ud.actions.Idle.setEffectiveWeight(1 - ud.walkW);
+        ud.actions.Walk.timeScale = u.def.speed / 2.0;
+        ud.mixer.update(dt);
       } else {
         ud.turret.rotation.y = -(e.turret - e.angle);
         for (const b of ud.barrels) {
@@ -613,7 +614,7 @@ export class Renderer {
         r.scale.setScalar(Math.max(o.w, o.h) * 1.6);
       }
       const team = o.team;
-      r.material.color.setHex(team === 1 ? 0x66ffa0 : team === 2 ? 0xff5040 : 0xc8c8c8);
+      r.material.color.setHex(team === 1 ? 0x66ffa0 : team === 2 ? 0x4aa0ff : 0xc8c8c8);
       r.material.opacity = 0.7 + Math.sin(time * 6) * 0.2;
     }
     for (; i < this.rings.length; i++) this.rings[i].visible = false;

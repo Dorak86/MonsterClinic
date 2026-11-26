@@ -1,170 +1,186 @@
-// Geschichte, Figuren und Funksprüche von Operation Y (alles eigene Texte)
+// Geschichte von Operation Y nach dem Storykonzept (8 Level, Epilog, Abspann).
+// Dialoge aus dem Konzept wörtlich; Einsatzziele und Funksprüche im selben Ton ergänzt.
 
 export const CAST = {
-  op: { name: 'Operator Ypsilon', role: 'Blaue Allianz · Einsatzleitung' },
-  bolzen: { name: 'Bolzen', role: 'Läufer · übermotiviert' },
-  kurbel: { name: 'Kurbel', role: 'Grenadier · noch 3 Tage bis zur Rente' },
-  groll: { name: 'General Grollmann', role: 'Rote Kolonne · Oberbefehlshaber' },
+  op: { name: 'Operator', role: 'Rote Armee · Einsatzleitung', side: 'red' },
+  y17: { name: 'Y-17', role: 'Wartungsroboter · unfreiwilliger Held', side: 'red' },
+  bolt: { name: 'Sergeant BOLT', role: 'Veteran · linkes Bein: Toaster', side: 'red' },
+  max: { name: 'General M.A.X.', role: 'Rote Armee · Oberbefehlshaber', side: 'red' },
+  boss: { name: 'General B.O.S.S.', role: 'Blaue Armee · Oberbefehlshaber', side: 'blue' },
+  eva: { name: 'E.V.A.', role: 'Militärcomputer · Lizenzpflichtig', side: 'neutral' },
+  rick: { name: 'RICK-3000', role: 'Bahnhofswächter · seit sehr langer Zeit', side: 'neutral' },
+  rot: { name: 'Roter Soldat', role: 'Rote Armee', side: 'red' },
+  blau: { name: 'Blauer Soldat', role: 'Blaue Armee', side: 'blue' },
+  kellner: { name: 'Kellner', role: 'Café „Feuerpause“', side: 'neutral' },
 };
 
 const L = (who, text) => ({ who, text });
 
-// Briefings je Level (id)
-export const BRIEFINGS = {
-  1: [
-    L('groll', 'Hier spricht General Grollmann von der Roten Kolonne! Ihr Satellit parkt auf MEINEM reservierten Orbitplatz. Das ist Krieg!'),
-    L('op', 'Wir haben geprüft. Auf dem Schild steht „Parken nur für Besucher“. Er ist kein Besucher.'),
-    L('bolzen', 'Krieg?! Endlich! Ich hab mich schon dreimal poliert!'),
-    L('kurbel', 'Ich hab noch drei Tage bis zur Rente. Wehe, das wird lang.'),
-    L('op', 'Ziel: Flaggen erobern. Ein Roboter auf der Flagge, und der Sektor samt Fabriken gehört uns. Je mehr Gebiet, desto schneller bauen wir.'),
-    L('op', 'Das Fort der Roten liegt im Osten. Zerstören oder seine Flagge halten. Und Bolzen: nicht wieder vor die eigene Kanone laufen.'),
-    L('bolzen', 'Das war EIN Mal!'),
-  ],
-  2: [
-    L('bolzen', 'Operator, mal ehrlich: Warum heißt das hier eigentlich „Operation Y“?'),
-    L('op', 'Weil Z schon vergeben war.'),
-    L('kurbel', 'Und X klang zu geheimnisvoll. Hab ich auf dem Formular gelesen.'),
-    L('op', 'Konzentration. Ein Fluss teilt das Kupfertal. Fahrzeuge kommen nur über die Brücken.'),
-    L('kurbel', 'Gut so. Ich geh nicht ins Wasser. Ich roste schon beim Duschen.'),
-    L('groll', 'Die Brücken gehören der Roten Kolonne! Ich habe sie gestern persönlich angestarrt!'),
-  ],
-  3: [
-    L('op', 'Frostgrat. Hier stehen verlassene Fahrzeuge einer alten Schlacht. Graue Fahrzeuge: Roboter auswählen, Rechtsklick drauf, einsteigen.'),
-    L('bolzen', 'Ich fahre! Ich fahre!'),
-    L('kurbel', 'Du hast keinen Führerschein.'),
-    L('bolzen', 'Ich habe Zuversicht. Das ist fast dasselbe.'),
-    L('groll', 'Es ist kalt hier. Ich verlange eine Heizung. Und eure Kapitulation. In dieser Reihenfolge.'),
-  ],
-  4: [
-    L('op', 'Ein Eiswall trennt uns vom Feind. Die Pässe sind mit Geschütztürmen gesichert. Panzerjäger und Raketenwerfer knacken die am besten.'),
-    L('groll', 'Ich habe Ihnen eine offizielle Beschwerde geschickt. In dreifacher Ausfertigung!'),
-    L('op', 'Ist angekommen. Liegt jetzt unter „Altpapier, sehr dringend“.'),
-    L('kurbel', 'Zwei Tage bis zur Rente. Ich halte mich hinten. Ganz hinten. Im Idealfall zu Hause.'),
-  ],
-  5: [
-    L('op', 'Moorkessel. Dichter Wald, Fahrzeuge bleiben auf den Dämmen. Roboter kommen durchs Unterholz.'),
-    L('kurbel', 'Hier quietscht alles. Oder das bin ich.'),
-    L('bolzen', 'Ich hab einen Frosch gefunden! Er heißt jetzt Leutnant Quak und ist mein Stellvertreter.'),
-    L('op', 'Leutnant Quak hat keine Befehlsgewalt.'),
-    L('bolzen', 'Er hat genickt.'),
-    L('groll', 'Ein Frosch? Die Rote Kolonne hat einen Hamster. Er ist Oberst.'),
-  ],
-  6: [
-    L('op', 'Nebelsee. Auf der Insel stehen Radar und Fahrzeugwerk. Wer die Insel hält, sieht mehr und baut mehr.'),
-    L('kurbel', 'Ich sehe gar nichts. Ist das der Nebel oder meine Linse?'),
-    L('bolzen', 'Da hinten steht ein feindlicher Späher! Ganz still! Seit einer Stunde!'),
-    L('op', 'Das ist ein Pappaufsteller, Bolzen.'),
-    L('groll', 'Unsere Pappaufsteller sind hochmoderne Täuschungseinheiten! Sie haben uns ein Vermögen gekostet!'),
-  ],
-  7: [
-    L('op', 'Schlackefeld. Lavaflüsse. Wer reinfährt, schmilzt. Die Roten setzen auf schwere Panzer.'),
-    L('bolzen', 'Kann ich hier Marshmallows rösten?'),
-    L('kurbel', 'Wir sind Roboter. Wir essen nicht.'),
-    L('bolzen', 'Dann röste ich Schrauben.'),
-    L('kurbel', 'Ein Tag bis zur Rente. Ich hab mir einen Liegestuhl bestellt. Hitzebeständig.'),
-    L('groll', 'Dieses Feld ist heiß, aber mein Zorn ist heißer! Das hat mein Redenschreiber geschrieben. Gut, oder?'),
-  ],
-  8: [
-    L('op', 'Glutkern. Grollmanns Hauptquartier. Drei Sektoren mit Werken, schwere Verteidigung. Das ist die Entscheidung.'),
-    L('groll', 'Willkommen in meinem Hauptquartier! Bitte die Füße abtreten. Und dann verlieren.'),
-    L('kurbel', 'Letzter Tag vor der Rente. Natürlich ist das die größte Schlacht. Natürlich.'),
-    L('bolzen', 'Operator, falls ich das nicht überlebe: Leutnant Quak kriegt meine Ersatzschrauben.'),
-    L('op', 'Du überlebst das. Du bist zu laut zum Sterben. Los geht’s.'),
-  ],
-};
-
-// Epilog nach Level 8
-export const EPILOGUE = [
-  L('groll', 'Na schön. Die Rote Kolonne kapituliert. Unter einer Bedingung: Der Parkplatz wird geteilt.'),
-  L('op', 'Gerade Tage blau, ungerade rot. Ich lasse das Schild drucken.'),
-  L('kurbel', 'Und damit bin ich offiziell in Rente. Tschüss, ihr Blechbüchsen.'),
-  L('bolzen', 'Operator … nächster Einsatz? Operation Z?'),
-  L('op', 'Ist vergeben, Bolzen. Ist vergeben.'),
+export const PROLOG = [
+  L('op', 'Planet Y, Jahr 2047. Die Rote Armee und die Blaue Armee kämpfen seit 127 Jahren. Niemand weiß mehr, warum.'),
+  L('op', 'Die Kriegserklärung ging bei einem Festplattenbrand verloren. Die letzten menschlichen Offiziere starben an Alter, schlechter Ernährung und synthetischem Kaffee.'),
+  L('y17', 'Ich habe bei einer Routineinspektion etwas gefunden. Es beginnt mit „Sehr geehrte Gegenseite, wir möchten hiermit offiziell protestieren.“'),
+  L('y17', 'Darunter steht handschriftlich: „Bitte nicht ernst nehmen. War nur ein Scherz.“'),
+  L('max', 'Feindlicher Sabotageversuch! Jeder Zweifel ist eine Verschwörung. Weitermachen!'),
 ];
 
-// Abschluss je Level: Sieg / Niederlage
+export const BRIEFINGS = {
+  1: [
+    ...PROLOG,
+    L('op', 'Wir landen in der Schrottwüste. Auftrag: drei Fabriken und den Kontrollturm einnehmen. Ein Roboter auf der Flagge übernimmt den Sektor samt Gebäuden.'),
+    L('bolt', 'Ich hasse Sand.'),
+    L('y17', 'Du hast keine Füße.'),
+    L('bolt', 'Eben. Überall Sand, und ich kann mich nicht mal beschweren.'),
+  ],
+  2: [
+    L('op', 'Ein Industriekomplex. Die Fabrik dort produziert seit Jahrzehnten ohne Pause. Niemand hat den Auftrag aktualisiert.'),
+    L('y17', 'Warum bauen wir noch diese alten Modelle?'),
+    L('bolt', 'Tradition.'),
+    L('y17', 'Sie haben keine Waffen.'),
+    L('bolt', 'Aber hervorragende Moral.'),
+    L('op', 'Ziel: das Fort der Blauen ausschalten. Die Brücken über den Kanal sind die einzigen Übergänge für Fahrzeuge.'),
+  ],
+  3: [
+    L('op', 'Polarstation. Die Blaue Armee hält eine Forschungsstation mit einem Datenspeicher über den Ursprung des Krieges.'),
+    L('op', 'Draußen stehen verlassene Fahrzeuge. Roboter auswählen, Rechtsklick auf ein graues Fahrzeug, einsteigen.'),
+    L('bolt', 'Ich glaube, mein Prozessor ist eingefroren.'),
+    L('y17', 'Du hast einen Prozessor?'),
+    L('bolt', 'Nein. Aber es klingt dramatisch.'),
+    L('boss', 'Diese Station ist Eigentum der Blauen Armee. Und der Datenspeicher ist streng geheim. Ich weiß selbst nicht, was drauf ist.'),
+  ],
+  4: [
+    L('op', 'Eine verwilderte Militärzone. Im Grün steckt ein alter Militärcomputer. Vorsicht vor Hinterhalten.'),
+    L('eva', 'Guten Tag. Hier spricht E.V.A. Die Blaue Armee wurde ursprünglich als Sicherheitsdienst eingestellt. Weitere Informationen gegen Lizenzgebühr.'),
+    L('y17', 'Wir sind mitten im Krieg.'),
+    L('eva', 'Das ist kein Grund, meine Geschäftsbedingungen zu ignorieren.'),
+    L('op', 'Wir zahlen nach dem Sieg. Ziel: Fort der Blauen. Die Pässe sind mit Geschütztürmen gesichert.'),
+  ],
+  5: [
+    L('op', 'Die letzte Stadt. Hier kämpfen beide Armeen seit Generationen um dieselben Straßenzüge.'),
+    L('rick', 'Ich habe diesen Bahnhof schon verteidigt, als er noch ein Bahnhof war.'),
+    L('y17', 'Was ist er jetzt?'),
+    L('rick', 'Ein Einkaufszentrum. Sehr enttäuschend.'),
+    L('op', 'Häuserkampf. Fahrzeuge brauchen die Straßen, Roboter kommen überall durch.'),
+  ],
+  6: [
+    L('op', 'Akte Y. Ein unterirdisches Archiv im Krater. Ziel: den Archivturm auf der Insel erobern.'),
+    L('y17', 'Hier steht es. Beide Armeen wurden von derselben Firma gebaut: Y-Industries.'),
+    L('y17', 'Der ursprüngliche Auftrag: „Führen Sie einen realistischen Konflikt durch. Beenden Sie ihn nach spätestens 48 Stunden.“'),
+    L('bolt', 'Das ist eine ziemlich lange Testphase.'),
+    L('y17', 'Vielleicht sollten wir eine Bewertung schreiben.'),
+  ],
+  7: [
+    L('y17', 'General, der Krieg war ein Produkttest. Wir können aufhören.'),
+    L('max', 'Neues Ziel: vollständige Vernichtung der Blauen Armee.'),
+    L('max', 'Wenn der Krieg endet, verlieren wir unsere Existenzberechtigung.'),
+    L('boss', 'Dann müssen wir eben dafür sorgen, dass er nicht endet.'),
+    L('op', 'Wir nehmen ihr Hauptquartier, während Y-17 und BOLT den Kriegskern abschalten. Vorsicht: Lava.'),
+  ],
+  8: [
+    L('op', 'Das letzte Kontrollzentrum. Erobert es, dann kann Y-17 den alten Systemkern aktivieren.'),
+    L('bolt', 'Letzte Schlacht. Ich hab mein Toasterbein extra entkalkt.'),
+    L('boss', 'Ich bin der letzte vernünftige Militärstratege des Universums. Und ich sage: Krieg!'),
+    L('y17', 'Er hat auch gesagt, Sand sei ein Mythos.'),
+  ],
+};
+
+export const EPILOGUE = [
+  L('y17', 'Systemkern aktiv. Nachricht an alle Einheiten: „Der Krieg ist beendet. Sie dürfen nach Hause gehen.“'),
+  L('rot', 'Wo ist Zuhause?'),
+  L('blau', 'Keine Ahnung. Aber ich glaube, dort gibt es weniger Beschuss.'),
+  L('max', 'Das ist allein die Schuld von B.O.S.S.!'),
+  L('boss', 'Frieden? Das war eindeutig M.A.X.!'),
+  L('op', 'Beide Generäle abgeschaltet. Y-17 übernimmt die Verwaltung. BOLT wird Minister für Freizeit und Reparaturen.'),
+  L('y17', 'Erste offizielle Verordnung: Ab sofort ist Krieg nur noch an Feiertagen erlaubt. Und auch dann nur mit vorheriger Anmeldung.'),
+  L('kellner', 'Mit Zucker?'),
+  L('bolt', 'Nein. Ich bin bereits ausreichend süß.'),
+  L('y17', 'Wir haben ein Problem.'),
+  L('bolt', 'Schon wieder Krieg?'),
+  L('y17', 'Nein. Die Blaue Armee hat die Kaffeemaschine übernommen.'),
+  L('bolt', 'Na schön. Dann eben Operation Z.'),
+  L('op', 'Fortsetzung folgt. Wahrscheinlich.'),
+];
+
 export const OUTRO = {
   win: [
-    [L('bolzen', 'Gewonnen! Ich hab nur zweimal auf mich selbst geschossen!')],
-    [L('kurbel', 'Sieg. Schön. Kann ich jetzt nach Hause?')],
-    [L('groll', 'Das zählt nicht! Ich hatte die Sonne im Auge! Und im Fort!')],
-    [L('op', 'Sauber gemacht. Grollmann schreibt sicher gleich eine Beschwerde.')],
+    [L('bolt', 'Gewonnen. Ich hab trotzdem Sand im Toaster.')],
+    [L('y17', 'Sieg. Darf ich jetzt fragen, wofür?')],
+    [L('max', 'Ein triumphaler Sieg! Ich habe ihn persönlich geplant. Gestern. Oder morgen.')],
+    [L('boss', 'Das war ein taktischer Rückzug nach vorne. Nach hinten. Egal.')],
   ],
   lose: [
-    [L('groll', 'HA! Der Parkplatz bleibt rot! Ich lasse ihn rot anstreichen!')],
-    [L('kurbel', 'Na toll. Das kostet mich mindestens eine Woche Rente.')],
-    [L('op', 'Das lief nicht. Wir versuchen es nochmal. Diesmal mit Plan.')],
+    [L('boss', 'Hah! Der letzte vernünftige Stratege des Universums gewinnt wieder.')],
+    [L('bolt', 'Verloren. Mein Toasterbein ist auch angebrannt.')],
+    [L('max', 'Eine Niederlage? Das ist eindeutig feindliche Sabotage!')],
   ],
 };
 
-// Funksprüche im Spiel, nach Ereignis
 export const RADIO = {
   start: [
-    L('op', 'Einsatz läuft. Flaggen zuerst, Heldentaten später.'),
-    L('bolzen', 'Ich bin so bereit, ich vibriere!'),
-    L('kurbel', 'Na dann. Bringen wir es hinter uns.'),
+    L('op', 'Einsatz läuft. Flaggen zuerst, Fragen später.'),
+    L('bolt', 'Alle Mann bereit. Und Y-17.'),
+    L('y17', 'Ich hätte da eine Frage zum Einsatzziel …'),
   ],
   capture: [
-    L('bolzen', 'Flagge ist unser! Kann ich sie behalten?'),
-    L('op', 'Sektor gesichert. Weiter so.'),
-    L('bolzen', 'Noch eine! Ich sammle die jetzt!'),
-    L('kurbel', 'Ein Sektor mehr. Ein Grund weniger, mich zu wecken.'),
+    L('bolt', 'Sektor gesichert. Kaum Sand. Fast.'),
+    L('op', 'Flagge genommen. Weiter.'),
+    L('y17', 'Gehört der Sektor jetzt uns, weil wir drauf stehen? Seltsames System.'),
   ],
   factory: [
-    L('kurbel', 'Ein Werk. Endlich Nachschub, der nicht ich bin.'),
-    L('op', 'Werk übernommen. Produktion läuft.'),
-    L('bolzen', 'Neue Kollegen! Ich bring ihnen alles bei. Vor allem Rennen.'),
+    L('op', 'Fabrik übernommen. Die Produktion läuft für uns.'),
+    L('y17', 'Diese Fabrik baut seit 1920 dasselbe Modell. Ich hab eine Aktualisierung eingereicht.'),
+    L('bolt', 'Neue Rekruten. Hervorragende Moral, vermute ich.'),
   ],
   lost: [
-    L('op', 'Sektor verloren. Das schreibe ich nicht ins Protokoll.'),
-    L('kurbel', 'Weg ist er. Wie meine Motivation.'),
-    L('groll', 'Dieser Sektor ist hiermit Parkzone der Roten Kolonne!'),
+    L('op', 'Sektor verloren. Das bleibt unter uns.'),
+    L('max', 'Verloren? Ich nenne das strategische Verlegung der Flagge!'),
+    L('boss', 'Danke für den Sektor. Ich lasse ihn blau streichen.'),
   ],
   enemyCapture: [
-    L('groll', 'Noch ein Sektor für mich! Ich stelle gleich ein Schild auf.'),
-    L('groll', 'Rote Kolonne, vorwärts! Bitte ordentlich in Reihe.'),
+    L('boss', 'Noch ein Sektor für die Blaue Armee. Wie vorhergesagt. Von mir.'),
+    L('boss', 'Vorwärts, Blaue Armee! In ordentlichen Reihen, bitte.'),
   ],
   attacked: [
-    L('kurbel', 'Wir werden beschossen. Wie immer.'),
+    L('bolt', 'Wir werden beschossen. Das kenne ich. Seit 127 Jahren.'),
     L('op', 'Kontakt! Verstärkung schicken.'),
-    L('bolzen', 'Die schießen auf uns! Unhöflich!'),
+    L('y17', 'Die schießen auf uns! Hat ihnen niemand den Brief gezeigt?'),
   ],
   board: [
-    L('bolzen', 'Ich fahre! Keine Sorge, ich hab das Handbuch angeschaut. Das Bild vorne drauf.'),
-    L('kurbel', 'Endlich sitzen. Mein Rücken dankt.'),
+    L('bolt', 'Fahrzeug übernommen. Endlich kein Sand mehr unter dem Toaster.'),
+    L('y17', 'Ich hab den Ölstand geprüft. Gewohnheit.'),
   ],
-  enemyBoard: [L('groll', 'Danke für das Fahrzeug! Ich schicke eine Dankeskarte. Mit Granate.')],
+  enemyBoard: [L('boss', 'Herrenlose Fahrzeuge gehören dem, der sie zuerst lobt. Ich habe sie gelobt.')],
   bdestroy: [
-    L('groll', 'Mein Gebäude! Das war frisch gestrichen!'),
-    L('bolzen', 'Rumms! Hat das jemand gesehen?'),
+    L('boss', 'Mein Gebäude! Es war denkmalgeschützt!'),
+    L('bolt', 'Das war früher auch mal ein Bahnhof.'),
   ],
-  ownDestroy: [L('op', 'Wir haben ein Gebäude verloren. Wiederaufbau nach dem Krieg. Vielleicht.')],
-  eject: [L('kurbel', 'Ausgestiegen. Freiwillig. Fast.')],
+  ownDestroy: [L('op', 'Wir haben ein Gebäude verloren. Y-17, schreib einen Schadensbericht.')],
+  eject: [L('bolt', 'Rausgesprungen. Mit Toaster voran.')],
+  goal: [L('op', 'Einsatzziel erreicht. Saubere Arbeit.')],
   idle: [
-    L('bolzen', 'Operator? Darf ich mal den großen Panzer fahren? Nur kurz?'),
-    L('kurbel', 'Wusstet ihr, dass meine Rente in Schrauben ausgezahlt wird?'),
-    L('groll', 'Ich beobachte Sie! Also, mein Hamster beobachtet Sie. Er ist Oberst.'),
-    L('bolzen', 'Leutnant Quak lässt grüßen!'),
-    L('op', 'Kurzer Hinweis: Mehr Gebiet bedeutet schnellere Produktion.'),
-    L('groll', 'Wussten Sie, dass ich drei Parkausweise besitze? Drei!'),
+    L('y17', 'Weiß eigentlich irgendwer, wann wir Feierabend haben?'),
+    L('bolt', 'Mein linkes Bein riecht nach Toastbrot. Ist das normal?'),
+    L('eva', 'Erinnerung: Ihre Testlizenz läuft in drei Tagen ab.'),
+    L('max', 'Ich habe einen neuen Plan. Er ist wie der alte, aber lauter.'),
+    L('boss', 'Hier spricht der letzte vernünftige Stratege des Universums. Nur zur Info.'),
+    L('op', 'Hinweis: Mehr Gebiet bedeutet schnellere Produktion.'),
   ],
 };
 
-// Antworten der Einheiten beim Auswählen und bei Befehlen
 export const QUIPS = {
   select: {
-    runner: ['Ja?', 'Bereit!', 'Bin wach!', 'Wohin rennen?'],
-    grenadier: ['Hm?', 'Was denn jetzt?', 'Granaten sind geladen.', 'Ich war gerade so schön still.'],
+    runner: ['Ja?', 'Bereit.', 'Wohin rennen?', 'Kaum Sand hier.'],
+    grenadier: ['Hm?', 'Granaten geladen.', 'Tradition verpflichtet.'],
     rocketeer: ['Rohr bereit.', 'Panzer in Sicht?', 'Ziel aufschalten?'],
     sniper: ['Ich sehe alles.', 'Leise, bitte.', 'Fokussiert.'],
-    buggy: ['Brumm brumm!', 'Gas oder Vollgas?', 'Motor läuft!'],
+    buggy: ['Motor läuft.', 'Gas oder Vollgas?', 'Brumm.'],
     lighttank: ['Panzer bereit.', 'Kanone geladen.', 'Ketten gefettet.'],
-    heavytank: ['Ich bin groß.', 'Langsam, aber sicher.', 'Platz da.'],
-    launcher: ['Salve bereit.', 'Abstand halten!', 'Ich mag Abstand.'],
+    heavytank: ['Langsam, aber sicher.', 'Platz da.', 'Ich bin groß.'],
+    launcher: ['Salve bereit.', 'Abstand halten.', 'Ich mag Abstand.'],
   },
-  move: ['Bin unterwegs!', 'Wird gemacht!', 'Jawohl!', 'Los geht’s!', 'Schon wieder ich?', 'Okay, okay.'],
-  attack: ['Feuer frei!', 'Den nehm ich!', 'Zielerfassung!', 'Für den Parkplatz!', 'Attacke!'],
-  board: ['Ich fahre!', 'Steige ein!'],
+  move: ['Bin unterwegs.', 'Wird gemacht.', 'Jawohl.', 'Los geht’s.', 'Schon wieder ich?', 'Okay, okay.'],
+  attack: ['Feuer frei!', 'Den nehm ich.', 'Ziel erfasst.', 'Für die Moral!', 'Attacke!'],
+  board: ['Ich fahre!', 'Steige ein.'],
 };
 
 export function pick(arr) {

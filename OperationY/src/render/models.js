@@ -3,6 +3,11 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import glbRunner from '../../assets/robot_runner.glb';
+import glbGrenadier from '../../assets/robot_grenadier.glb';
+import glbRocketeer from '../../assets/robot_rocketeer.glb';
+import glbSniper from '../../assets/robot_sniper.glb';
 import { mat, TEAM_COLORS, panelTex, treadTex, patchFow } from './materials.js';
 
 let PANEL = null, TREAD = null;
@@ -35,10 +40,10 @@ export function teamMat(team, kind = 'paint') {
   const tc = TEAM_COLORS[team];
   let m;
   if (kind === 'paint') {
-    const c = tc.clone().lerp(new THREE.Color(0x8a9096), team === 0 ? 0.2 : 0.35);
-    m = new THREE.MeshStandardMaterial({ color: c, roughness: 0.45, metalness: 0.55, map: PANEL });
+    const c = tc.clone().lerp(new THREE.Color(0x5a5e58), team === 0 ? 0.3 : 0.55);
+    m = new THREE.MeshStandardMaterial({ color: c, roughness: 0.5, metalness: 0.45, map: PANEL });
   } else if (kind === 'glow') {
-    m = new THREE.MeshStandardMaterial({ color: 0x111111, emissive: tc, emissiveIntensity: team === 0 ? 0.4 : 3.2, roughness: 0.4 });
+    m = new THREE.MeshStandardMaterial({ color: 0x111111, emissive: tc, emissiveIntensity: team === 0 ? 0.4 : 1.8, roughness: 0.4 });
   } else if (kind === 'dark') {
     m = new THREE.MeshStandardMaterial({ color: tc.clone().multiplyScalar(0.3), roughness: 0.6, metalness: 0.4 });
   }
@@ -484,15 +489,62 @@ function instance(key, build) {
   return templates.get(key).clone();
 }
 
+// ---------- Roboter aus Blender (GLB mit Skelett und Animationen) ----------
+const ROBOT_GLB = { runner: glbRunner, grenadier: glbGrenadier, rocketeer: glbRocketeer, sniper: glbSniper };
+const robotSrc = {};
+const robotMatCache = new Map();
+
+export async function loadRobotModels() {
+  const loader = new GLTFLoader();
+  await Promise.all(Object.entries(ROBOT_GLB).map(([type, bytes]) => new Promise((res, rej) => {
+    const buf = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+    loader.parse(buf, '', (g) => { robotSrc[type] = g; res(); }, rej);
+  })));
+}
+
+function robotMaterial(m, team) {
+  if (m.name === 'Team') return teamMat(team, 'paint');
+  if (m.name === 'TeamGlow') return teamMat(team, 'glow');
+  if (!robotMatCache.has(m.name)) {
+    const c = m.clone();
+    if (m.name === 'Armor' || m.name === 'Dark') { textures(); c.map = PANEL; }
+    patchFow(c);
+    robotMatCache.set(m.name, c);
+  }
+  return robotMatCache.get(m.name);
+}
+
 export function makeRobot(type, team) {
-  const o = instance('r' + type + team, () => buildRobot(type, team));
-  const ud = o.userData;
-  ud.body = o.getObjectByName('body');
-  ud.legs = [o.getObjectByName('legL'), o.getObjectByName('legR')];
-  ud.torso = o.getObjectByName('torso');
-  ud.arms = o.getObjectByName('arms');
-  ud.gun = o.getObjectByName('gun');
-  return o;
+  const key = 'g' + type + team;
+  if (!templates.has(key)) {
+    const src = robotSrc[type].scene.clone();
+    src.traverse((c) => {
+      if (c.isMesh) { c.material = robotMaterial(c.material, team); c.castShadow = true; c.receiveShadow = true; }
+    });
+    templates.set(key, src);
+  }
+  const model = templates.get(key).clone();
+  model.rotation.y = Math.PI / 2; // glTF blickt nach +Z, das Spiel nach +X
+  const root = new THREE.Group();
+  root.add(model);
+  root.scale.setScalar(1.12);
+  const mixer = new THREE.AnimationMixer(model);
+  const actions = {};
+  for (const clip of robotSrc[type].animations) {
+    const a = mixer.clipAction(clip);
+    if (clip.name === 'Shoot') { a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = false; }
+    actions[clip.name] = a;
+  }
+  actions.Idle.play();
+  actions.Walk.play();
+  actions.Walk.setEffectiveWeight(0);
+  actions.Idle.time = Math.random() * 2;
+  root.userData = {
+    kind: 'robot', scale: 1.12, mixer, actions, walkW: 0,
+    muzzle: model.getObjectByName('Muzzle'), head: model.getObjectByName('Head'),
+    torso: model.getObjectByName('Spine'), model,
+  };
+  return root;
 }
 
 export function makeVehicle(type, team) {

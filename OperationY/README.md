@@ -7,8 +7,8 @@ feindlichen Forts oder Erobern seiner Flagge.
 
 Anforderungen und Umsetzungsstand: [PFLICHTENHEFT.md](PFLICHTENHEFT.md)
 
-Dazu eine eigene, humorvolle Geschichte um einen Parkplatzstreit, der eskaliert ist:
-Operator Ypsilon, die Roboter Bolzen und Kurbel und General Grollmann von der Roten Kolonne.
+Die Geschichte folgt dem Storykonzept: Rote und Blaue Armee kämpfen seit 127 Jahren, niemand weiß
+mehr warum, bis Wartungsroboter Y-17 die Kriegserklärung findet.
 
 ## Spielen
 
@@ -29,6 +29,9 @@ enthält alles, läuft offline und braucht keinen Server.
 ```
 npm install
 npm run build      # erzeugt dist/operation-y.html
+node tools/previews.mjs   # Level-Vorschaubilder neu rendern (danach erneut bauen)
+# Roboter neu bauen (Blender als Python-Modul bpy):
+# python tools/blender/robots.py assets
 npm test           # KI gegen KI auf allen Leveln (Simulation, ohne Grafik)
 npm run test:browser   # Headless-Chromium: lädt jedes Level, Screenshots nach dist/shots
 ```

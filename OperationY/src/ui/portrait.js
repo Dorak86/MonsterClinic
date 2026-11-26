@@ -1,4 +1,4 @@
-// Sprecher-Portraits als animierte 3D-Büsten: Operator, Bolzen, Kurbel, General Grollmann
+// Sprecher-Portraits als animierte 3D-Büsten: Operator, Y-17, BOLT, M.A.X., B.O.S.S., E.V.A., RICK-3000 u. a.
 
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
@@ -38,12 +38,23 @@ function furTex(base, dark) {
   return t;
 }
 
-const SPOTS = {
-  op: { x: 0, cam: [1.0, 0.25, 3.6], look: [0, -0.15, 0] },
-  bolzen: { x: 10, cam: [11.2, 2.4, 3.9], look: [10.1, 1.72, 0] },
-  kurbel: { x: 20, cam: [21.2, 2.45, 4.0], look: [20.1, 1.75, 0] },
-  groll: { x: 30, cam: [31.2, 2.5, 4.0], look: [30.1, 1.8, 0] },
+const ROBOTS = {
+  y17: { type: 'runner', team: 1, scale: 0.85 },
+  bolt: { type: 'grenadier', team: 1 },
+  max: { type: 'grenadier', team: 1 },
+  boss: { type: 'grenadier', team: 2 },
+  rick: { type: 'sniper', team: 0 },
+  rot: { type: 'runner', team: 1 },
+  blau: { type: 'runner', team: 2 },
+  kellner: { type: 'runner', team: 0 },
 };
+const SPOTS = { op: { x: 0, cam: [1.0, 0.25, 3.6], look: [0, -0.15, 0] } };
+Object.keys(ROBOTS).concat(['eva']).forEach((k, i) => {
+  const x = 10 + i * 6;
+  const sc = ROBOTS[k]?.scale || 1;
+  SPOTS[k] = { x, cam: [x + 0.55, 1.95 * sc, 2.7 * sc], look: [x, 1.6 * sc, 0] };
+});
+SPOTS.eva = { x: SPOTS.eva.x, cam: [SPOTS.eva.x + 0.5, 1.2, 2.6], look: [SPOTS.eva.x, 0.95, 0] };
 
 export class Portrait {
   constructor(canvas, size) {
@@ -75,7 +86,7 @@ export class Portrait {
     key.target.position.set(0, 0, 0);
     scene.add(key);
     this.key = key;
-    const rim = new THREE.DirectionalLight(0x4aa8ff, 4.5);
+    const rim = new THREE.DirectionalLight(0xff6a4a, 4.0);
     rim.position.set(-2.5, 1.5, -2);
     scene.add(rim);
     this.rim = rim;
@@ -94,7 +105,7 @@ export class Portrait {
     const stacheM = std(0xffffff, 0.8, 0, { map: furTex('#6e3b22', 'rgba(40,18,8,0.6)') });
     const shirt = std(0xf0d44a, 0.85);
     const navy = std(0x23306a, 0.8);
-    const blue = new THREE.MeshStandardMaterial({ color: 0x0a1a2a, emissive: 0x2f9dff, emissiveIntensity: 2.2 });
+    const blue = new THREE.MeshStandardMaterial({ color: 0x2a0a06, emissive: 0xe5452f, emissiveIntensity: 2.2 });
     const metal = std(0x6c747e, 0.35, 0.8);
     const black = std(0x121416, 0.4, 0.3);
     const white = std(0xf2f0ec, 0.25);
@@ -193,48 +204,120 @@ export class Portrait {
     add(new THREE.SphereGeometry(0.026, 16, 12), blue, b.x, b.y, b.z, head);
   }
 
-  // ---------- Roboter-Sprecher ----------
+  // ---------- Roboter-Sprecher (Blender-Modelle mit Zubehör) ----------
   buildRobots() {
-    const mk = (who, type, team) => {
-      const o = makeRobot(type, team);
-      // eigene Materialien, damit das Visier-Pulsieren nicht ins Spiel durchschlägt
+    const gold = std(0xd4a63a, 0.3, 0.9);
+    const chrome = std(0xd8dadc, 0.12, 1.0);
+    const black = std(0x101010, 0.3, 0.5);
+    for (const [who, cfg] of Object.entries(ROBOTS)) {
+      const o = makeRobot(cfg.type, cfg.team);
+      const ud = o.userData;
       const glows = [];
       o.traverse((c) => {
-        if (c.isMesh) {
+        if (c.isMesh && c.material.emissive && c.material.emissiveIntensity > 1) {
           c.material = c.material.clone();
-          if (c.material.emissive && c.material.emissiveIntensity > 1) glows.push(c.material);
+          glows.push(c.material);
         }
       });
+      o.scale.setScalar(cfg.scale || 1);
       o.position.set(SPOTS[who].x, 0, 0);
-      o.rotation.y = -0.9;
+      o.rotation.y = -Math.PI / 2 + 0.38;
       this.scene.add(o);
-      this.subjects[who] = { root: o, torso: o.userData.torso, glows, kind: 'robot' };
-      return o;
-    };
-    mk('bolzen', 'runner', 1);
-    const kurbel = mk('kurbel', 'grenadier', 1);
-    const groll = mk('groll', 'grenadier', 2);
-    const gold = std(0xd4a63a, 0.3, 0.9);
-    const add = (parent, geo, m, x, y, z) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); parent.add(o); return o; };
-    // Kurbel: Lesebrille
-    const glass = std(0x222222, 0.3, 0.6);
-    for (const side of [-1, 1]) {
-      const g = add(kurbel.userData.torso, new THREE.TorusGeometry(0.045, 0.008, 8, 24), glass, 0.2, 0.75, side * 0.055);
-      g.rotation.y = Math.PI / 2;
+      o.updateMatrixWorld(true);
+      const model = ud.model;
+      // Zubehör im Modellraum (Y oben, Blick +Z, Gesicht bei z≈0.15, y≈1.62), dann an Knochen hängen
+      const acc = (geo, m, x, y, z, bone = 'Head', rot) => {
+        const mesh = new THREE.Mesh(geo, m);
+        mesh.position.set(x, y, z);
+        if (rot) mesh.rotation.set(...rot);
+        model.add(mesh);
+        mesh.updateMatrixWorld(true);
+        model.getObjectByName(bone).attach(mesh);
+        return mesh;
+      };
+      const cap = (color) => {
+        const cm = std(color, 0.6);
+        acc(new THREE.CylinderGeometry(0.19, 0.16, 0.13, 32), cm, 0, 1.8, -0.01);
+        acc(new THREE.CylinderGeometry(0.11, 0.11, 0.015, 32), black, 0, 1.75, 0.13, 'Head', [0.25, 0, 0]);
+        acc(new THREE.SphereGeometry(0.03, 16, 12), gold, 0, 1.82, 0.17);
+      };
+      if (who === 'y17') {
+        const ring = acc(new THREE.TorusGeometry(0.075, 0.018, 12, 32), chrome, 0, 1.63, 0.15);
+        void ring;
+        const eye = acc(new THREE.CircleGeometry(0.06, 32), new THREE.MeshStandardMaterial({ color: 0x220a04, emissive: 0xffa040, emissiveIntensity: 2.5 }), 0, 1.63, 0.162);
+        glows.push(eye.material);
+        acc(new THREE.CylinderGeometry(0.006, 0.006, 0.3, 8), chrome, 0.08, 1.88, -0.02);
+        const tip = acc(new THREE.SphereGeometry(0.02, 12, 10), new THREE.MeshStandardMaterial({ color: 0x220000, emissive: 0xff3020, emissiveIntensity: 3 }), 0.08, 2.03, -0.02);
+        this.blinker = tip.material;
+      } else if (who === 'bolt') {
+        // linkes Bein aus einem Toaster
+        const shin = model.getObjectByName('ShinL');
+        shin.children.forEach((c) => { if (c.isMesh) c.visible = false; });
+        acc(new THREE.BoxGeometry(0.22, 0.34, 0.26), chrome, 0.13, 0.33, 0, 'ShinL');
+        acc(new THREE.BoxGeometry(0.04, 0.02, 0.18), black, 0.08, 0.505, 0, 'ShinL');
+        acc(new THREE.BoxGeometry(0.04, 0.02, 0.18), black, 0.18, 0.505, 0, 'ShinL');
+        acc(new THREE.BoxGeometry(0.03, 0.05, 0.03), black, 0.25, 0.4, 0, 'ShinL');
+        acc(new THREE.SphereGeometry(0.075, 16, 12), std(0x222222, 0.3, 0.8), 0.13, 0.53, 0, 'ShinL');
+        acc(new THREE.BoxGeometry(0.06, 0.012, 0.2), std(0x3a2a20, 0.8), -0.06, 1.68, 0.15, 'Head', [0, 0.3, 0.2]); // Narbe
+      } else if (who === 'max' || who === 'boss') {
+        cap(who === 'max' ? 0x6a1410 : 0x14306a);
+        for (const sd of [-1, 1]) acc(new THREE.BoxGeometry(0.16, 0.025, 0.12), gold, sd * 0.28, 1.47, 0, 'Spine');
+        if (who === 'max') {
+          for (const sd of [-1, 1]) acc(new THREE.CapsuleGeometry(0.018, 0.09, 4, 10), std(0x9aa0a8, 0.3, 0.9), sd * 0.05, 1.56, 0.17, 'Head', [0, 0, Math.PI / 2 + sd * 0.45]);
+        } else {
+          acc(new THREE.BoxGeometry(0.24, 0.05, 0.03), std(0x050505, 0.05, 0.6), 0, 1.64, 0.17);
+          for (let k = 0; k < 3; k++) acc(new THREE.CylinderGeometry(0.025, 0.025, 0.01, 16), gold, 0.08 + k * 0.05, 1.35, 0.2, 'Spine', [Math.PI / 2, 0, 0]);
+        }
+      } else if (who === 'rick') {
+        cap(0x1a2236);
+        acc(new THREE.TorusGeometry(0.17, 0.012, 8, 32), gold, 0, 1.8, -0.01, 'Head', [Math.PI / 2, 0, 0]);
+      } else if (who === 'kellner') {
+        for (const sd of [-1, 1]) acc(new THREE.ConeGeometry(0.045, 0.09, 16), black, sd * 0.045, 1.47, 0.18, 'Spine', [0, 0, sd * Math.PI / 2]);
+      }
+      this.subjects[who] = { root: o, kind: 'robot', glows, head: model.getObjectByName('Head'), mixer: ud.mixer };
     }
-    // Grollmann: Generalsmütze, Schulterklappen, Metall-Schnurrbart
-    const capM = std(0x5a1410, 0.6);
-    const t = groll.userData.torso;
-    add(t, new THREE.CylinderGeometry(0.2, 0.17, 0.12, 32), capM, 0, 0.87, 0);
-    const brim = add(t, new THREE.CylinderGeometry(0.13, 0.13, 0.015, 32), std(0x111111, 0.4), 0.11, 0.8, 0);
-    brim.scale.set(1, 1, 1.4);
-    add(t, new THREE.SphereGeometry(0.035, 16, 12), gold, 0.19, 0.87, 0);
-    for (const side of [-1, 1]) {
-      const ep = add(t, new THREE.BoxGeometry(0.16, 0.025, 0.12), gold, 0, 0.62, side * 0.28);
-      ep.rotation.x = side * 0.2;
-      const st = add(t, new THREE.CapsuleGeometry(0.018, 0.08, 4, 10), std(0x9aa0a8, 0.3, 0.9), 0.17, 0.67, side * 0.05);
-      st.rotation.x = Math.PI / 2 + side * 0.5;
+    this.buildEva();
+  }
+
+  buildEva() {
+    const x = SPOTS.eva.x;
+    const g = new THREE.Group();
+    g.position.set(x, 0, 0);
+    g.rotation.y = 0.35;
+    this.scene.add(g);
+    const shell = std(0xb8b09a, 0.6, 0.1);
+    const add = (geo, m, px, py, pz) => { const o = new THREE.Mesh(geo, m); o.position.set(px, py, pz); g.add(o); return o; };
+    add(new THREE.BoxGeometry(0.9, 0.75, 0.7), shell, 0, 1.0, -0.05);
+    add(new THREE.BoxGeometry(0.5, 0.2, 0.45), shell, 0, 0.55, -0.1);
+    add(new THREE.BoxGeometry(1.0, 0.08, 0.6), std(0x3a3a3a, 0.7), 0, 0.42, 0);
+    const c = document.createElement('canvas');
+    c.width = 256; c.height = 192;
+    this.evaCtx = c.getContext('2d');
+    this.evaTex = new THREE.CanvasTexture(c);
+    this.evaTex.colorSpace = THREE.SRGBColorSpace;
+    const screen = add(new THREE.PlaneGeometry(0.72, 0.54), new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0xffffff, emissiveMap: this.evaTex, emissiveIntensity: 1.6 }), 0, 1.02, 0.305);
+    void screen;
+    for (let i = 0; i < 4; i++) add(new THREE.SphereGeometry(0.018, 12, 8), new THREE.MeshStandardMaterial({ color: 0x110000, emissive: i % 2 ? 0x40ff60 : 0xffa020, emissiveIntensity: 2 }), 0.33, 0.72 + i * 0.05, 0.31);
+    this.subjects.eva = { root: g, kind: 'eva' };
+    this.drawEva(0);
+  }
+
+  drawEva(open) {
+    const g = this.evaCtx, W = 256, H = 192;
+    g.fillStyle = '#031a08'; g.fillRect(0, 0, W, H);
+    g.strokeStyle = '#4dff7a'; g.fillStyle = '#4dff7a'; g.lineWidth = 6;
+    g.beginPath(); g.ellipse(85, 70, 16, 11, 0, 0, Math.PI * 2); g.fill();
+    g.beginPath(); g.ellipse(171, 70, 16, 11, 0, 0, Math.PI * 2); g.fill();
+    g.beginPath();
+    for (let i = 0; i <= 40; i++) {
+      const px = 70 + i * 3, py = 132 + Math.sin(i * 0.9 + this.t * 20) * open * 14;
+      i ? g.lineTo(px, py) : g.moveTo(px, py);
     }
+    g.stroke();
+    g.fillStyle = 'rgba(0,0,0,0.25)';
+    for (let y = 0; y < H; y += 4) g.fillRect(0, y, W, 2);
+    g.fillStyle = '#4dff7a'; g.font = '16px monospace'; g.fillText('E.V.A. · LIZENZ 0042', 10, 182);
+    this.evaTex.needsUpdate = true;
   }
 
   setSpeaker(who) {
@@ -247,7 +330,7 @@ export class Portrait {
     this.key.target.position.set(sp.x, 1, 0);
     this.key.target.updateMatrixWorld();
     this.rim.position.set(sp.x - 2.5, 2, -2);
-    this.rim.color.setHex(this.who === 'groll' ? 0xff5a3a : 0x4aa8ff);
+    this.rim.color.setHex(this.who === 'boss' || this.who === 'blau' ? 0x4aa8ff : this.who === 'eva' || this.who === 'rick' || this.who === 'kellner' ? 0x9adfa0 : 0xff6a4a);
   }
 
   start() {
@@ -292,11 +375,15 @@ export class Portrait {
       if (this.blinkT < 0.12) lid = 1.0;
       if (this.blinkT < 0) this.blinkT = 2.5 + Math.random() * 3;
       for (const l of this.lids) l.scale.y = lid;
+    } else if (s.kind === 'eva') {
+      this.drawEva(talking ? 0.6 + Math.abs(Math.sin(t * 9)) * 0.4 : 0.05);
+      s.root.rotation.y = 0.35 + Math.sin(t * 0.5) * 0.03;
     } else {
-      s.torso.rotation.y = Math.sin(t * 0.7) * 0.08 + (talking ? Math.sin(t * 6) * 0.04 : 0);
-      s.torso.rotation.z = Math.sin(t * 1.1) * 0.02 + (talking ? Math.sin(t * 9) * 0.015 : 0);
-      const pulse = talking ? 2.5 + Math.abs(Math.sin(t * 14)) * 4 : 2.5 + Math.sin(t * 2) * 0.4;
+      s.mixer.update(dt);
+      if (talking) { s.head.rotation.x += Math.sin(t * 11) * 0.05; s.head.rotation.y += Math.sin(t * 5) * 0.05; }
+      const pulse = talking ? 1.8 + Math.abs(Math.sin(t * 14)) * 3 : 1.8 + Math.sin(t * 2) * 0.3;
       for (const m of s.glows) m.emissiveIntensity = pulse;
+      if (this.blinker) this.blinker.emissiveIntensity = Math.sin(t * 6) > 0 ? 4 : 0.3;
     }
     this.render();
   }

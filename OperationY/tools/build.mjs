@@ -15,6 +15,7 @@ const res = await build({
   target: ['es2022'],
   write: false,
   legalComments: 'none',
+  loader: { '.glb': 'binary', '.jpg': 'dataurl' },
 });
 const js = res.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
 const font = (w) => `@font-face{font-family:"Chakra Petch";font-weight:${w};font-style:normal;font-display:swap;src:url(data:font/woff2;base64,${readFileSync(join(root, `src/fonts/chakra-petch-${w}.woff2`)).toString('base64')}) format("woff2")}`;

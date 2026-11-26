@@ -1,0 +1,4 @@
+# Vorschaubilder des Spiels normal versionieren (klein, ohne Git LFS)
+*.jpg -filter -diff -merge binary
+*.glb binary
+*.woff2 binary

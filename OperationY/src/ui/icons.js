@@ -73,7 +73,7 @@ export function drawPortrait(canvas, seed = 0) {
   g.beginPath();
   g.moveTo(cx - 95, H); g.quadraticCurveTo(cx - 90, H - 80, cx - 40, H - 95);
   g.lineTo(cx + 40, H - 95); g.quadraticCurveTo(cx + 90, H - 80, cx + 95, H); g.fill();
-  g.fillStyle = '#2f9dff';
+  g.fillStyle = '#e5452f';
   g.fillRect(cx - 70, H - 70, 26, 5); g.fillRect(cx + 44, H - 70, 26, 5);
   // Kragen
   g.fillStyle = '#1b242d';
@@ -104,7 +104,7 @@ export function drawPortrait(canvas, seed = 0) {
   g.strokeStyle = '#11161b'; g.lineWidth = 3;
   g.beginPath(); g.moveTo(cx + 44, H - 150); g.quadraticCurveTo(cx + 34, H - 128, cx + 14, H - 127); g.stroke();
   // Abzeichen
-  g.fillStyle = '#2f9dff';
+  g.fillStyle = '#e5452f';
   g.beginPath(); g.moveTo(cx - 60, H - 50); g.lineTo(cx - 50, H - 40); g.lineTo(cx - 60, H - 30); g.lineTo(cx - 70, H - 40); g.fill();
   g.fillStyle = 'rgba(223,230,238,0.7)';
   g.font = '600 12px Segoe UI, sans-serif';

@@ -13,10 +13,10 @@ export const shared = {
 
 export const TEAM_COLORS = {
   0: new THREE.Color(0x9aa3ad),
-  1: new THREE.Color(0x2f9dff),
-  2: new THREE.Color(0xff4532),
+  1: new THREE.Color(0xe5452f),
+  2: new THREE.Color(0x3b8fff),
 };
-export const TEAM_CSS = { 0: '#9aa3ad', 1: '#2f9dff', 2: '#ff4532' };
+export const TEAM_CSS = { 0: '#9aa3ad', 1: '#e5452f', 2: '#3b8fff' };
 
 const FOW_VERT_DECL = 'varying vec3 vFowPos;';
 const FOW_VERT = `

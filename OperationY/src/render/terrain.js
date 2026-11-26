@@ -29,6 +29,8 @@ export class Terrain {
     this.map = map;
     this.scene = scene;
     this.quality = quality;
+    this.style = map.biome.rockStyle || 'boulder';
+    this.structures = ['block', 'industrial', 'bunker'].includes(this.style);
     this.group = new THREE.Group();
     scene.add(this.group);
     this.buildHeights();
@@ -46,7 +48,7 @@ export class Terrain {
       const n = fbm(x * 0.15, y * 0.15, seed + 200, 3);
       let v;
       switch (t) {
-        case T.ROCK: v = 2.2 + fbm(x * 0.35, y * 0.35, seed + 300, 3) * 3.2; break;
+        case T.ROCK: v = this.structures ? n * 0.2 : 2.2 + fbm(x * 0.35, y * 0.35, seed + 300, 3) * 3.2; break;
         case T.WATER: case T.BRIDGE: v = -1.6; break;
         case T.ROAD: v = n * 0.12; break;
         default: v = n * 0.55;
@@ -239,12 +241,13 @@ export class Terrain {
     const q = this.quality;
 
     // Felsen
+    if (this.structures) this.buildStructures(rng, dummy);
     const rockGeo = jitter(new THREE.IcosahedronGeometry(1, 3), 0.18, 0.7, 3);
     const rockMat = mat(biome.rock, { r: 0.8 });
     const rockSpots = [];
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
       const t = tiles[y * w + x];
-      if (t === T.ROCK) { if (rng() < 0.55) rockSpots.push([x + rng(), y + rng(), 0.6 + rng() * 0.9]); }
+      if (t === T.ROCK) { if (!this.structures && rng() < 0.55) rockSpots.push([x + rng(), y + rng(), 0.6 + rng() * 0.9]); }
       else if ((t === T.GROUND) && rng() < 0.03) rockSpots.push([x + rng(), y + rng(), 0.15 + rng() * 0.25]);
     }
     const rocks = new THREE.InstancedMesh(rockGeo, rockMat, rockSpots.length);
@@ -276,6 +279,10 @@ export class Terrain {
       trunkGeo = new THREE.CylinderGeometry(0.08, 0.14, 1.0, 6).translate(0, 0.5, 0);
       crownGeo = new THREE.ConeGeometry(0.9, 1.8, 14).translate(0, 1.6, 0);
       crown2Geo = new THREE.ConeGeometry(0.65, 1.4, 14).translate(0, 2.5, 0);
+    } else if (kind === 'jungle') {
+      trunkGeo = new THREE.CylinderGeometry(0.1, 0.2, 2.6, 8).translate(0, 1.3, 0);
+      crownGeo = new THREE.IcosahedronGeometry(1.25, 3).scale(1.25, 0.55, 1.25).translate(0, 2.7, 0);
+      crown2Geo = new THREE.IcosahedronGeometry(0.85, 3).scale(1.2, 0.6, 1.2).translate(0.3, 1.8, -0.3);
     } else if (kind === 'willow') {
       trunkGeo = new THREE.CylinderGeometry(0.12, 0.22, 1.4, 6).translate(0, 0.7, 0);
       crownGeo = new THREE.IcosahedronGeometry(0.95, 3).scale(1.1, 0.7, 1.1).translate(0, 1.9, 0);
@@ -289,7 +296,7 @@ export class Terrain {
       crownGeo = new THREE.IcosahedronGeometry(0.95, 3).translate(0, 1.7, 0);
       crown2Geo = new THREE.IcosahedronGeometry(0.6, 3).translate(0.35, 2.2, -0.2);
     }
-    if (kind === 'round' || kind === 'willow') { crownGeo = jitter(crownGeo, 0.16, 1, 7); crown2Geo = jitter(crown2Geo, 0.16, 1, 9); }
+    if (kind === 'round' || kind === 'willow' || kind === 'jungle') { crownGeo = jitter(crownGeo, 0.16, 1, 7); crown2Geo = jitter(crown2Geo, 0.16, 1, 9); }
     const trunkMat = mat(kind === 'dead' ? 0x221a16 : 0x4a3626, { r: 0.9 });
     const crownMat = mat(0xffffff, { r: 0.8 });
     const trunks = new THREE.InstancedMesh(trunkGeo, trunkMat, treeSpots.length);
@@ -309,6 +316,32 @@ export class Terrain {
       crowns2.setColorAt(i, cc.multiplyScalar(1.1));
     });
     for (const m of [trunks, crowns, crowns2]) { m.castShadow = true; m.receiveShadow = true; this.group.add(m); }
+    if (this.style === 'scrap') {
+      // verrostete Wracks und Fässer in der Schrottwüste
+      const items = [];
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+        const t = tiles[y * w + x];
+        if ((t === T.GROUND && rng() < 0.035) || (t === T.ROCK && rng() < 0.25)) items.push([x + rng(), y + rng()]);
+      }
+      const rust = patchFow(new THREE.MeshStandardMaterial({ color: 0x7a4a2a, roughness: 0.85, metalness: 0.5 }));
+      const geos = [new THREE.BoxGeometry(1.4, 0.6, 0.9), new THREE.CylinderGeometry(0.3, 0.3, 0.9, 16), new THREE.BoxGeometry(0.8, 0.4, 2.0)];
+      geos.forEach((gg, gi) => {
+        const list = items.filter((_, i) => i % 3 === gi);
+        if (!list.length) return;
+        const m = new THREE.InstancedMesh(gg, rust, list.length);
+        list.forEach(([x, y], i) => {
+          const wx = x * TILE, wz = y * TILE;
+          dummy.position.set(wx, this.heightAt(wx, wz) + 0.15, wz);
+          dummy.rotation.set((rng() - 0.5) * 0.6, rng() * 6.28, (rng() - 0.5) * 0.6);
+          dummy.scale.setScalar(0.7 + rng() * 0.6);
+          dummy.updateMatrix();
+          m.setMatrixAt(i, dummy.matrix);
+          m.setColorAt(i, new THREE.Color().setHSL(0.06, 0.4, 0.25 + rng() * 0.2));
+        });
+        m.castShadow = true; m.receiveShadow = true;
+        this.group.add(m);
+      });
+    }
     this.trees = crowns;
 
     // Gras-/Buschbüschel als Detail
@@ -339,6 +372,94 @@ export class Terrain {
       });
       tufts.receiveShadow = true;
       this.group.add(tufts);
+    }
+  }
+
+  buildStructures(rng, dummy) {
+    const { w, h, tiles } = this.map;
+    const spots = [];
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (tiles[y * w + x] === T.ROCK) spots.push([x, y]);
+    const S = TILE;
+    const place = (mesh, list) => {
+      list.forEach(([x, y, sx, sy, sz, rot, col, off], i) => {
+        const wx = (x + 0.5) * S, wz = (y + 0.5) * S;
+        dummy.position.set(wx, this.heightAt(wx, wz) - 0.05 + (off || 0), wz);
+        dummy.rotation.set(0, rot, 0);
+        dummy.scale.set(sx, sy, sz);
+        dummy.updateMatrix();
+        mesh.setMatrixAt(i, dummy.matrix);
+        if (col) mesh.setColorAt(i, col);
+      });
+      mesh.castShadow = true; mesh.receiveShadow = true;
+      this.group.add(mesh);
+    };
+    if (this.style === 'block') {
+      // Stadt: Häuserblöcke in drei Höhen mit Fensterfassaden
+      for (const [hh, tag] of [[4.5, 0], [8, 1], [12, 2]]) {
+        const list = spots.filter(([x, y]) => (Math.floor(fbm(x * 0.3, y * 0.3, this.map.seed + 70, 2) * 6 + x * 7 + y * 13) % 3) === tag);
+        if (!list.length) continue;
+        const facade = canvasTex(256, (g, s) => {
+          g.fillStyle = '#8a847a'; g.fillRect(0, 0, s, s);
+          const rows = Math.round(hh / 1.5), cols = 4;
+          for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+            const lit = Math.random() < 0.22;
+            g.fillStyle = lit ? '#ffd890' : (Math.random() < 0.5 ? '#2a3440' : '#38444f');
+            g.fillRect(c * s / cols + 10, r * s / rows + s / rows * 0.25, s / cols - 20, s / rows * 0.5);
+          }
+        });
+        const side = new THREE.MeshStandardMaterial({ map: facade, roughness: 0.8, metalness: 0.1 });
+        const roof = new THREE.MeshStandardMaterial({ color: 0x4a4844, roughness: 0.95 });
+        patchFow(side); patchFow(roof);
+        const geo = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0);
+        const mesh = new THREE.InstancedMesh(geo, [side, side, roof, roof, side, side], list.length);
+        place(mesh, list.map(([x, y]) => [x, y, S * 0.96, hh * (0.85 + rng() * 0.3), S * 0.96, 0, new THREE.Color().setHSL(0.08, 0.1, 0.55 + rng() * 0.35)]));
+      }
+    } else if (this.style === 'industrial') {
+      const cont = [], tank = [];
+      const colors = [0x8a4a2a, 0x2a5a6a, 0x5a6a3a, 0x7a6a4a, 0x6a2a2a];
+      for (const [x, y] of spots) {
+        if (rng() < 0.35) tank.push([x, y, 0.85, 2 + rng() * 2.2, 0.85, 0, new THREE.Color(rng() < 0.5 ? 0xb8bcc0 : 0x8a8e92)]);
+        else {
+          const stack = 1 + Math.floor(rng() * 3);
+          for (let k = 0; k < stack; k++) cont.push([x, y, 1.0, 1.0, 1.0, rng() < 0.5 ? 0 : Math.PI / 2, new THREE.Color(colors[Math.floor(rng() * colors.length)]), k]);
+        }
+      }
+      const cTex = canvasTex(128, (g, s) => {
+        g.fillStyle = '#d0d0d0'; g.fillRect(0, 0, s, s);
+        g.fillStyle = 'rgba(0,0,0,0.25)';
+        for (let i = 0; i < s; i += 8) g.fillRect(i, 0, 3, s);
+      });
+      const cMat = patchFow(new THREE.MeshStandardMaterial({ map: cTex, roughness: 0.7, metalness: 0.4 }));
+      const cGeo = new THREE.BoxGeometry(1.9, 1.2, 1.1).translate(0, 0.6, 0);
+      const cm = new THREE.InstancedMesh(cGeo, cMat, cont.length || 1);
+      cont.forEach((c, i) => {
+        const [x, y, , , , rot, col, k] = c;
+        const wx = (x + 0.5) * S, wz = (y + 0.5) * S;
+        dummy.position.set(wx, this.heightAt(wx, wz) + k * 1.22 - 0.05, wz);
+        dummy.rotation.set(0, rot + (rng() - 0.5) * 0.1, 0);
+        dummy.scale.set(1, 1, 1);
+        dummy.updateMatrix();
+        cm.setMatrixAt(i, dummy.matrix);
+        cm.setColorAt(i, col);
+      });
+      cm.count = cont.length;
+      cm.castShadow = true; cm.receiveShadow = true;
+      this.group.add(cm);
+      const tMat = patchFow(new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.35, metalness: 0.7 }));
+      const tGeo = new THREE.CylinderGeometry(1, 1, 1, 28).translate(0, 0.5, 0);
+      if (tank.length) place(new THREE.InstancedMesh(tGeo, tMat, tank.length), tank);
+      const dome = new THREE.SphereGeometry(1, 28, 10, 0, Math.PI * 2, 0, Math.PI / 2);
+      if (tank.length) place(new THREE.InstancedMesh(dome, tMat, tank.length), tank.map(([x, y, sx, sy, sz, r, c]) => [x, y, sx, 0.35, sz, r, c, sy]));
+    } else if (this.style === 'bunker') {
+      const hz = canvasTex(128, (g, s) => {
+        g.fillStyle = '#6a6c66'; g.fillRect(0, 0, s, s);
+        for (let i = -s; i < s * 2; i += 24) { g.fillStyle = '#d8a820'; g.beginPath(); g.moveTo(i, s * 0.78); g.lineTo(i + 12, s * 0.78); g.lineTo(i + 24, s); g.lineTo(i + 12, s); g.fill(); }
+        g.fillStyle = '#1a1a1a'; g.fillRect(0, s * 0.76, s, 2);
+      });
+      const bm = patchFow(new THREE.MeshStandardMaterial({ map: hz, roughness: 0.9 }));
+      const top = patchFow(new THREE.MeshStandardMaterial({ color: 0x52544e, roughness: 0.95 }));
+      const geo = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0);
+      place(new THREE.InstancedMesh(geo, [bm, bm, top, top, bm, bm], spots.length), spots.map(([x, y]) => [x, y, S * 0.97, 1.6 + rng() * 1.6, S * 0.97, 0]));
     }
   }
 

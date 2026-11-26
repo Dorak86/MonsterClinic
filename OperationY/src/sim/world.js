@@ -743,6 +743,7 @@ export class World {
     }
     this.emit({ t: 'capture', sector: s.id, team, prev, x: s.x, y: s.y });
     if (hasFort) this.gameOver(team, 'flag');
+    this.checkGoal();
   }
 
   repair(dt) {
@@ -789,6 +790,14 @@ export class World {
     const xi = Math.floor(x), yi = Math.floor(y);
     if (xi < 0 || yi < 0 || xi >= this.map.w || yi >= this.map.h) return false;
     return this.vis[team][yi * this.map.w + xi] === 1;
+  }
+
+  // Sonderziel eines Levels: bestimmte Gebäude besitzen
+  checkGoal() {
+    const g = this.level.goal;
+    if (!g || g.type !== 'own' || this.over) return;
+    const need = this.buildings.filter((b) => g.types.includes(b.type) && !b.destroyed);
+    if (need.length && need.every((b) => b.team === TEAM.PLAYER)) this.gameOver(TEAM.PLAYER, 'goal');
   }
 
   gameOver(winner, reason) {

@@ -106,7 +106,7 @@ export class Hud {
       const tw = g.measureText(b.text).width + 16;
       g.globalAlpha = k;
       g.fillStyle = 'rgba(12,18,26,0.92)';
-      g.strokeStyle = '#2f9dff';
+      g.strokeStyle = '#e5452f';
       g.lineWidth = 1;
       g.beginPath();
       g.roundRect(sx - tw / 2, sy - 30, tw, 24, 4);
@@ -199,7 +199,7 @@ export class Hud {
     for (const u of w.units) {
       if (u.dead) continue;
       if (u.team !== 1 && !w.isVisible(1, u.x, u.y)) continue;
-      g.fillStyle = u.team === 1 ? '#7cc4ff' : u.team === 2 ? '#ff6a5a' : '#bbb';
+      g.fillStyle = u.team === 1 ? '#ff8a70' : u.team === 2 ? '#7cb8ff' : '#bbb';
       const s = u.cls === 'vehicle' ? 1.3 : 0.9;
       g.fillRect(u.x - s / 2, u.y - s / 2, s, s);
     }
@@ -314,7 +314,7 @@ export class Hud {
     const bar = (x, y, wd, f, col) => {
       g.fillStyle = 'rgba(0,0,0,0.65)';
       g.fillRect(x - wd / 2 - 1, y - 1, wd + 2, 5);
-      g.fillStyle = col || (f > 0.6 ? '#66ffa0' : f > 0.3 ? '#ffb347' : '#ff4532');
+      g.fillStyle = col || (f > 0.6 ? '#66ffa0' : f > 0.3 ? '#ffb347' : '#3b8fff');
       g.fillRect(x - wd / 2, y, wd * f, 3);
     };
     const zoom = 42 / this.r.cam.dist;
@@ -326,7 +326,7 @@ export class Hud {
       const x = u.px + (u.x - u.px) * alpha, y = u.py + (u.y - u.py) * alpha;
       const [sx, sy, sz] = this.r.tileToScreen(x, y, u.cls === 'robot' ? 2.4 : 2.2);
       if (sz > 1) continue;
-      bar(sx, sy, (u.cls === 'robot' ? 22 : 34) * Math.min(1.4, zoom), u.hp / u.maxHp, u.team === 2 && !selection.has(u.id) ? '#ff6a5a' : null);
+      bar(sx, sy, (u.cls === 'robot' ? 22 : 34) * Math.min(1.4, zoom), u.hp / u.maxHp, u.team === 2 && !selection.has(u.id) ? '#7cb8ff' : null);
     }
     for (const b of w.buildings) {
       if (b.destroyed) continue;
@@ -335,7 +335,7 @@ export class Hud {
       if (sz > 1 || sx < -50 || sy < -50 || sx > window.innerWidth + 50 || sy > window.innerHeight + 50) continue;
       if (sel || b.hp < b.maxHp || hoverId === b.id) bar(sx, sy, 50 * Math.min(1.3, zoom), b.hp / b.maxHp);
       if (b.team === 1 && b.produce && b.def.produces) {
-        bar(sx, sy + 7, 50 * Math.min(1.3, zoom), b.progress, '#2f9dff');
+        bar(sx, sy + 7, 50 * Math.min(1.3, zoom), b.progress, '#e5452f');
       }
       if (sel && b.rally && b.team === 1) {
         const [rx, ry] = this.r.tileToScreen(b.rally[0], b.rally[1], 0.1);

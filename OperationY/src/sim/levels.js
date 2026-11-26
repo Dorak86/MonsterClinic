@@ -5,6 +5,54 @@
 const S = (x, y, o, b = []) => ({ x, y, o, b });
 
 export const BIOMES = {
+  desert: {
+    name: 'Schrottwüste', rockStyle: 'scrap',
+    ground: [0xc9a46a, 0xb58c56, 0xd8b884],
+    road: 0x8a6c48, rock: 0xa07a50, forest: 0x8a7a4a,
+    water: 0x3a7a8a, waterDeep: 0x1a3a44, lava: false,
+    sky: 0xe6cfa2, fog: 0xe0c89a, sun: 0xfff0d0, sunI: 3.2, hemiSky: 0xfff2dd, hemiGround: 0x8a6a40,
+    tree: 'dead', treeColor: [0x5a4a38, 0x6a5a44, 0x4a3a2a],
+  },
+  industrial: {
+    name: 'Industriekomplex', rockStyle: 'industrial',
+    ground: [0x7a7872, 0x6a6862, 0x86837a],
+    road: 0x3c3c3e, rock: 0x6a6a6a, forest: 0x4a5a3a,
+    water: 0x3a5a52, waterDeep: 0x1a2a26, lava: false,
+    sky: 0xa8a69c, fog: 0xa09e94, sun: 0xfff0dc, sunI: 2.6, hemiSky: 0xd8dcdc, hemiGround: 0x4a4a44,
+    tree: 'round', treeColor: [0x4a6030, 0x55683a, 0x3e5228],
+  },
+  jungle: {
+    name: 'Dschungel', rockStyle: 'boulder',
+    ground: [0x5a6a32, 0x4a5c2a, 0x6a743a],
+    road: 0x6a5434, rock: 0x5a5a48, forest: 0x23401c,
+    water: 0x2f5a44, waterDeep: 0x14301e, lava: false,
+    sky: 0x9aae8a, fog: 0x8aa080, sun: 0xfff2c8, sunI: 2.6, hemiSky: 0xd0e8c0, hemiGround: 0x2a3a18,
+    tree: 'jungle', treeColor: [0x2e6a22, 0x3a7a2a, 0x245a1c],
+  },
+  city: {
+    name: 'Stadt', rockStyle: 'block',
+    ground: [0x5e5e5c, 0x55554f, 0x686660],
+    road: 0x2e2e30, rock: 0x7a746c, forest: 0x3a5228,
+    water: 0x2f5468, waterDeep: 0x142838, lava: false,
+    sky: 0xb2b8be, fog: 0xa8aeb4, sun: 0xfff4e4, sunI: 2.6, hemiSky: 0xdde6f0, hemiGround: 0x40403c,
+    tree: 'round', treeColor: [0x3e6a2a, 0x4a7632, 0x345a24],
+  },
+  bunker: {
+    name: 'Geheimbunker', rockStyle: 'bunker',
+    ground: [0x4a4c48, 0x424440, 0x55574f],
+    road: 0x2a2b2c, rock: 0x5a5c58, forest: 0x2a3a24,
+    water: 0x3a6a2a, waterDeep: 0x14280e, lava: false,
+    sky: 0x5a6058, fog: 0x585e56, sun: 0xe8f0e0, sunI: 2.0, hemiSky: 0xb8c4b8, hemiGround: 0x2a2c28,
+    tree: 'dead', treeColor: [0x2a2a24, 0x34342c, 0x22221c],
+  },
+  core: {
+    name: 'Kontrollzentrum', rockStyle: 'industrial',
+    ground: [0x3a3634, 0x322e2c, 0x46403c],
+    road: 0x1e1c1c, rock: 0x3a3430, forest: 0x2a2220,
+    water: 0xff5a10, waterDeep: 0xa01a00, lava: true,
+    sky: 0x3a2622, fog: 0x4a2c24, sun: 0xffc8a0, sunI: 2.0, hemiSky: 0xffb090, hemiGround: 0x401810,
+    tree: 'dead', treeColor: [0x241c18, 0x2e2420, 0x1c1614],
+  },
   steppe: {
     name: 'Steppe',
     ground: [0x9a8a5a, 0x7f8a4c, 0xb39a68],
@@ -41,15 +89,15 @@ export const BIOMES = {
 
 export const LEVELS = [
   {
-    id: 1, name: 'Erstkontakt', biome: 'steppe', w: 48, h: 36, seed: 11,
+    id: 1, name: 'Willkommen im Krieg', place: 'Schrottwüste · Tutorial', biome: 'desert', goal: { type: 'own', types: ['robot', 'vehicle', 'radar'], text: 'Drei Fabriken und den Kontrollturm einnehmen' }, w: 48, h: 36, seed: 11,
     rocks: 0.1, forest: 0.12, extraRoads: 2, aiLevel: 0.75,
     tips: true,
     sectors: [
       S(6, 18, 1, [['fort', 2, -1]]),
       S(17, 7, 0, [['robot', 2, 1]]),
-      S(17, 29, 0),
+      S(17, 29, 0, [['robot', 2, -3]]),
       S(24, 18, 0, [['vehicle', -1, 2]]),
-      S(32, 7, 0, [['radar', 2, 1]]),
+      S(32, 7, 2, [['radar', 2, 1], ['turret', -2, 2]]),
       S(32, 29, 0),
       S(42, 18, 2, [['fort', -5, -1]]),
     ],
@@ -59,8 +107,8 @@ export const LEVELS = [
     ],
   },
   {
-    id: 2, name: 'Kupfertal', biome: 'steppe', w: 64, h: 48, seed: 23,
-    rocks: 0.12, forest: 0.12, extraRoads: 1, aiLevel: 0.9,
+    id: 2, name: 'Die Fabrik der verlorenen Seelen', place: 'Industriekomplex · Produktionskrieg', biome: 'industrial', w: 64, h: 48, seed: 23,
+    rocks: 0.2, forest: 0.03, extraRoads: 1, aiLevel: 0.9,
     rivers: [{ pts: [[33, -2], [30, 12], [35, 24], [31, 36], [34, 50]], w: 2.2 }],
     sectors: [
       S(6, 24, 1, [['fort', 2, -1]]),
@@ -80,7 +128,7 @@ export const LEVELS = [
     ],
   },
   {
-    id: 3, name: 'Frostgrat', biome: 'ice', w: 64, h: 48, seed: 37,
+    id: 3, name: 'Eiszeit für Anfänger', place: 'Polarstation · Überleben und Kontrolle', biome: 'ice', w: 64, h: 48, seed: 37,
     rocks: 0.16, forest: 0.1, extraRoads: 2, aiLevel: 1.0,
     lakes: [[32, 24, 4]],
     sectors: [
@@ -102,8 +150,8 @@ export const LEVELS = [
     ],
   },
   {
-    id: 4, name: 'Gletscherpass', biome: 'ice', w: 64, h: 48, seed: 41,
-    rocks: 0.08, forest: 0.08, extraRoads: 0, aiLevel: 1.05,
+    id: 4, name: 'Der Dschungel lebt', place: 'Verwilderte Militärzone · Hinterhalt', biome: 'jungle', w: 64, h: 48, seed: 41,
+    rocks: 0.06, forest: 0.26, extraRoads: 0, aiLevel: 1.05,
     walls: [{ pts: [[31, -1], [33, 14], [30, 26], [34, 38], [32, 49]], w: 3 }],
     sectors: [
       S(6, 24, 1, [['fort', 2, -1]]),
@@ -124,8 +172,8 @@ export const LEVELS = [
     ],
   },
   {
-    id: 5, name: 'Moorkessel', biome: 'swamp', w: 64, h: 48, seed: 53,
-    rocks: 0.06, forest: 0.32, extraRoads: 3, aiLevel: 1.05,
+    id: 5, name: 'Die letzte Stadt', place: 'Urbaner Krieg · Taktische Herausforderung', biome: 'city', w: 64, h: 48, seed: 53,
+    rocks: 0.24, forest: 0.05, extraRoads: 3, aiLevel: 1.05,
     lakes: [[20, 16, 3], [44, 32, 3.5], [32, 6, 2.5], [30, 42, 2.5]],
     sectors: [
       S(6, 8, 1, [['fort', 2, 1]]),
@@ -146,8 +194,8 @@ export const LEVELS = [
     ],
   },
   {
-    id: 6, name: 'Nebelsee', biome: 'swamp', w: 64, h: 48, seed: 67,
-    rocks: 0.08, forest: 0.18, extraRoads: 2, aiLevel: 1.1,
+    id: 6, name: 'Akte Y', place: 'Geheimbunker · Storywendung', biome: 'bunker', goal: { type: 'own', types: ['radar'], text: 'Den Archivturm auf der Insel erobern' }, w: 64, h: 48, seed: 67,
+    rocks: 0.16, forest: 0.05, extraRoads: 2, aiLevel: 1.1,
     lakes: [[32, 24, 9], [10, 6, 2.5], [54, 42, 2.5]],
     sectors: [
       S(6, 38, 1, [['fort', 2, -4]]),
@@ -168,7 +216,7 @@ export const LEVELS = [
     ],
   },
   {
-    id: 7, name: 'Schlackefeld', biome: 'volcano', w: 64, h: 48, seed: 79,
+    id: 7, name: 'Der letzte Befehl', place: 'Hauptquartier · Große Schlacht', biome: 'volcano', w: 64, h: 48, seed: 79,
     rocks: 0.14, forest: 0.06, extraRoads: 2, aiLevel: 1.05,
     rivers: [
       { pts: [[-2, 16], [16, 18], [30, 14], [44, 20], [66, 16]], w: 1.8 },
@@ -194,7 +242,7 @@ export const LEVELS = [
     ],
   },
   {
-    id: 8, name: 'Glutkern', biome: 'volcano', w: 80, h: 56, seed: 97,
+    id: 8, name: 'Operation Y', place: 'Finale · Die Entscheidung', biome: 'core', w: 80, h: 56, seed: 97,
     rocks: 0.14, forest: 0.05, extraRoads: 4, aiLevel: 1.0,
     lakes: [[40, 28, 4.5]],
     rivers: [{ pts: [[40, -2], [38, 10], [42, 20]], w: 1.6 }, { pts: [[42, 36], [38, 46], [40, 58]], w: 1.6 }],
