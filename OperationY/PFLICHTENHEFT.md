@@ -107,6 +107,11 @@ der Lebensleiste, Akku und Vorrat im Panel, Ladeblitze, LED-Mimik „Akku leer�
 Zerstörte Gebäude als Blender-Ruinen in vier Größen, neue Flaggen mit Sockel und Wappen.
 Level 6: Archivturm muss 60 Sekunden gehalten werden.
 
+Laden über Induktionsplatten (v1.8): Vor Hauptquartier und Stromwerken liegt eine Reihe
+markierter Platten (Warnstreifen, Blitzsymbol, leuchtende Spule, auf der Minikarte blau).
+Nur Roboter auf einer Platte laden (15/s); der Versorger tankt nur dort. Das Fabrik-Panel zeigt
+den Sektor-Bonus auf die Bauzeit.
+
 Nicht umgesetzt: 3D-NavMesh (Wegfindung bleibt rasterbasiert, Brücken verändern das Raster),
 überrollbare Bäume, Karten-/Rauch-Idle mit Requisiten.
 
@@ -146,7 +151,7 @@ keine Produktion mehr).
 
 - Werk anklicken → Produktionsleiste mit allen Einheiten des Werks, Fortschrittsbalken.
 - Endlosproduktion der gewählten Einheit (Genre-typisch), Sammelpunkt per Rechtsklick.
-- Bauzeit = Grundzeit × Faktor(Gebietsanteil); Faktor 1,6 bei 10 % bis 0,55 bei 100 %.
+- Bauzeit = Grundzeit × (1 − 0,5 × Gebietsanteil): jeder gehaltene Sektor verkürzt sie, bis zur Hälfte bei 100 %.
 - Einheitenlimit je Seite: 60.
 
 ### 3.4 Einheiten

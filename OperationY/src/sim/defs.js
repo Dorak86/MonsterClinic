@@ -109,7 +109,7 @@ export const UNITS = {
   fueltruck: {
     name: 'Versorger', cls: 'vehicle', armor: 'medium', hp: 240, speed: 2.9, sight: 7,
     weapon: null, build: 22, radius: 0.85, turnRate: 2.8, support: true, stock: 400,
-    desc: 'Batterie-Lkw: tankt an Hauptquartier und Stromwerken Strom und lädt Roboter in seiner Nähe auf. Explodiert, wenn er zerstört wird.',
+    desc: 'Batterie-Lkw: tankt auf den Induktionsplatten von Hauptquartier und Stromwerken und lädt Roboter in seiner Nähe auf. Explodiert, wenn er zerstört wird.',
   },
   launcher: {
     name: 'Raketenwerfer', cls: 'vehicle', armor: 'medium', hp: 220, speed: 2.3, sight: 8,
@@ -122,7 +122,7 @@ export const BUILDINGS = {
   fort: {
     name: 'Fort', w: 3, h: 3, hp: 3200, weapon: 'fortgun', sight: 9, charges: true,
     produces: ['runner', 'assault', 'grenadier', 'rocketeer'],
-    desc: 'Hauptquartier und Generator: lädt Roboter und Versorger in der Nähe auf. Fällt es, ist die Schlacht verloren.',
+    desc: 'Hauptquartier und Generator: Roboter und Versorger laden auf den Induktionsplatten davor. Fällt es, ist die Schlacht verloren.',
   },
   robot: {
     name: 'Roboterwerk', w: 3, h: 2, hp: 1300, sight: 6,
@@ -140,7 +140,7 @@ export const BUILDINGS = {
   },
   power: {
     name: 'Stromwerk', w: 2, h: 2, hp: 1100, sight: 6, charges: true,
-    desc: 'Lädt eigene Roboter und Versorger in der Nähe auf. Gehört dem Besitzer des Sektors.',
+    desc: 'Speist die Induktionsplatten davor: eigene Roboter und Versorger laden dort auf. Gehört dem Besitzer des Sektors.',
   },
   repair: {
     name: 'Reparaturstation', w: 2, h: 2, hp: 900, sight: 5,
@@ -161,7 +161,7 @@ export const UNIT_CAP = 60;
 // Akkus der Roboter
 export const BAT = {
   max: 100, move: 0.3, idle: 0.04, fire: 0.22, empty: 0.4,
-  charge: 10, range: 4, truckRange: 3, truckGive: 12, truckRefill: 45, low: 25,
+  charge: 15, range: 4, truckRange: 3, truckGive: 12, truckRefill: 45, low: 25,
 };
 
 // Explosives Fass (Kartenobjekt)
@@ -169,6 +169,6 @@ export const BARREL = { name: 'Explosives Fass', cls: 'prop', armor: 'light', hp
 export const SIM_DT = 0.05;
 
 export function productionFactor(share) {
-  const s = Math.max(0, Math.min(1, (share - 0.1) / 0.9));
-  return 1.6 + (0.55 - 1.6) * s;
+  // Grundbauzeit gilt ohne Gebiet; jeder gehaltene Sektor verkürzt sie, bis auf die Hälfte bei 100 %
+  return 1 - 0.5 * Math.max(0, Math.min(1, share));
 }

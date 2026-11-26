@@ -48,6 +48,7 @@ export class World {
       this.addBuilding(spot.type, spot.x, spot.y, sec.owner, spot.sector);
     }
     this.fires = [];
+    this.initPads();
     this.initBridges();
     for (const [type, x, y, team] of level.units || []) {
       const cls = UNITS[type].cls;
@@ -56,6 +57,33 @@ export class World {
     }
     this.placeBarrels();
     this.updateVisibility();
+  }
+
+  // Induktionsplatten: eine Reihe Ladefelder vor jedem Generator (Hauptquartier, Stromwerk)
+  initPads() {
+    const { w, h } = this.map;
+    this.padAt = new Int32Array(w * h);
+    this.pads = [];
+    for (const b of this.buildings) {
+      if (!b.def.charges) continue;
+      const y = b.y + b.h;
+      for (let x = b.x - 1; x <= b.x + b.w; x++) {
+        if (x < 0 || y < 0 || x >= w || y >= h) continue;
+        if (!passable(this.map, x, y, 'robot') || this.padAt[y * w + x]) continue;
+        this.pads.push({ x: x + 0.5, y: y + 0.5, b: b.id });
+        this.padAt[y * w + x] = b.id;
+      }
+    }
+  }
+
+  // Generator der Ladeplatte unter einer Position (nur wenn eigen und intakt)
+  padOwner(x, y, team) {
+    const xi = Math.floor(x), yi = Math.floor(y);
+    if (xi < 0 || yi < 0 || xi >= this.map.w || yi >= this.map.h) return null;
+    const id = this.padAt[yi * this.map.w + xi];
+    if (!id) return null;
+    const b = this.byId.get(id);
+    return b && !b.destroyed && b.team === team ? b : null;
   }
 
   // Zusammenhängende Brückenfelder zu Brücken gruppieren
@@ -378,19 +406,20 @@ export class World {
 
   // Strom: Laden an Generatoren, Batterie-Lkw tanken und verteilen
   updatePower(dt) {
-    const chargers = this.buildings.filter((b) => b.def.charges && !b.destroyed && b.team);
     for (const u of this.units) {
       if (u.dead || !u.team) continue;
       if (u.cls === 'robot') {
         u.bat = Math.max(0, u.bat - BAT.idle * dt);
         if (u.bat < BAT.max) {
-          const c = chargers.find((b) => b.team === u.team && this.distToBuilding(u.x, u.y, b) < BAT.range);
-          if (c) { u.bat = Math.min(BAT.max, u.bat + BAT.charge * dt); u.chargeT = this.time; u.chargeFrom = c.id; }
+          const c = this.padOwner(u.x, u.y, u.team);
+          if (c) { u.bat = Math.min(BAT.max, u.bat + BAT.charge * dt); u.chargeT = this.time; u.chargeFrom = c.id; u.onPad = true; }
+          else u.onPad = false;
         }
         if (u.bat <= 0 && !u.batWarn) { u.batWarn = true; this.emit({ t: 'batteryEmpty', id: u.id, team: u.team, x: u.x, y: u.y }); }
         if (u.bat > 20) u.batWarn = false;
       } else if (u.def.support) {
-        const c = chargers.find((b) => b.team === u.team && this.distToBuilding(u.x, u.y, b) < BAT.range + 0.5);
+        let c = this.padOwner(u.x, u.y, u.team);
+        if (!c) for (const p of this.pads) { if (Math.hypot(p.x - u.x, p.y - u.y) < 1.3) { c = this.padOwner(p.x, p.y, u.team); if (c) break; } }
         if (c && u.stock < u.def.stock) { u.stock = Math.min(u.def.stock, u.stock + BAT.truckRefill * dt); u.chargeT = this.time; u.chargeFrom = c.id; }
         if (u.stock > 0) {
           for (const r of this.units) {

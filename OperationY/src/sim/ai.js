@@ -84,7 +84,6 @@ export class AI {
     const idle = mine.filter((u) => !this.tasks.has(u.id) && u.order.kind === 'idle' && !u.chase && u.cls !== 'prop');
 
     // Strom: leere Roboter zum Laden, Versorger zwischen Generator und Truppe pendeln
-    const chargers = w.buildings.filter((b) => b.def.charges && !b.destroyed && b.team === this.team);
     const trucks = mine.filter((u) => u.def.support);
     const nearest = (list, x, y, f = (o) => [o.cx ?? o.x, o.cy ?? o.y]) => {
       let best = null, bd = 1e9;
@@ -93,9 +92,10 @@ export class AI {
     };
     for (const u of mine) {
       if (u.cls !== 'robot' || u.bat > 22 || this.tasks.get(u.id)?.kind === 'charge') continue;
-      const src = nearest(chargers.concat(trucks.filter((t) => t.stock > 60)), u.x, u.y);
+      const pads = w.pads.filter((p) => w.padOwner(p.x, p.y, this.team));
+      const src = nearest(pads.concat(trucks.filter((t) => t.stock > 60)), u.x, u.y, (o) => [o.x, o.y]);
       if (!src) continue;
-      const [sx, sy] = src.kind === 'building' ? [src.cx, src.y + src.h + 1] : [src.x, src.y];
+      const [sx, sy] = [src.x, src.y];
       w.commandMove([u.id], sx, sy, this.team, false);
       this.tasks.set(u.id, { kind: 'charge', until: w.time + 45 });
     }
@@ -107,8 +107,8 @@ export class AI {
       const task = this.tasks.get(t.id);
       if (task && task.kind === 'truck' && t.order.kind !== 'idle') continue;
       if (t.stock < 120) {
-        const c = nearest(chargers, t.x, t.y);
-        if (c) w.commandMove([t.id], c.cx, c.y + c.h + 1.5, this.team, false);
+        const c = nearest(w.pads.filter((p) => w.padOwner(p.x, p.y, this.team)), t.x, t.y, (o) => [o.x, o.y]);
+        if (c) w.commandMove([t.id], c.x, c.y, this.team, false);
       } else {
         const low = mine.filter((u) => u.cls === 'robot' && u.bat < 60).sort((a, b) => a.bat - b.bat).slice(0, 6);
         if (low.length) {

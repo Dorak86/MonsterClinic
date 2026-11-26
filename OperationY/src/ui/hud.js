@@ -194,6 +194,12 @@ export class Hud {
       g.strokeStyle = '#000'; g.lineWidth = 0.25;
       g.strokeRect(b.x, b.y, b.w, b.h);
     }
+    // Induktionsplatten
+    for (const p of w.pads) {
+      if (!exp[Math.floor(p.y) * mw + Math.floor(p.x)]) continue;
+      g.fillStyle = w.padOwner(p.x, p.y, 1) ? '#6ae8ff' : 'rgba(106,232,255,0.35)';
+      g.fillRect(p.x - 0.5, p.y - 0.5, 1, 1);
+    }
     // Flaggen
     for (const s of w.sectors) {
       g.fillStyle = '#fff';
@@ -251,7 +257,7 @@ export class Hud {
   updatePanel(selection) {
     const w = this.w;
     const objs = [...selection].map((id) => w.byId.get(id)).filter((o) => o && !o.dead && (o.kind === 'unit' || !o.destroyed || true));
-    let key = objs.map((o) => o.id + ':' + o.team + (o.kind === 'building' ? (o.produce || '-') + o.destroyed : '')).join(',');
+    let key = objs.map((o) => o.id + ':' + o.team + (o.kind === 'building' ? (o.produce || '-') + o.destroyed : '')).join(',') + '|' + w.sectors.filter((s) => s.owner === 1).length;
     if (key !== this.panelKey) {
       this.panelKey = key;
       this.buildPanel(objs);
@@ -354,6 +360,9 @@ export class Hud {
           <p class="desc">${d.desc}</p>
           <div class="hpbar" data-hp="${o.id}"><div></div></div>`;
         if (d.produces && o.team === 1 && !o.destroyed) {
+          const own = this.w.sectors.filter((s) => s.owner === 1).length, all = this.w.sectors.length;
+          const f = productionFactor(own / all);
+          html += `<p class="desc" style="margin:0 0 4px;color:var(--ok)">${own} von ${all} Sektoren: Bauzeit −${Math.round((1 - f) * 100)} % (jeder weitere Sektor verkürzt sie)</p>`;
           html += '<div class="prodgrid">';
           for (const t of d.produces) {
             html += `<button class="pbtn ${o.produce === t ? 'on' : ''}" data-b="${o.id}" data-type="${t}" title="${UNITS[t].desc}">${img(t)}<span>${UNITS[t].name}</span><span class="t"></span><span class="prog"></span></button>`;

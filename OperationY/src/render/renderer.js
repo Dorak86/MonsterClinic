@@ -6,7 +6,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
-import { TILE, shared, TEAM_COLORS } from './materials.js';
+import { TILE, shared, TEAM_COLORS, patchFow } from './materials.js';
 import { Terrain } from './terrain.js';
 import { Effects } from './effects.js';
 import { makeRobot, makeVehicle, makeBuilding, makeRuin, makeFlag, wreckify, makeBarrel, energyMaterials } from './models.js';
@@ -125,12 +125,58 @@ export class Renderer {
     }
     // Gebäude
     for (const b of world.buildings) this.syncBuilding(b, true);
+    this.buildPads();
 
     // Nachbearbeitung
     this.setupComposer();
     this.resize();
     const fort = world.buildings.find((b) => b.type === 'fort' && b.team === 1);
     if (fort) this.lookAt(fort.cx, fort.cy + 4, true);
+  }
+
+  // Induktionsplatten: Warnstreifen-Rahmen, Spule und Blitzsymbol, leuchten in der Besitzerfarbe
+  buildPads() {
+    const c = document.createElement('canvas');
+    c.width = c.height = 128;
+    const g = c.getContext('2d');
+    g.fillStyle = '#2a2d31'; g.fillRect(0, 0, 128, 128);
+    for (let i = -128; i < 256; i += 16) {
+      g.fillStyle = '#d8a820';
+      g.beginPath(); g.moveTo(i, 0); g.lineTo(i + 8, 0); g.lineTo(i + 8 - 128, 128); g.lineTo(i - 128, 128); g.fill();
+    }
+    g.fillStyle = '#1a1c1f'; g.fillRect(12, 12, 104, 104);
+    const em = document.createElement('canvas');
+    em.width = em.height = 128;
+    const e = em.getContext('2d');
+    e.strokeStyle = '#ffffff'; e.lineWidth = 3;
+    for (let r = 14; r < 50; r += 9) { e.beginPath(); e.arc(64, 64, r, 0, Math.PI * 2); e.stroke(); }
+    e.fillStyle = '#ffffff';
+    e.beginPath(); e.moveTo(70, 30); e.lineTo(48, 68); e.lineTo(62, 68); e.lineTo(56, 98); e.lineTo(80, 58); e.lineTo(66, 58); e.lineTo(74, 30); e.fill();
+    g.drawImage(em, 0, 0);
+    const map = new THREE.CanvasTexture(c); map.colorSpace = THREE.SRGBColorSpace;
+    const emap = new THREE.CanvasTexture(em);
+    const geo = new THREE.PlaneGeometry(TILE * 0.94, TILE * 0.94).rotateX(-Math.PI / 2);
+    this.pads = this.world.pads.map((p) => {
+      const m = new THREE.MeshStandardMaterial({ map, emissiveMap: emap, emissive: 0x6ae8ff, emissiveIntensity: 1, roughness: 0.6, metalness: 0.4, polygonOffset: true, polygonOffsetFactor: -2 });
+      patchFow(m);
+      const mesh = new THREE.Mesh(geo, m);
+      mesh.position.set(p.x * TILE, Math.max(this.terrain.heightAt(p.x * TILE, p.y * TILE), -0.3) + 0.06, p.y * TILE);
+      mesh.receiveShadow = true;
+      this.scene.add(mesh);
+      return { mesh, p };
+    });
+  }
+
+  updatePads(time) {
+    const w = this.world;
+    for (const { mesh, p } of this.pads || []) {
+      const b = w.byId.get(p.b);
+      const m = mesh.material;
+      const owned = b && !b.destroyed && b.team;
+      m.emissive.copy(owned ? (b.team === 1 ? new THREE.Color(0x6ae8ff) : new THREE.Color(0x6ae8ff).lerp(TEAM_COLORS[2], 0.4)) : new THREE.Color(0x202428));
+      const busy = owned && w.units.some((u) => !u.dead && u.onPad && Math.floor(u.x) === Math.floor(p.x) && Math.floor(u.y) === Math.floor(p.y) && u.bat < 100);
+      m.emissiveIntensity = owned ? (busy ? 3 + Math.sin(time * 12) * 1.2 : 1.1 + Math.sin(time * 2 + p.x) * 0.3) : 0.2;
+    }
   }
 
   setupComposer() {
@@ -560,7 +606,9 @@ export class Renderer {
         const src = w.byId.get(u.chargeFrom);
         if (src) {
           const sx = src.kind === 'building' ? src.cx : src.x, sy = src.kind === 'building' ? src.cy : src.y;
-          const from = new THREE.Vector3(sx * TILE, this.terrain.unitHeight(sx, sy) + (src.kind === 'building' ? 3 : 1.6), sy * TILE);
+          const from = src.kind === 'building'
+            ? new THREE.Vector3(e.obj.position.x, gy + 0.1, e.obj.position.z)
+            : new THREE.Vector3(sx * TILE, this.terrain.unitHeight(sx, sy) + 1.6, sy * TILE);
           this.effects.zap(from, new THREE.Vector3(e.obj.position.x, gy + 1.3, e.obj.position.z));
         }
       }
@@ -638,6 +686,7 @@ export class Renderer {
       }
     }
     for (const m of energyMaterials()) m.emissiveIntensity = 3.5 + Math.sin(time * 3) * 1.5;
+    this.updatePads(time);
     // Flaggen
     for (const f of this.flags) {
       const ud = f.obj.userData;
