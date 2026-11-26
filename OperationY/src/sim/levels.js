@@ -43,7 +43,6 @@ export const LEVELS = [
   {
     id: 1, name: 'Erstkontakt', biome: 'steppe', w: 48, h: 36, seed: 11,
     rocks: 0.1, forest: 0.12, extraRoads: 2, aiLevel: 0.75,
-    briefing: 'Kommandantin Vey: „Willkommen an der Front, Hauptmann. Die rote Kolonne hat das Tal besetzt. Schicken Sie Läufer zu den Flaggen – jeder Sektor beschleunigt unsere Produktion. Das Roboterwerk im Norden ist Gold wert. Zerstören Sie das feindliche Fort oder erobern Sie dessen Flagge."',
     tips: true,
     sectors: [
       S(6, 18, 1, [['fort', 2, -1]]),
@@ -63,7 +62,6 @@ export const LEVELS = [
     id: 2, name: 'Kupfertal', biome: 'steppe', w: 64, h: 48, seed: 23,
     rocks: 0.12, forest: 0.12, extraRoads: 1, aiLevel: 0.9,
     rivers: [{ pts: [[33, -2], [30, 12], [35, 24], [31, 36], [34, 50]], w: 2.2 }],
-    briefing: 'Vey: „Ein Fluss teilt das Kupfertal. Brücken sind die einzigen Übergänge für Fahrzeuge – halten Sie sie. Das Fahrzeugwerk im Süden liefert Panzer, wenn Sie es zuerst erreichen."',
     sectors: [
       S(6, 24, 1, [['fort', 2, -1]]),
       S(13, 9, 1, [['robot', 2, 1]]),
@@ -85,7 +83,6 @@ export const LEVELS = [
     id: 3, name: 'Frostgrat', biome: 'ice', w: 64, h: 48, seed: 37,
     rocks: 0.16, forest: 0.1, extraRoads: 2, aiLevel: 1.0,
     lakes: [[32, 24, 4]],
-    briefing: 'Vey: „Auf dem Frostgrat stehen verlassene Fahrzeuge einer früheren Schlacht. Ein Roboter kann jedes graue Fahrzeug besteigen – Rechtsklick genügt. Seien Sie schneller als die Roten."',
     sectors: [
       S(7, 40, 1, [['fort', 2, -4]]),
       S(8, 22, 1, [['robot', 2, 1]]),
@@ -108,7 +105,6 @@ export const LEVELS = [
     id: 4, name: 'Gletscherpass', biome: 'ice', w: 64, h: 48, seed: 41,
     rocks: 0.08, forest: 0.08, extraRoads: 0, aiLevel: 1.05,
     walls: [{ pts: [[31, -1], [33, 14], [30, 26], [34, 38], [32, 49]], w: 3 }],
-    briefing: 'Vey: „Ein Eiswall trennt uns vom Feind. Nur wenige Pässe führen hindurch – und die Roten haben sie mit Geschütztürmen gesichert. Panzerjäger und Raketenwerfer knacken Türme am besten."',
     sectors: [
       S(6, 24, 1, [['fort', 2, -1]]),
       S(14, 10, 1, [['vehicle', 2, 1]]),
@@ -131,7 +127,6 @@ export const LEVELS = [
     id: 5, name: 'Moorkessel', biome: 'swamp', w: 64, h: 48, seed: 53,
     rocks: 0.06, forest: 0.32, extraRoads: 3, aiLevel: 1.05,
     lakes: [[20, 16, 3], [44, 32, 3.5], [32, 6, 2.5], [30, 42, 2.5]],
-    briefing: 'Vey: „Der Moorkessel ist dicht bewaldet. Fahrzeuge kommen nur über die Dämme voran – Roboter dagegen schlüpfen durch das Unterholz. Eine Karte für Grenadiere und Scharfschützen."',
     sectors: [
       S(6, 8, 1, [['fort', 2, 1]]),
       S(8, 26, 1, [['robot', 2, 1]]),
@@ -154,7 +149,6 @@ export const LEVELS = [
     id: 6, name: 'Nebelsee', biome: 'swamp', w: 64, h: 48, seed: 67,
     rocks: 0.08, forest: 0.18, extraRoads: 2, aiLevel: 1.1,
     lakes: [[32, 24, 9], [10, 6, 2.5], [54, 42, 2.5]],
-    briefing: 'Vey: „Mitten im Nebelsee liegt eine Insel mit Radarmast und Fahrzeugwerk. Wer sie hält, sieht und baut mehr. Die Dämme sind schmal – rechnen Sie mit Gegenwehr."',
     sectors: [
       S(6, 38, 1, [['fort', 2, -4]]),
       S(8, 20, 1, [['vehicle', 2, -1]]),
@@ -180,7 +174,6 @@ export const LEVELS = [
       { pts: [[-2, 16], [16, 18], [30, 14], [44, 20], [66, 16]], w: 1.8 },
       { pts: [[-2, 34], [18, 30], [34, 34], [48, 29], [66, 33]], w: 1.8 },
     ],
-    briefing: 'Vey: „Lavaflüsse zerschneiden das Schlackefeld. Wer hineinfährt, schmilzt. Die Roten setzen auf schwere Panzer – bauen Sie Panzerjäger und Raketenwerfer."',
     sectors: [
       S(6, 24, 1, [['fort', 2, -1]]),
       S(8, 6, 1, [['robot', 2, 1]]),
@@ -205,7 +198,6 @@ export const LEVELS = [
     rocks: 0.14, forest: 0.05, extraRoads: 4, aiLevel: 1.0,
     lakes: [[40, 28, 4.5]],
     rivers: [{ pts: [[40, -2], [38, 10], [42, 20]], w: 1.6 }, { pts: [[42, 36], [38, 46], [40, 58]], w: 1.6 }],
-    briefing: 'Vey: „Der Glutkern. Die Rote Kolonne hat hier ihr Hauptquartier und hält bereits drei Sektoren mit Werken. Das ist die Entscheidungsschlacht, Hauptmann. Viel Glück."',
     sectors: [
       S(6, 28, 1, [['fort', 2, -1]]),
       S(10, 10, 1, [['robot', 2, 1]]),

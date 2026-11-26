@@ -1,4 +1,4 @@
-# SEKTORFRONT
+# OPERATION Y
 
 Echtzeit-Strategiespiel um Flaggen, Fabriken und jeden Meter Boden. Eigenständiges Spiel im
 Stil der Territorial-RTS der 90er Jahre: Roboter erobern Sektoren über deren Flaggen, Werke
@@ -7,9 +7,12 @@ feindlichen Forts oder Erobern seiner Flagge.
 
 Anforderungen und Umsetzungsstand: [PFLICHTENHEFT.md](PFLICHTENHEFT.md)
 
+Dazu eine eigene, humorvolle Geschichte um einen Parkplatzstreit, der eskaliert ist:
+Operator Ypsilon, die Roboter Bolzen und Kurbel und General Grollmann von der Roten Kolonne.
+
 ## Spielen
 
-`dist/sektorfront.html` im Browser öffnen (Chrome, Edge oder Firefox mit WebGL2). Die Datei
+`dist/operation-y.html` im Browser öffnen (Chrome, Edge oder Firefox mit WebGL2). Die Datei
 enthält alles, läuft offline und braucht keinen Server.
 
 ## Inhalt
@@ -25,7 +28,7 @@ enthält alles, läuft offline und braucht keinen Server.
 
 ```
 npm install
-npm run build      # erzeugt dist/sektorfront.html
+npm run build      # erzeugt dist/operation-y.html
 npm test           # KI gegen KI auf allen Leveln (Simulation, ohne Grafik)
 npm run test:browser   # Headless-Chromium: lädt jedes Level, Screenshots nach dist/shots
 ```

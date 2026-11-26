@@ -19,6 +19,7 @@ export class Hud {
     this.lastEvent = null;
     this.onMinimap = null;
     this.onPanel = null;
+    this.bubbles = [];
     this.mmDown = false;
     this.mm.addEventListener('mousedown', (e) => this.mmClick(e, true));
     this.mm.addEventListener('mousemove', (e) => { if (this.mmDown) this.mmClick(e, false); });
@@ -83,6 +84,39 @@ export class Hud {
     if (e.button === 0 || !down) {
       this.mmDown = true;
       this.onMinimap?.('look', x, y);
+    }
+  }
+
+  bubble(id, text) {
+    this.bubbles = this.bubbles.filter((b) => b.id !== id);
+    this.bubbles.push({ id, text, t: performance.now() });
+  }
+
+  drawBubbles(alpha) {
+    const g = this.og, w = this.w, now = performance.now();
+    this.bubbles = this.bubbles.filter((b) => now - b.t < 1800);
+    g.font = '600 13px "Chakra Petch", "Segoe UI", sans-serif';
+    for (const b of this.bubbles) {
+      const u = w.byId.get(b.id);
+      if (!u || u.dead) continue;
+      const x = u.px + (u.x - u.px) * alpha, y = u.py + (u.y - u.py) * alpha;
+      const [sx, sy, sz] = this.r.tileToScreen(x, y, 3.2);
+      if (sz > 1) continue;
+      const k = Math.min(1, (1800 - (now - b.t)) / 300);
+      const tw = g.measureText(b.text).width + 16;
+      g.globalAlpha = k;
+      g.fillStyle = 'rgba(12,18,26,0.92)';
+      g.strokeStyle = '#2f9dff';
+      g.lineWidth = 1;
+      g.beginPath();
+      g.roundRect(sx - tw / 2, sy - 30, tw, 24, 4);
+      g.moveTo(sx - 5, sy - 6); g.lineTo(sx, sy); g.lineTo(sx + 5, sy - 6);
+      g.fill(); g.stroke();
+      g.fillStyle = '#e3e9ef';
+      g.textAlign = 'center';
+      g.fillText(b.text, sx, sy - 13);
+      g.textAlign = 'left';
+      g.globalAlpha = 1;
     }
   }
 
@@ -327,6 +361,7 @@ export class Hud {
       const [bx, by] = this.r.tileToScreen(goal[0], goal[1], 0.1);
       g.beginPath(); g.moveTo(ax, ay); g.lineTo(bx, by); g.stroke();
     }
+    this.drawBubbles(alpha);
     if (box) {
       g.strokeStyle = '#66ffa0';
       g.lineWidth = 1;

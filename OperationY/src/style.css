@@ -90,9 +90,9 @@ select, input[type=range] { font: inherit; color: var(--text); background: #1a22
   background: linear-gradient(90deg, #06090ded 0%, #06090dcc 30%, #06090d40 55%, transparent 75%), radial-gradient(ellipse at 70% 50%, transparent 40%, #06090d99 100%); }
 .menu-panel { display: flex; flex-direction: column; gap: 18px; max-width: 520px; }
 .eyebrow { font: 500 13px var(--display); letter-spacing: .28em; text-transform: uppercase; color: var(--player); }
-.logo { margin: 0; font: 700 clamp(52px, 8.4vw, 112px)/0.9 var(--display); letter-spacing: .02em; display: flex; flex-direction: column; }
+.logo { margin: 0; font: 700 clamp(44px, 6.6vw, 92px)/0.92 var(--display); letter-spacing: .02em; display: flex; flex-direction: column; }
 .logo .l1 { background: linear-gradient(180deg, #ffffff 0%, #c9d4df 55%, #8796a6 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.logo .l2 { background: linear-gradient(180deg, #8fd3ff 0%, #2f9dff 55%, #1462b8 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 24px #2f9dff66); margin-left: .5em; }
+.logo .l2 { background: linear-gradient(180deg, #8fd3ff 0%, #2f9dff 55%, #1462b8 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 28px #2f9dff88); font-size: 1.9em; line-height: .85; margin-left: 1.2em; }
 .logo-rule { height: 2px; background: linear-gradient(90deg, #2f9dff, #2f9dff33 70%, transparent); position: relative; overflow: hidden; width: 100%; }
 .logo-rule i { position: absolute; top: 0; bottom: 0; width: 80px; background: linear-gradient(90deg, transparent, #fff, transparent); animation: sweep 4s ease-in-out infinite; }
 @keyframes sweep { 0% { left: -80px; } 60%, 100% { left: 100%; } }
@@ -144,3 +144,20 @@ table.stats th.p { color: var(--player); } table.stats th.e { color: var(--enemy
   #topbar .stat .lbl { display: none; }
   .brief { flex-direction: column; align-items: center; }
 }
+
+/* Dialog im Briefing */
+.dialog { background: #0b1219cc; border: 1px solid var(--line); border-left: 3px solid var(--player); padding: 14px 16px 10px; display: flex; flex-direction: column; gap: 8px; cursor: pointer; }
+.dialog.groll { border-left-color: var(--enemy); }
+.dialog p#br-text { min-height: 6.5em; }
+.dialog-foot { display: flex; justify-content: space-between; align-items: center; }
+.ibtn.wide { width: auto; padding: 0 14px; }
+.row.left { justify-content: flex-start; }
+/* Funk im Spiel */
+#radio { position: absolute; left: 12px; top: 56px; max-width: 420px; display: flex; gap: 10px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--player); padding: 6px 12px 6px 6px; transition: opacity .4s; }
+#radio.groll { border-left-color: var(--enemy); }
+#radio img, .radio-line img { width: 56px; height: 56px; flex: none; background: radial-gradient(#1f3247, #0b131c); }
+#radio b, .radio-line b { display: block; font: 700 13px var(--display); letter-spacing: .05em; text-transform: uppercase; color: var(--player); }
+#radio.groll b, .radio-line.groll b { color: var(--enemy); }
+#radio span, .radio-line span { font-size: 14px; line-height: 1.4; }
+.radio-line { display: flex; gap: 12px; align-items: center; max-width: 560px; background: var(--panel); border: 1px solid var(--line); padding: 8px 14px 8px 8px; }
+.radio-line img { width: 72px; height: 72px; }

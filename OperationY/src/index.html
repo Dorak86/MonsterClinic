@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sektorfront</title>
+<title>Operation Y</title>
 <style>/*__CSS__*/</style>
 </head>
 <body>
@@ -25,6 +25,7 @@
     <button id="btn-pause" class="ibtn" title="Pause (P / Esc)">❚❚</button>
   </div>
   <div id="msgs"></div>
+  <div id="radio" hidden><img id="radio-face" alt=""><div><b id="radio-who"></b><span id="radio-text"></span></div></div>
   <div id="tipbox" hidden><div id="tiptext"></div><button id="tipclose" class="ibtn small" title="Hinweis schließen">✕</button></div>
   <div id="bottom">
     <div id="minimap-wrap"><canvas id="minimap"></canvas></div>
@@ -35,8 +36,8 @@
 <div id="screens">
   <section id="scr-menu" class="screen">
     <div class="menu-panel">
-      <div class="eyebrow">Taktische Robotergefechte · 3. Feldkorps</div>
-      <h1 class="logo"><span class="l1">SEKTOR</span><span class="l2">FRONT</span></h1>
+      <div class="eyebrow">Blaue Allianz · Streng geheim (fast)</div>
+      <h1 class="logo"><span class="l1">OPERATION</span><span class="l2">Y</span></h1>
       <div class="logo-rule"><i></i></div>
       <p class="sub">Erobern Sie Flaggen, übernehmen Sie Fabriken, halten Sie jeden Meter Boden.</p>
       <nav class="menu">
@@ -45,9 +46,9 @@
         <button data-go="help">Steuerung</button>
         <button data-go="options">Optionen</button>
       </nav>
-      <p id="touchnote" class="muted" hidden>Sektorfront ist für Maus und Tastatur am Desktop ausgelegt.</p>
+      <p id="touchnote" class="muted" hidden>Operation Y ist für Maus und Tastatur am Desktop ausgelegt.</p>
     </div>
-    <p class="foot">Eigenständiges Spiel im Stil klassischer Territorial-RTS · v1.1</p>
+    <p class="foot">Eigenständiges Spiel im Stil klassischer Territorial-RTS · v1.2</p>
   </section>
 
   <section id="scr-campaign" class="screen" hidden>
@@ -71,13 +72,16 @@
     <div class="brief">
       <div class="comm">
         <canvas id="portrait"></canvas>
-        <div class="comm-label"><b>Kdt. Vey</b><span>3. Feldkorps · Funkverbindung</span></div>
+        <div class="comm-label"><b id="br-name">Operator Ypsilon</b><span id="br-role">Funkverbindung</span></div>
       </div>
       <div class="brief-body">
         <h2 id="br-title"></h2>
         <p id="br-meta" class="muted"></p>
-        <p id="br-text"></p>
-        <div class="row">
+        <div class="dialog" id="br-dialog" title="Klicken: weiter">
+          <p id="br-text"></p>
+          <div class="dialog-foot"><span id="br-count" class="muted num"></span><button id="br-next" class="ibtn wide" title="Weiter (Leertaste)">Weiter ▸</button></div>
+        </div>
+        <div class="row left">
           <label>Gegner
             <select id="br-diff"><option value="0">Leicht</option><option value="1" selected>Normal</option><option value="2">Schwer</option></select>
           </label>
@@ -143,6 +147,7 @@
   <section id="scr-end" class="screen dim" hidden>
     <h2 id="end-title"></h2>
     <p id="end-reason" class="muted"></p>
+    <div class="radio-line" id="end-quote"><img id="end-face" alt=""><div><b id="end-who"></b><span id="end-text"></span></div></div>
     <table id="end-stats" class="stats"></table>
     <div class="row">
       <button id="end-next" class="primary">Nächster Einsatz</button>

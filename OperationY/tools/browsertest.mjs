@@ -19,7 +19,7 @@ const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
 const errors = [];
 page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') errors.push(`[${m.type()}] ${m.text()}`); });
 page.on('pageerror', (e) => errors.push('[pageerror] ' + e.message));
-await page.goto(pathToFileURL(join(root, 'dist/sektorfront.html')).href);
+await page.goto(pathToFileURL(join(root, 'dist/operation-y.html')).href);
 await page.waitForTimeout(4000);
 await page.screenshot({ path: join(outDir, 'menu.png') });
 for (const lv of levels) {

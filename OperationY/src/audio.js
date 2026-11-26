@@ -178,6 +178,7 @@ export class Audio {
   s_lost(t) { [523, 440, 349].forEach((f, i) => this.tone(t + i * 0.12, f, 0.3, 'sawtooth', 0.08)); }
   s_spawn(t) { this.tone(t, 440, 0.08, 'triangle', 0.08); this.tone(t + 0.08, 660, 0.12, 'triangle', 0.08); }
   s_alarm(t) { for (let i = 0; i < 3; i++) this.tone(t + i * 0.22, 740, 0.14, 'square', 0.07); }
+  s_radio(t) { this.tone(t, 1400, 0.04, 'square', 0.04); this.tone(t + 0.06, 1800, 0.05, 'square', 0.035); }
   s_board(t) { this.tone(t, 300, 0.1, 'sawtooth', 0.08); this.tone(t + 0.1, 600, 0.15, 'triangle', 0.1); }
 
   // ---------- Musik: generativer Puls ----------

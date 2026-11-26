@@ -113,6 +113,7 @@ export class Input {
     }
     this.lastClick = { t: now, id: o ? o.id : null };
     if (!e.shiftKey) sel.clear();
+    if (o && o.kind === 'unit' && o.team === TEAM.PLAYER) g.quip(o.id, 'select');
     if (o) {
       if (e.shiftKey && sel.has(o.id)) sel.delete(o.id);
       else if (e.shiftKey && (o.team !== TEAM.PLAYER || o.kind === 'building')) { /* nur eigene Einheiten ergänzen */ }
@@ -142,12 +143,15 @@ export class Input {
     const target = this.pickAt(sx, sy);
     if (target && target.team === TEAM.ENEMY && !(target.kind === 'building' && target.destroyed)) {
       w.commandAttack(units, target.id, TEAM.PLAYER);
+      g.quip(units[0], 'attack');
       g.renderer.marker(target.kind === 'building' ? target.cx : target.x, target.kind === 'building' ? target.cy : target.y, 0xff5040);
     } else if (target && target.kind === 'unit' && target.team === TEAM.NEUTRAL && units.some((id) => w.byId.get(id).cls === 'robot')) {
       w.commandBoard(units, target.id, TEAM.PLAYER);
+      g.quip(units.find((id) => w.byId.get(id).cls === 'robot'), 'board');
       g.renderer.marker(target.x, target.y, 0xffd060);
     } else {
       w.commandMove(units, tx, ty, TEAM.PLAYER, this.aMode || this.keys.has('KeyF'));
+      g.quip(units[0], 'move');
       g.renderer.marker(tx, ty, this.aMode || this.keys.has('KeyF') ? 0xffb347 : 0x66ffa0);
     }
     this.aMode = false;

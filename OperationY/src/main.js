@@ -11,14 +11,16 @@ import { Hud } from './ui/hud.js';
 import { Input } from './ui/input.js';
 import { renderIcons } from './ui/icons.js';
 import { Portrait } from './ui/portrait.js';
+import { CAST, BRIEFINGS, EPILOGUE, OUTRO, RADIO, QUIPS, pick } from './story.js';
 import { Audio } from './audio.js';
 
 const $ = (id) => document.getElementById(id);
-const SAVE_KEY = 'sektorfront.v1';
+const SAVE_KEY = 'operation-y.v1';
+const OLD_SAVE_KEY = 'sektorfront.v1';
 
 function loadSave() {
   try {
-    const s = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
+    const s = JSON.parse(localStorage.getItem(SAVE_KEY) || localStorage.getItem(OLD_SAVE_KEY) || '{}');
     return { unlocked: s.unlocked || 1, best: s.best || {}, options: { quality: 1, sfx: 0.7, music: 0.35, edge: true, ...(s.options || {}) } };
   } catch (e) {
     return { unlocked: 1, best: {}, options: { quality: 1, sfx: 0.7, music: 0.35, edge: true } };
@@ -50,6 +52,16 @@ class Game {
     this.prevScreen = 'menu';
     this.renderer = new Renderer($('gl'), this.options.quality);
     this.icons = renderIcons();
+    this.faces = {};
+    try {
+      const fc = document.createElement('canvas');
+      fc.width = fc.height = 112;
+      const fp = new Portrait(fc, 112);
+      for (const who of Object.keys(CAST)) this.faces[who] = fp.snapshot(who);
+      fp.r.dispose();
+    } catch (e) { console.warn('Portraits', e); }
+    this.radioQ = [];
+    this.radioT = 0;
     this.hud = new Hud(this.icons);
     this.input = new Input(this);
     this.hud.onMinimap = (kind, x, y) => {
@@ -89,6 +101,17 @@ class Game {
       this.audio.play('click');
       this.showScreen(this.prevScreen);
     }));
+    $('br-dialog').addEventListener('click', () => {
+      const d = this.dialog;
+      if (d && !d.typing && d.i + 1 >= d.lines.length) {
+        if (this.epilogMode) { this.epilogMode = false; $('br-start').hidden = false; $('br-diff').parentElement.hidden = false; this.showScreen('menu'); return; }
+        $('br-start').click(); return;
+      }
+      this.dialogNext?.();
+    });
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && !$('scr-briefing').hidden) { e.preventDefault(); $('br-dialog').click(); }
+    });
     $('br-start').addEventListener('click', () => { this.audio.init(); this.difficulty = +$('br-diff').value; this.start(this.levelIndex, this.difficulty, true); });
     $('pa-resume').addEventListener('click', () => this.togglePause());
     $('pa-restart').addEventListener('click', () => this.start(this.levelIndex, this.difficulty, this.campaign));
@@ -99,7 +122,7 @@ class Game {
     $('end-menu').addEventListener('click', () => this.toMenu());
     $('end-next').addEventListener('click', () => {
       if (this.levelIndex + 1 < LEVELS.length) this.briefing(this.levelIndex + 1);
-      else this.toMenu();
+      else this.epilogue();
     });
     $('tipclose').addEventListener('click', () => { this.tipsOff = true; $('tipbox').hidden = true; });
     // Optionen
@@ -180,28 +203,63 @@ class Game {
 
   briefing(i) {
     this.levelIndex = i;
+    this.epilogMode = false;
+    $('br-start').hidden = false;
+    $('br-diff').parentElement.hidden = false;
     const l = LEVELS[i];
     $('br-title').textContent = `Einsatz ${l.id}: ${l.name}`;
     $('br-meta').textContent = `${BIOMES[l.biome].name} · ${l.w}×${l.h} Felder · ${l.sectors.length} Sektoren`;
     $('br-diff').value = String(this.difficulty);
     this.showScreen('briefing');
-    // Funkspruch: Text erscheint Zeichen für Zeichen, die Kommandantin spricht
     if (!this.portrait) this.portrait = new Portrait($('portrait'));
     try { this.portrait.start(); } catch (e) { console.warn(e); }
-    const text = l.briefing;
-    const el = $('br-text');
-    el.textContent = '';
-    clearInterval(this.typeTimer);
-    let n = 0;
-    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduce) { el.textContent = text; return; }
-    this.typeTimer = setInterval(() => {
-      n += 2;
-      el.textContent = text.slice(0, n);
-      this.portrait?.speak(0.15);
-      if (n >= text.length) clearInterval(this.typeTimer);
-    }, 28);
-    el.onclick = () => { clearInterval(this.typeTimer); el.textContent = text; };
+    this.playDialog(BRIEFINGS[l.id] || [], () => {});
+  }
+
+  epilogue() {
+    this.toMenu();
+    $('br-title').textContent = 'Epilog: Der Parkplatzfrieden';
+    $('br-meta').textContent = 'Kampagne abgeschlossen · Die Rote Kolonne kapituliert';
+    this.showScreen('briefing');
+    $('br-start').hidden = true;
+    $('br-diff').parentElement.hidden = true;
+    this.epilogMode = true;
+    try { this.portrait ??= new Portrait($('portrait')); this.portrait.start(); } catch (e) { console.warn(e); }
+    this.playDialog(EPILOGUE, () => {});
+  }
+
+  // Dialog Zeile für Zeile; Klick oder Leertaste: Zeile vervollständigen bzw. weiter
+  playDialog(lines, onEnd) {
+    this.dialog = { lines, i: -1, onEnd };
+    const next = () => {
+      const d = this.dialog;
+      if (!d) return;
+      const el = $('br-text');
+      if (d.typing) { clearInterval(this.typeTimer); d.typing = false; el.textContent = d.lines[d.i].text; return; }
+      if (d.i + 1 >= d.lines.length) { $('br-next').textContent = 'Einsatz beginnen ▸'; d.onEnd?.(); return; }
+      d.i++;
+      const line = d.lines[d.i];
+      const cast = CAST[line.who];
+      $('br-name').textContent = cast.name;
+      $('br-role').textContent = cast.role;
+      $('br-dialog').classList.toggle('groll', line.who === 'groll');
+      $('br-count').textContent = `${d.i + 1} / ${d.lines.length}`;
+      $('br-next').textContent = d.i + 1 >= d.lines.length ? 'Einsatz beginnen ▸' : 'Weiter ▸';
+      this.portrait?.setSpeaker(line.who);
+      clearInterval(this.typeTimer);
+      el.textContent = '';
+      let n = 0;
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) { el.textContent = line.text; this.portrait?.speak(1.5); return; }
+      d.typing = true;
+      this.typeTimer = setInterval(() => {
+        n += 2;
+        el.textContent = line.text.slice(0, n);
+        this.portrait?.speak(0.15);
+        if (n >= line.text.length) { clearInterval(this.typeTimer); d.typing = false; }
+      }, 26);
+    };
+    this.dialogNext = next;
+    next();
   }
 
   // Hintergrund im Menü: langsam kreisende Kamera über Level 1 mit KI gegen KI
@@ -263,6 +321,9 @@ class Game {
         this.audio.init();
         this.audio.startMusic(i);
         this.hud.message(`Einsatz ${level.id}: ${level.name}`, 'info');
+        this.radioQ = []; this.radioT = 1.5; $('radio').hidden = true;
+        this.radio(RADIO.start);
+        this.idleT = 60 + Math.random() * 40;
       } catch (e) {
         console.error(e);
         $('err-text').textContent = String(e && e.message || e);
@@ -291,6 +352,39 @@ class Game {
     $('btn-speed').textContent = s + '×';
   }
 
+  radio(pool, chance = 1) {
+    if (this.demo || Math.random() > chance) return;
+    const line = Array.isArray(pool) ? pick(pool) : pool;
+    if (this.radioQ.length > 2) return;
+    if (this.radioQ.some((l) => l.text === line.text)) return;
+    this.radioQ.push(line);
+  }
+
+  updateRadio(dt) {
+    const box = $('radio');
+    this.radioT -= dt;
+    if (this.radioT > 0) return;
+    if (!this.radioQ.length) { box.hidden = true; return; }
+    const line = this.radioQ.shift();
+    $('radio-face').src = this.faces[line.who] || '';
+    $('radio-who').textContent = CAST[line.who].name;
+    $('radio-text').textContent = line.text;
+    box.classList.toggle('groll', line.who === 'groll');
+    box.hidden = false;
+    this.radioT = 3 + line.text.length * 0.045;
+    this.audio.play('radio');
+  }
+
+  quip(id, kind) {
+    const u = this.world.byId.get(id);
+    if (!u || u.kind !== 'unit') return;
+    const now = performance.now();
+    if (now - (this.lastQuip || 0) < 900) return;
+    this.lastQuip = now;
+    const text = kind === 'select' ? pick(QUIPS.select[u.type] || QUIPS.move) : pick(QUIPS[kind] || QUIPS.move);
+    this.hud.bubble(id, text);
+  }
+
   handleEvents() {
     const w = this.world;
     for (const ev of w.drainEvents()) {
@@ -307,27 +401,30 @@ class Game {
         case 'bdestroy':
           this.audio.play('bigexplode', ev.x, ev.y, 1.2);
           this.hud.message(`${BUILDINGS[ev.type].name} ${ev.team === 1 ? 'verloren' : 'zerstört'}`, ev.team === 1 ? 'bad' : 'good', ev.x, ev.y);
+          this.radio(ev.team === 1 ? RADIO.ownDestroy : RADIO.bdestroy, 0.9);
           break;
         case 'capture': {
           const s = w.sectors[ev.sector];
           const names = s.buildings.map((id) => w.byId.get(id)).filter((b) => b && !b.destroyed).map((b) => b.def.name);
           const what = names.length ? ` (${names.join(', ')})` : '';
-          if (ev.team === 1) { this.audio.play('capture'); this.hud.message(`Sektor erobert${what}`, 'good', ev.x, ev.y); }
-          else if (ev.prev === 1) { this.audio.play('lost'); this.hud.message(`Sektor verloren${what}!`, 'bad', ev.x, ev.y); }
-          else if (names.length) this.hud.message(`Gegner übernimmt ${names.join(', ')}`, 'bad', ev.x, ev.y);
+          const factory = s.buildings.some((id) => { const b = w.byId.get(id); return b && !b.destroyed && b.def.produces && b.type !== 'fort'; });
+          if (ev.team === 1) { this.audio.play('capture'); this.hud.message(`Sektor erobert${what}`, 'good', ev.x, ev.y); this.radio(factory ? RADIO.factory : RADIO.capture, factory ? 1 : 0.4); }
+          else if (ev.prev === 1) { this.audio.play('lost'); this.hud.message(`Sektor verloren${what}!`, 'bad', ev.x, ev.y); this.radio(RADIO.lost, 0.8); }
+          else { if (names.length) this.hud.message(`Gegner übernimmt ${names.join(', ')}`, 'bad', ev.x, ev.y); this.radio(RADIO.enemyCapture, 0.25); }
           break;
         }
         case 'underattack':
-          if (ev.team === 1) { this.audio.play('alarm'); this.hud.message(`${ev.what} unter Beschuss`, 'bad', ev.x, ev.y); }
+          if (ev.team === 1) { this.audio.play('alarm'); this.hud.message(`${ev.what} unter Beschuss`, 'bad', ev.x, ev.y); this.radio(RADIO.attacked, 0.5); }
           break;
         case 'spawn':
           if (ev.team === 1) { this.audio.play('spawn', ev.x, ev.y, 0.6); }
           break;
         case 'board':
-          if (ev.team === 1) { this.audio.play('board'); this.hud.message('Fahrzeug übernommen', 'good', ev.x, ev.y); }
-          else this.hud.message('Gegner übernimmt ein herrenloses Fahrzeug', 'bad', ev.x, ev.y);
+          if (ev.team === 1) { this.audio.play('board'); this.hud.message('Fahrzeug übernommen', 'good', ev.x, ev.y); this.radio(RADIO.board); }
+          else { this.hud.message('Gegner übernimmt ein herrenloses Fahrzeug', 'bad', ev.x, ev.y); this.radio(RADIO.enemyBoard, 0.6); }
           break;
         case 'eject':
+          if (ev.team === 1) this.radio(RADIO.eject, 0.3);
           break;
         case 'gameover':
           this.endGame(ev);
@@ -366,8 +463,15 @@ class Game {
         <tr><td>Abschüsse</td><td>${s1.kills}</td><td>${s2.kills}</td></tr>
         <tr><td>Sektoren erobert</td><td>${s1.captures}</td><td>${s2.captures}</td></tr>
         <tr><td>Gebiet am Ende</td><td>${Math.round(w.territory(1) * 100)} %</td><td>${Math.round(w.territory(2) * 100)} %</td></tr>`;
-      $('end-next').hidden = !win || this.levelIndex + 1 >= LEVELS.length;
-      if (win && this.levelIndex + 1 >= LEVELS.length) $('end-reason').textContent += ' Die Kampagne ist abgeschlossen – das Glutkern-Hauptquartier ist gefallen.';
+      const last = this.levelIndex + 1 >= LEVELS.length;
+      $('end-next').hidden = !win || (last && !this.campaign);
+      $('end-next').textContent = last ? 'Epilog ansehen' : 'Nächster Einsatz';
+      const q = pick(win ? OUTRO.win : OUTRO.lose)[0];
+      $('end-face').src = this.faces[q.who] || '';
+      $('end-who').textContent = CAST[q.who].name;
+      $('end-text').textContent = q.text;
+      $('end-quote').classList.toggle('groll', q.who === 'groll');
+      $('radio').hidden = true;
       this.showScreen('end');
     }, 2500);
   }
@@ -421,6 +525,11 @@ class Game {
         this.hud.updateTop();
         this.hud.drawMinimap();
         this.updateTips();
+      }
+      if (this.state === 'play') {
+        this.updateRadio(dt);
+        this.idleT -= dt * this.speed;
+        if (this.idleT <= 0) { this.idleT = 70 + Math.random() * 50; this.radio(RADIO.idle); }
       }
       this.hud.updatePanel(this.selection);
       this.hud.drawOverlay(this.selection, this.input.box, this.input.hoverId, alpha);

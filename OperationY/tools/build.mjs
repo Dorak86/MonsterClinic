@@ -22,7 +22,7 @@ const css = readFileSync(join(root, 'src/style.css'), 'utf8').replace('/*__FONTS
 let html = readFileSync(join(root, 'src/index.html'), 'utf8');
 html = html.replace('/*__CSS__*/', () => css).replace('/*__JS__*/', () => js);
 mkdirSync(join(root, 'dist'), { recursive: true });
-const out = join(root, 'dist/sektorfront.html');
+const out = join(root, 'dist/operation-y.html');
 writeFileSync(out, html);
 console.log(`${out}  ${(html.length / 1024).toFixed(0)} KB`);
 // Variante ohne Dokumentgerüst (für Plattformen, die es selbst ergänzen)

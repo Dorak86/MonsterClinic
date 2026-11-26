@@ -1,10 +1,10 @@
-# SEKTORFRONT – Pflichtenheft
+# OPERATION Y – Pflichtenheft
 
 Version 1.0 · Stand 25.11.2026
 
 ## 1. Zielbestimmung
 
-SEKTORFRONT ist ein Echtzeit-Strategiespiel im Stil der Territorial-RTS der 90er Jahre
+OPERATION Y ist ein Echtzeit-Strategiespiel im Stil der Territorial-RTS der 90er Jahre
 (Genre-Vorbild: *Z*, The Bitmap Brothers, 1996). Übernommen wird **die Spielidee des Genres**,
 nicht das Werk selbst: Name, Figuren, Grafik, Musik, Texte und Level sind vollständig neu.
 
@@ -41,6 +41,25 @@ zerstört oder dem Gegner alle Einheiten und Fabriken nimmt.
 - Kein Mehrspieler über Netzwerk.
 - Kein Karteneditor in Version 1.0.
 - Keine Videosequenzen; Briefings als Text mit Kommandanten-Figur, die neu entworfen ist.
+
+### 1.4 Geschichte und Figuren (v1.2)
+
+Operation Y erzählt eine eigene, humorvolle Geschichte: General Grollmann von der Roten
+Kolonne erklärt der Blauen Allianz den Krieg, weil ein Satellit auf seinem reservierten
+Orbitparkplatz steht. Figuren (alle eigene Entwürfe):
+
+| Figur | Rolle |
+| --- | --- |
+| Operator Ypsilon | Einsatzleitung der Blauen Allianz; 3D-Büste nach dem Foto des Auftraggebers |
+| Bolzen | übermotivierter Läufer-Roboter mit Frosch-Stellvertreter „Leutnant Quak“ |
+| Kurbel | zynischer Grenadier, zählt die Tage bis zur Rente |
+| General Grollmann | pompöser Befehlshaber der Roten Kolonne mit Generalsmütze und Metallschnurrbart |
+
+Umsetzung: Briefing-Dialoge mit wechselnden animierten Sprechern je Level, Funksprüche im
+Spiel bei Ereignissen (Eroberung, Verlust, Beschuss, Fahrzeug übernommen, Gebäude zerstört)
+und zwischendurch, Sprechblasen der Einheiten bei Auswahl und Befehl, Abschlusszeile nach
+jedem Einsatz, Epilog nach Level 8. Der Running Gag um den Namen („Warum Y? Weil Z schon
+vergeben war.“) ist ein Augenzwinkern an das Genre-Vorbild, ohne dessen Inhalte zu übernehmen.
 
 ## 2. Produkteinsatz
 
@@ -159,7 +178,7 @@ Fortschritt (freigeschaltete Level, Bestzeiten) und Optionen in `localStorage`.
 
 ## 7. Technik
 
-- Three.js (WebGL2), JavaScript-Module, gebündelt mit esbuild zu `dist/sektorfront.html`.
+- Three.js (WebGL2), JavaScript-Module, gebündelt mit esbuild zu `dist/operation-y.html`.
 - Alle Modelle prozedural aus Grundkörpern, Texturen prozedural auf Canvas erzeugt.
 - Ton per WebAudio-Synthese.
 
